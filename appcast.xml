@@ -3,6 +3,26 @@
     <channel>
         <title>Nameplate</title>
         <item>
+            <title>0.2.1</title>
+            <pubDate>Tue, 07 Jul 2026 20:46:01 +0100</pubDate>
+            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
+            <sparkle:version>4</sparkle:version>
+            <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Nameplate 0.2.1</h2>
+<ul>
+<li>Windows port in <code>windows/</code> (C#/.NET 8 WPF): click-through frame/tag/watermark/splash overlays per monitor, real remote-connect splash via WTS session events, tray dashboard, named-pipe CLI (<code>nameplate attention|splash</code>), fleet.json compatibility, and hostname-color parity with macOS. Verified on Windows 11 (21 core tests + on-VM overlay/attention proof).</li>
+<li>Linux port in <code>linux/</code> (Rust + GTK4): the same overlay set for X11 (xrdp/VNC fleets; Wayland renders best-effort), unix-socket CLI, logind unlock splash, fleet.json compatibility, and color parity. Verified on Ubuntu 26.04 (8 core tests + on-VM overlay/attention proof).</li>
+<li>Releases now ship per-platform artifacts: <code>Nameplate-Windows-{x64,arm64}.zip</code> and <code>Nameplate-Linux-{x86_64,arm64}.tar.gz</code> alongside the Mac zip/DMG, with stable <code>releases/latest</code> download URLs.</li>
+<li>Website: cross-platform — the live settings window auto-adopts your OS&#x27;s chrome (macOS / Windows 11 / GNOME) with a manual OS toggle, and the download button targets your platform.</li>
+<li>Releases now ship a notarized DMG with a branded drag-to-install background, plus stable <code>Nameplate.dmg</code> / <code>Nameplate.zip</code> download URLs via <code>releases/latest</code>; website and README link the DMG.</li>
+<li>Per-Mac location: optional <code>location</code> field (fleet file or Settings) shown in the status menu, connect splash, and identity.</li>
+</ul>
+<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
+]]></description>
+            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.1/Nameplate-0.2.1.zip" length="2982536" type="application/octet-stream" sparkle:edSignature="2mToajd7KOttQHpsgzXn+NVsFXLBpu9nPhtUlYBiqcGP030/4V/VYXcet6iRXBHEJYodLbQLJZDLaLOcWeKUDQ=="/>
+        </item>
+        <item>
             <title>0.2.0</title>
             <pubDate>Tue, 07 Jul 2026 19:09:19 +0100</pubDate>
             <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
@@ -34,32 +54,6 @@
 <p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
 ]]></description>
             <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.1.1/Nameplate-0.1.1.zip" length="2939511" type="application/octet-stream" sparkle:edSignature="qgIA7YMOXFHO7IlWTOUqVjVlhFyF68bdANqLylYZDBNhFk2IlElX50hFgvq7J7VzCWbifrd5dSpgyMTMmaLfAQ=="/>
-        </item>
-        <item>
-            <title>0.1.0</title>
-            <pubDate>Tue, 07 Jul 2026 01:43:35 -0700</pubDate>
-            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
-            <sparkle:version>1</sparkle:version>
-            <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description><![CDATA[<h2>Nameplate 0.1.0</h2>
-<ul>
-<li>Initial release: frame, name tag, watermark, and connect-splash overlays with per-host default colors.</li>
-<li>Status menu doubles as a dashboard: uptime, IP address (click to copy), CPU load, RAM, free disk, and layer toggles.</li>
-<li>Frame corner rounding is configurable per corner (radius slider + corner toggles); default rounds only the bottom corners.</li>
-<li>Agent skill for attention alerts ships in <code>skills/nameplate-attention/</code>.</li>
-<li>Decoration visibility mode: show frame/tag/watermark/splash always, or only when viewed remotely (virtual display detected or Screen Sharing/VNC connected); attention alerts are exempt.</li>
-<li>Native grouped settings (System Settings style): Identity, Layers, Splash, General, and About panes with a live preview.</li>
-<li>Fleet file support (<code>~/.config/nameplate/fleet.json</code>) to brand every Mac from one synced dotfile.</li>
-<li>Bundled <code>nameplate</code> CLI: <code>attention</code> (topmost message card + pulsating borders for agents that need the human), <code>splash</code>, and <code>settings</code>.</li>
-<li>Sparkle auto-updates for Developer ID release builds (disabled for dev and Homebrew installs).</li>
-<li>Designed app icon: dark glass screen with a glowing jade frame and nameplate pill.</li>
-<li>Start at login, menu bar name toggle, hideable menu bar icon, and <code>nameplate://splash</code> URL scheme.</li>
-</ul>
-<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
-]]></description>
-            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.1.0/Nameplate-0.1.0.zip" length="2938691" type="application/octet-stream" sparkle:edSignature="/40p+L4dTL07HJlx8ZN3nU8D91e204AJAaYy0GTZ1Ba5PYujpv7SzwYF//IKjJ9MhcsotNm0cHQXS862dhMdAQ=="/>
         </item>
     </channel>
 </rss>
