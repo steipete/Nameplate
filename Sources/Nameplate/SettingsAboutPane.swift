@@ -36,10 +36,8 @@ struct AboutPane: View {
                     Toggle(
                         "Automatically download and install updates",
                         isOn: self.autoUpdateBinding)
-                    LabeledContent("Updates") {
-                        Button("Check for Updates…") {
-                            self.updater?.checkForUpdates(nil)
-                        }
+                    Button("Check for Updates…") {
+                        self.updater?.checkForUpdates(nil)
                     }
                 } else {
                     Text(self.updater?.unavailableReason ?? "Updates unavailable in this build.")
