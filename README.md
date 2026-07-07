@@ -9,6 +9,7 @@ If you drive a herd of Macs over [Jump Desktop](https://jumpdesktop.com/), Scree
 - **Watermark** — a big translucent name across the screen, readable from across the room.
 - **Connect splash** — the Mac's name flashes center-screen when a remote session likely just started, then fades out.
 - **Menu bar plate** — a colored mini-nameplate (plus the name) in the menu bar. Its menu doubles as a glanceable dashboard: uptime, IP address (click to copy), CPU load, RAM, and free disk, plus layer toggles.
+- **Attention alerts** — a bundled CLI lets agents and scripts summon a topmost message card with pulsating screen borders when they need the human (e.g. right before a 1Password auth prompt).
 
 Your wallpaper stays untouched — everything is a transparent overlay, so you can keep any background you like.
 
@@ -52,15 +53,35 @@ Manage the whole fleet from one dotfile. Nameplate reads `~/.config/nameplate/fl
 
 All fields are optional; anything missing falls back to local settings. Sync the file via your dotfiles and every Mac picks up its own entry. Changes are applied live.
 
-### Scripting
+### CLI
 
-Trigger the splash from your own connect automation (works from SSH sessions too, no app activation needed):
+The app bundle ships a CLI at `Nameplate.app/Contents/Helpers/nameplate` (symlink it onto your PATH):
+
+```sh
+ln -s /Applications/Nameplate.app/Contents/Helpers/nameplate ~/bin/nameplate
+
+nameplate attention "Need 1Password approval for release verification — no secret read." \
+  --title "Codex → 1Password" --duration 12
+nameplate splash      # replay the identity splash
+nameplate settings    # open settings
+```
+
+`attention` shows a topmost card (click to dismiss) plus pulsating borders on every display — built for AI agents that need a human at the keyboard, with the *reason* right in the alert. It launches the app if needed.
+
+### Scripting without the CLI
+
+Darwin notifications work from anywhere, including SSH sessions, with no app activation:
 
 ```sh
 notifyutil -p com.steipete.nameplate.splash
+notifyutil -p com.steipete.nameplate.settings
 ```
 
-`notifyutil -p com.steipete.nameplate.settings` opens Settings. The `nameplate://splash` and `nameplate://settings` URLs are registered as well, but URL delivery to menu-bar-only SwiftUI apps is unreliable on current macOS betas — the Darwin notification is the dependable path.
+The `nameplate://splash` and `nameplate://settings` URLs are registered as well, but URL delivery to menu-bar-only apps is unreliable on current macOS betas — the Darwin notifications are the dependable path.
+
+### Updates
+
+Release builds update via [Sparkle](https://sparkle-project.org) (feed: `appcast.xml` on `main`). Dev and Homebrew builds keep Sparkle disabled.
 
 ## Why the splash triggers are heuristics
 

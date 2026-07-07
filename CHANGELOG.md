@@ -7,4 +7,7 @@
 - Frame corners are rounded (configurable) so the border follows the display's curve instead of looking clipped.
 - Trimmy-style settings app: Identity, Layers, Splash, General, and About panes with a live preview.
 - Fleet file support (`~/.config/nameplate/fleet.json`) to brand every Mac from one synced dotfile.
+- Bundled `nameplate` CLI: `attention` (topmost message card + pulsating borders for agents that need the human), `splash`, and `settings`.
+- Sparkle auto-updates for Developer ID release builds (disabled for dev and Homebrew installs).
+- Designed app icon: dark glass screen with a glowing jade frame and nameplate pill.
 - Start at login, menu bar name toggle, hideable menu bar icon, and `nameplate://splash` URL scheme.

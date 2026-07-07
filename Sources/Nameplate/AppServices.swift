@@ -1,4 +1,5 @@
 import AppKit
+import NameplateCore
 import notify
 
 /// Long-lived controllers, wired together once at launch. App-lifetime object:
@@ -8,9 +9,11 @@ final class AppServices {
     private let settings: AppSettings
     private var overlay: OverlayController?
     private var splash: SplashController?
+    private var attention: AttentionController?
     private var monitor: ConnectionMonitor?
     private var statusItem: StatusItemController?
     private var settingsWindow: SettingsWindowController?
+    private(set) var updater: UpdaterProviding?
 
     init(settings: AppSettings) {
         self.settings = settings
@@ -32,7 +35,9 @@ final class AppServices {
         let settings = self.settings
         self.overlay = OverlayController(settings: settings)
         self.splash = SplashController(settings: settings)
+        self.attention = AttentionController(settings: settings)
         self.statusItem = StatusItemController(settings: settings, services: self)
+        self.updater = makeUpdaterController(settings: settings)
         let monitor = ConnectionMonitor()
         self.monitor = monitor
 
@@ -75,6 +80,10 @@ final class AppServices {
         }
         self.registerDarwinTrigger(name: "com.steipete.nameplate.settings") { services in
             services.showSettings()
+        }
+        self.registerDarwinTrigger(name: AttentionRequest.notificationName) { services in
+            guard let request = AttentionRequest.consume() else { return }
+            services.attention?.show(request)
         }
     }
 

@@ -10,7 +10,13 @@ fi
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
-swift Scripts/render_icon.swift "$TMP/icon_1024.png"
+# Prefer the designed master (Icon-master.png); fall back to the programmatic
+# render for bootstrap.
+if [[ -f "$ROOT/Icon-master.png" ]]; then
+  cp "$ROOT/Icon-master.png" "$TMP/icon_1024.png"
+else
+  swift Scripts/render_icon.swift "$TMP/icon_1024.png"
+fi
 
 ICONSET="$TMP/Icon.iconset"
 mkdir -p "$ICONSET"
