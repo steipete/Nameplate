@@ -90,17 +90,19 @@ struct IdentitySettingsPane: View {
     private func createFleetTemplate() {
         let host = Hostnames.short(self.settings.hostName)
         let identity = self.settings.identity
-        let template = """
-        {
-          "\(host)": { "name": "\(identity.name)", "color": "\(identity.colorHex)", "glyph": "\(identity.glyph)" }
-        }
-        """
+        let entry = FleetEntry(
+            name: identity.name,
+            color: identity.colorHex,
+            glyph: identity.glyph.isEmpty ? nil : identity.glyph)
         let url = FleetFile.defaultPath
         do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let data = try encoder.encode([host: entry])
             try FileManager.default.createDirectory(
                 at: url.deletingLastPathComponent(),
                 withIntermediateDirectories: true)
-            try template.write(to: url, atomically: true, encoding: .utf8)
+            try data.write(to: url, options: .atomic)
             self.settings.reloadFleetEntry()
             NSWorkspace.shared.activateFileViewerSelecting([url])
         } catch {
