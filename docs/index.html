@@ -12,6 +12,7 @@
 <meta property="og:image" content="https://nameplate.sh/card.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://nameplate.sh/card.png">
+<meta name="theme-color" content="#0c0e10">
 <link rel="icon" href="icon.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -690,7 +691,7 @@ function applyCorners() {
   for (const c of ["tl", "tr", "bl", "br"]) root.style.setProperty("--r-" + c, corners[c] ? r : "0px");
   $("valRadius").textContent = $("setRadius").value;
 }
-$("setRadius").addEventListener("input", applyCorners);
+$("setRadius").addEventListener("input", e => { e.target.dataset.userSet = "1"; applyCorners(); });
 win.querySelectorAll(".corner-tile").forEach(b => b.addEventListener("click", () => {
   corners[b.dataset.c] = !corners[b.dataset.c];
   b.classList.toggle("on", corners[b.dataset.c]);
@@ -727,6 +728,11 @@ const heroDownload = document.querySelector(".hero .btn.primary");
 function setOS(os) {
   win.dataset.os = os;
   document.body.classList.toggle("squircle", os === "mac");
+  const radius = $("setRadius");
+  if (!radius.dataset.userSet) {
+    radius.value = os === "mac" && !supportsSquircle ? 34 : 22;
+    applyCorners();
+  }
   document.querySelectorAll("#osToggle button").forEach(b => b.classList.toggle("on", b.dataset.os === os));
   const [label, href] = DOWNLOADS[os];
   heroDownload.textContent = label;
@@ -735,6 +741,9 @@ function setOS(os) {
   document.getElementById("applyOnMac").textContent = os === "mac" ? "Apply on this Mac" : "Apply on this machine";
 }
 document.querySelectorAll("#osToggle button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os)));
+// Safari/Firefox lack corner-shape; a larger radius nests inside macOS Tahoe's
+// window corner curve instead of getting clipped into a wedge.
+const supportsSquircle = CSS.supports("corner-shape", "squircle");
 function detectOS(p) {
   p = (p || "").toLowerCase();
   if (p.includes("win")) return "windows";
