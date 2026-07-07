@@ -22,7 +22,7 @@ struct OverlayView: View {
         let identity = self.settings.identity
         ZStack {
             if self.settings.frameEnabled {
-                Rectangle()
+                RoundedRectangle(cornerRadius: self.settings.frameCornerRadius, style: .continuous)
                     .strokeBorder(
                         identity.color.opacity(self.settings.frameOpacity),
                         lineWidth: self.settings.frameThickness)

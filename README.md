@@ -4,11 +4,11 @@
 
 If you drive a herd of Macs over [Jump Desktop](https://jumpdesktop.com/), Screen Sharing, or any other remote desktop, the screens all look the same. Nameplate gives each Mac an unmistakable identity — like an aircraft livery — rendered as click-through overlays that float above everything:
 
-- **Frame** — a colored border around every display. Always visible, costs zero pixels of workspace, survives fullscreen apps.
+- **Frame** — a colored border around every display, with rounded corners that follow the screen's curve. Always visible, costs zero pixels of workspace, survives fullscreen apps.
 - **Name tag** — a small pill with the Mac's name (and an optional emoji glyph) pinned to a corner.
 - **Watermark** — a big translucent name across the screen, readable from across the room.
 - **Connect splash** — the Mac's name flashes center-screen when a remote session likely just started, then fades out.
-- **Menu bar plate** — a colored mini-nameplate (plus the name) in the menu bar.
+- **Menu bar plate** — a colored mini-nameplate (plus the name) in the menu bar. Its menu doubles as a glanceable dashboard: uptime, IP address (click to copy), CPU load, RAM, and free disk, plus layer toggles.
 
 Your wallpaper stays untouched — everything is a transparent overlay, so you can keep any background you like.
 
@@ -34,7 +34,7 @@ open Nameplate.app
 Click the nameplate in the menu bar → **Settings…** (opens automatically on first launch):
 
 - **Identity** — name, color (8 presets or custom), optional glyph. Empty name = computer name.
-- **Layers** — frame thickness/opacity, tag corner, watermark corner/opacity.
+- **Layers** — frame thickness/corners/opacity, tag corner, watermark corner/opacity.
 - **Splash** — duration and triggers (display wake, screen unlock, display reconfiguration).
 - **General** — start at login, menu bar appearance.
 

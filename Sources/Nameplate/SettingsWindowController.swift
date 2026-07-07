@@ -16,12 +16,18 @@ final class SettingsWindowController {
         self.services = services
     }
 
-    func show() {
+    func show(tab: SettingsTab? = nil) {
         if self.window == nil {
             self.window = self.makeWindow()
         }
         NSApp.activate(ignoringOtherApps: true)
         self.window?.makeKeyAndOrderFront(nil)
+        if let tab {
+            // Post on the next turn so a freshly created view is subscribed.
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .nameplateSelectSettingsTab, object: tab)
+            }
+        }
     }
 
     private func makeWindow() -> NSWindow {

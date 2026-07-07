@@ -108,7 +108,8 @@ public enum Hostnames {
     public static func current() -> String {
         var buffer = [CChar](repeating: 0, count: 256)
         guard gethostname(&buffer, buffer.count - 1) == 0 else { return "mac" }
-        let name = String(cString: buffer)
+        let length = buffer.firstIndex(of: 0) ?? buffer.count
+        let name = String(decoding: buffer[..<length].map { UInt8(bitPattern: $0) }, as: UTF8.self)
         return name.isEmpty ? "mac" : name
     }
 }

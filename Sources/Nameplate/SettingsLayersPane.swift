@@ -23,6 +23,12 @@ struct LayersSettingsPane: View {
                         format: { "\(Int($0)) pt" })
                         .disabled(!self.settings.frameEnabled)
                     LabeledSlider(
+                        title: "Corners",
+                        value: self.$settings.frameCornerRadius,
+                        range: 0...40,
+                        format: { "\(Int($0)) pt" })
+                        .disabled(!self.settings.frameEnabled)
+                    LabeledSlider(
                         title: "Opacity",
                         value: self.$settings.frameOpacity,
                         range: 0.2...1,

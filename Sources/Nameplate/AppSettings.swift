@@ -18,6 +18,8 @@ final class AppSettings: ObservableObject {
     @AppStorage("frameEnabled") var frameEnabled: Bool = true
     @AppStorage("frameThickness") var frameThickness: Double = 4
     @AppStorage("frameOpacity") var frameOpacity: Double = 1.0
+    // Modern Mac displays have rounded corners; a square frame looks clipped.
+    @AppStorage("frameCornerRadius") var frameCornerRadius: Double = 16
 
     // Name tag layer.
     @AppStorage("tagEnabled") var tagEnabled: Bool = true
