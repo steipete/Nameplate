@@ -6,97 +6,71 @@ struct LayersSettingsPane: View {
     @ObservedObject var settings: AppSettings
 
     var body: some View {
-        SettingsPaneLayout {
-            SettingsSection(
-                "Frame",
-                subtitle: "A colored border around every display. Always visible, costs zero pixels of workspace.")
-            {
-                VStack(alignment: .leading, spacing: 12) {
-                    PreferenceToggleRow(
-                        title: "Show frame",
-                        subtitle: nil,
-                        binding: self.$settings.frameEnabled)
-                    LabeledSlider(
+        Form {
+            Section {
+                Toggle("Show frame", isOn: self.$settings.frameEnabled)
+                Group {
+                    SliderRow(
                         title: "Thickness",
                         value: self.$settings.frameThickness,
                         range: 2...12,
                         format: { "\(Int($0)) pt" })
-                        .disabled(!self.settings.frameEnabled)
-                    LabeledSlider(
+                    SliderRow(
                         title: "Corners",
                         value: self.$settings.frameCornerRadius,
                         range: 0...40,
                         format: { "\(Int($0)) pt" })
-                        .disabled(!self.settings.frameEnabled)
-                    LabeledSlider(
+                    SliderRow(
                         title: "Opacity",
                         value: self.$settings.frameOpacity,
                         range: 0.2...1,
-                        step: 0.05,
                         format: { "\(Int($0 * 100))%" })
-                        .disabled(!self.settings.frameEnabled)
                 }
+                .disabled(!self.settings.frameEnabled)
+            } header: {
+                Text("Frame")
+            } footer: {
+                Text("A colored border around every display. Always visible, costs zero pixels of workspace.")
             }
 
-            SettingsSection(
-                "Name tag",
-                subtitle: "A small pill with this Mac's name, floating above everything in a corner.")
-            {
-                VStack(alignment: .leading, spacing: 12) {
-                    PreferenceToggleRow(
-                        title: "Show name tag",
-                        subtitle: nil,
-                        binding: self.$settings.tagEnabled)
-                    CornerPicker(title: "Corner", corner: self.$settings.tagCorner)
-                        .disabled(!self.settings.tagEnabled)
-                    PreferenceToggleRow(
-                        title: "Include glyph",
-                        subtitle: nil,
-                        binding: self.$settings.tagShowsGlyph)
-                        .disabled(!self.settings.tagEnabled)
+            Section {
+                Toggle("Show name tag", isOn: self.$settings.tagEnabled)
+                Group {
+                    Picker("Corner", selection: self.$settings.tagCorner) {
+                        ForEach(ScreenCorner.allCases) { corner in
+                            Text(corner.label).tag(corner)
+                        }
+                    }
+                    Toggle("Include glyph", isOn: self.$settings.tagShowsGlyph)
                 }
+                .disabled(!self.settings.tagEnabled)
+            } header: {
+                Text("Name tag")
+            } footer: {
+                Text("A small pill with this Mac's name, floating above everything in a corner.")
             }
 
-            SettingsSection(
-                "Watermark",
-                subtitle: "A large translucent name across the screen — visible even from across the room.")
-            {
-                VStack(alignment: .leading, spacing: 12) {
-                    PreferenceToggleRow(
-                        title: "Show watermark",
-                        subtitle: nil,
-                        binding: self.$settings.watermarkEnabled)
-                    CornerPicker(title: "Corner", corner: self.$settings.watermarkCorner)
-                        .disabled(!self.settings.watermarkEnabled)
-                    LabeledSlider(
+            Section {
+                Toggle("Show watermark", isOn: self.$settings.watermarkEnabled)
+                Group {
+                    Picker("Corner", selection: self.$settings.watermarkCorner) {
+                        ForEach(ScreenCorner.allCases) { corner in
+                            Text(corner.label).tag(corner)
+                        }
+                    }
+                    SliderRow(
                         title: "Opacity",
                         value: self.$settings.watermarkOpacity,
                         range: 0.04...0.5,
-                        step: 0.02,
                         format: { "\(Int($0 * 100))%" })
-                        .disabled(!self.settings.watermarkEnabled)
                 }
+                .disabled(!self.settings.watermarkEnabled)
+            } header: {
+                Text("Watermark")
+            } footer: {
+                Text("A large translucent name across the screen — visible even from across the room.")
             }
         }
-    }
-}
-
-@MainActor
-struct CornerPicker: View {
-    let title: String
-    @Binding var corner: ScreenCorner
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Text(self.title)
-                .frame(width: 88, alignment: .leading)
-            Picker(self.title, selection: self.$corner) {
-                ForEach(ScreenCorner.allCases) { corner in
-                    Text(corner.label).tag(corner)
-                }
-            }
-            .labelsHidden()
-            .pickerStyle(.segmented)
-        }
+        .formStyle(.grouped)
     }
 }

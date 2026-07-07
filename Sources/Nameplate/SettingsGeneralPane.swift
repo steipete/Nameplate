@@ -6,59 +6,51 @@ struct GeneralSettingsPane: View {
     @ObservedObject var settings: AppSettings
 
     var body: some View {
-        SettingsPaneLayout {
-            SettingsSection(
-                "Startup",
-                subtitle: "A branding app only works if it is actually running.")
-            {
-                PreferenceToggleRow(
+        Form {
+            Section {
+                CaptionedToggle(
                     title: "Start at login",
-                    subtitle: "Launch Nameplate automatically when you sign in.",
-                    binding: self.$settings.launchAtLogin)
+                    caption: "Launch Nameplate automatically when you sign in.",
+                    isOn: self.$settings.launchAtLogin)
+            } header: {
+                Text("Startup")
+            } footer: {
+                Text("A branding app only works if it is actually running.")
             }
 
-            SettingsSection(
-                "Menu bar",
-                subtitle: "The colored nameplate in the menu bar is itself a branding layer.")
-            {
-                VStack(alignment: .leading, spacing: 16) {
-                    PreferenceToggleRow(
-                        title: "Show name next to icon",
-                        subtitle: "Display this Mac's name in the menu bar, not just the colored plate.",
-                        binding: self.$settings.showNameInMenuBar)
-
-                    Divider()
-
-                    PreferenceToggleRow(
-                        title: "Hide menu bar icon",
-                        subtitle: "Keep the overlays without the menu bar item. Open Nameplate again "
-                            + "(e.g. from Finder or Spotlight) to get back to Settings.",
-                        binding: self.$settings.hideMenuBarIcon)
-                }
+            Section {
+                CaptionedToggle(
+                    title: "Show name next to icon",
+                    caption: "Display this Mac's name in the menu bar, not just the colored plate.",
+                    isOn: self.$settings.showNameInMenuBar)
+                CaptionedToggle(
+                    title: "Hide menu bar icon",
+                    caption: "Keep the overlays without the menu bar item. Open Nameplate again "
+                        + "(e.g. from Finder or Spotlight) to get back to Settings.",
+                    isOn: self.$settings.hideMenuBarIcon)
+            } header: {
+                Text("Menu bar")
             }
 
-            SettingsSection(
-                "Overlays",
-                subtitle: "Master switch, also available from the menu bar.")
-            {
-                PreferenceToggleRow(
+            Section {
+                CaptionedToggle(
                     title: "Show overlays",
-                    subtitle: "Turns the frame, name tag, and watermark off at once.",
-                    binding: self.$settings.overlaysEnabled)
+                    caption: "Turns the frame, name tag, and watermark off at once.",
+                    isOn: self.$settings.overlaysEnabled)
+            } header: {
+                Text("Overlays")
             }
 
-            SettingsSection("App") {
-                HStack {
-                    Text("Remove all overlays and quit.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    Spacer()
+            Section {
+                LabeledContent("Remove all overlays and quit") {
                     Button("Quit Nameplate") {
                         NSApp.terminate(nil)
                     }
-                    .buttonStyle(.bordered)
                 }
+            } header: {
+                Text("App")
             }
         }
+        .formStyle(.grouped)
     }
 }

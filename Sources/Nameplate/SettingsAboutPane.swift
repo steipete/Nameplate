@@ -7,8 +7,8 @@ struct AboutPane: View {
     weak var updater: UpdaterProviding?
 
     var body: some View {
-        SettingsPaneLayout {
-            VStack(alignment: .leading, spacing: 16) {
+        Form {
+            Section {
                 HStack(spacing: 14) {
                     Image(nsImage: NSApp.applicationIconImage)
                         .resizable()
@@ -20,47 +20,46 @@ struct AboutPane: View {
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
+                    Spacer()
                 }
+                .padding(.vertical, 4)
 
                 Text("Brand every Mac in your fleet so you always know which one you just "
                     + "remoted into. A colored frame, a name tag, a watermark, and a connect "
                     + "splash — all click-through overlays. Your wallpaper stays untouched.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+            }
 
-                HStack(spacing: 10) {
-                    Button("GitHub") {
-                        NSWorkspace.shared.open(URL(string: "https://github.com/steipete/Nameplate")!)
-                    }
-                    Button("Report an issue") {
-                        NSWorkspace.shared.open(URL(string: "https://github.com/steipete/Nameplate/issues")!)
-                    }
-                }
-
-                Divider()
-
+            Section {
                 if let updater = self.updater, updater.isAvailable {
-                    VStack(alignment: .leading, spacing: 10) {
-                        PreferenceToggleRow(
-                            title: "Automatically download and install updates",
-                            subtitle: nil,
-                            binding: self.autoUpdateBinding)
+                    Toggle(
+                        "Automatically download and install updates",
+                        isOn: self.autoUpdateBinding)
+                    LabeledContent("Updates") {
                         Button("Check for Updates…") {
                             self.updater?.checkForUpdates(nil)
                         }
                     }
                 } else {
                     Text(self.updater?.unavailableReason ?? "Updates unavailable in this build.")
-                        .font(.footnote)
-                        .foregroundStyle(.tertiary)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                 }
+            } header: {
+                Text("Updates")
+            }
 
+            Section {
+                Link("GitHub", destination: URL(string: "https://github.com/steipete/Nameplate")!)
+                Link(
+                    "Report an issue",
+                    destination: URL(string: "https://github.com/steipete/Nameplate/issues")!)
+            } footer: {
                 Text("© 2026 Peter Steinberger. MIT licensed.")
-                    .font(.footnote)
-                    .foregroundStyle(.tertiary)
             }
         }
+        .formStyle(.grouped)
     }
 
     private var autoUpdateBinding: Binding<Bool> {

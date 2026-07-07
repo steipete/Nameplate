@@ -6,52 +6,53 @@ struct IdentitySettingsPane: View {
     @ObservedObject var settings: AppSettings
 
     var body: some View {
-        SettingsPaneLayout {
-            IdentityPreviewCard(settings: self.settings)
-
-            if self.settings.identityIsFleetManaged {
-                FleetManagedCallout()
+        Form {
+            Section {
+                IdentityPreviewCard(settings: self.settings)
+                    .padding(.vertical, 4)
             }
 
-            SettingsSection(
-                "Identity",
-                subtitle: "How this Mac announces itself. Leave the name empty to use the computer name.")
-            {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 12) {
-                        TextField(self.settings.defaultName, text: self.$settings.customName)
-                            .textFieldStyle(.roundedBorder)
-                        TextField("🦞", text: self.$settings.glyph)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 52)
-                            .multilineTextAlignment(.center)
-                            .help("Optional glyph or emoji shown in the tag and splash.")
+            if self.settings.identityIsFleetManaged {
+                Section {
+                    Label {
+                        Text("This Mac's identity is managed by the fleet file. Edit "
+                            + "~/.config/nameplate/fleet.json or turn off \"Follow fleet file\" below.")
+                            .font(.callout)
+                    } icon: {
+                        Image(systemName: "externaldrive.badge.checkmark")
+                            .foregroundStyle(.blue)
                     }
-                    .disabled(self.settings.identityIsFleetManaged)
-
-                    ColorSwatchRow(settings: self.settings)
-                        .disabled(self.settings.identityIsFleetManaged)
                 }
             }
 
-            SettingsSection(
-                "Fleet file",
-                subtitle: "Optional JSON at ~/.config/nameplate/fleet.json, keyed by short hostname. "
-                    + "Sync it via dotfiles to brand every Mac from one place.")
-            {
-                VStack(alignment: .leading, spacing: 10) {
-                    PreferenceToggleRow(
-                        title: "Follow fleet file",
-                        subtitle: "When the file has an entry for this Mac, it overrides the identity above.",
-                        binding: self.$settings.useFleetFile)
+            Section {
+                TextField(
+                    "Name",
+                    text: self.$settings.customName,
+                    prompt: Text(self.settings.defaultName))
+                    .disabled(self.settings.identityIsFleetManaged)
+                TextField(
+                    "Glyph",
+                    text: self.$settings.glyph,
+                    prompt: Text("Optional, e.g. 🦞"))
+                    .disabled(self.settings.identityIsFleetManaged)
+                LabeledContent("Color") {
+                    ColorSwatchRow(settings: self.settings)
+                        .disabled(self.settings.identityIsFleetManaged)
+                }
+            } header: {
+                Text("Identity")
+            } footer: {
+                Text("How this Mac announces itself. Leave the name empty to use the computer name.")
+            }
 
+            Section {
+                CaptionedToggle(
+                    title: "Follow fleet file",
+                    caption: "When the file has an entry for this Mac, it overrides the identity above.",
+                    isOn: self.$settings.useFleetFile)
+                LabeledContent {
                     HStack(spacing: 8) {
-                        Image(systemName: self.fleetStatusSymbol)
-                            .foregroundStyle(self.fleetStatusColor)
-                        Text(self.fleetStatusText)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                        Spacer()
                         if !self.settings.fleetFileExists {
                             Button("Create template") { self.createFleetTemplate() }
                         } else {
@@ -62,9 +63,22 @@ struct IdentitySettingsPane: View {
                         Button("Reload") { self.settings.reloadFleetEntry() }
                     }
                     .controlSize(.small)
+                } label: {
+                    Label {
+                        Text(self.fleetStatusText)
+                    } icon: {
+                        Image(systemName: self.fleetStatusSymbol)
+                            .foregroundStyle(self.fleetStatusColor)
+                    }
                 }
+            } header: {
+                Text("Fleet file")
+            } footer: {
+                Text("Optional JSON at ~/.config/nameplate/fleet.json, keyed by short hostname. "
+                    + "Sync it via dotfiles to brand every Mac from one place.")
             }
         }
+        .formStyle(.grouped)
     }
 
     private var fleetStatusSymbol: String {
@@ -80,11 +94,11 @@ struct IdentitySettingsPane: View {
     private var fleetStatusText: String {
         let host = Hostnames.short(self.settings.hostName)
         if !self.settings.fleetFileExists {
-            return "No fleet file found."
+            return "No fleet file found"
         }
         return self.settings.fleetEntry != nil
-            ? "Entry found for \"\(host)\"."
-            : "File exists, but has no entry for \"\(host)\"."
+            ? "Entry found for \"\(host)\""
+            : "No entry for \"\(host)\""
     }
 
     private func createFleetTemplate() {
@@ -179,7 +193,7 @@ struct ColorSwatchRow: View {
     @ObservedObject var settings: AppSettings
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             ForEach(NameplatePalette.colors) { palette in
                 let selected = self.settings.identity.colorHex == palette.hex
                 Button {
@@ -191,7 +205,7 @@ struct ColorSwatchRow: View {
                             red: ColorHex.components(palette.hex)?.red ?? 0,
                             green: ColorHex.components(palette.hex)?.green ?? 0,
                             blue: ColorHex.components(palette.hex)?.blue ?? 0))
-                        .frame(width: 22, height: 22)
+                        .frame(width: 18, height: 18)
                         .overlay {
                             if selected {
                                 Circle().strokeBorder(.primary, lineWidth: 2).padding(-3)
@@ -202,13 +216,9 @@ struct ColorSwatchRow: View {
                 .help(palette.name)
             }
 
-            Divider().frame(height: 20)
-
             ColorPicker("Custom", selection: self.customColorBinding, supportsOpacity: false)
                 .labelsHidden()
                 .help("Custom color")
-
-            Spacer()
 
             Button("Auto") {
                 self.settings.colorHex = ""
@@ -230,23 +240,5 @@ struct ColorSwatchRow: View {
                     Int(round(srgb.blueComponent * 255)))
                 self.settings.colorHex = hex
             })
-    }
-}
-
-@MainActor
-struct FleetManagedCallout: View {
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "externaldrive.badge.checkmark")
-                .foregroundStyle(.blue)
-            Text("This Mac's identity is managed by the fleet file. Edit "
-                + "~/.config/nameplate/fleet.json or turn off \"Follow fleet file\" below.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
     }
 }
