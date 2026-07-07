@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.2.1 - Unreleased
+
 ## 0.2.0 - 2026-07-07
 
 - `nameplate://config` URL: opens a floating confirmation panel summarizing the proposed identity/layer settings with Cancel/Apply — the website's live settings window sends its state here via "Apply on this Mac".
