@@ -3,6 +3,23 @@
     <channel>
         <title>Nameplate</title>
         <item>
+            <title>0.2.0</title>
+            <pubDate>Tue, 07 Jul 2026 19:09:19 +0100</pubDate>
+            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>0.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Nameplate 0.2.0</h2>
+<ul>
+<li><code>nameplate://config</code> URL: opens a floating confirmation panel summarizing the proposed identity/layer settings with Cancel/Apply — the website&#x27;s live settings window sends its state here via &quot;Apply on this Mac&quot;.</li>
+<li>Homebrew cask: <code>brew install --cask steipete/tap/nameplate</code> (installs the app and links the <code>nameplate</code> CLI).</li>
+<li>Website: the settings screenshot is now a live interactive remake of the Settings window — tabs work, and Identity/Layers/Splash/General controls restyle the nameplate the page itself wears; &quot;Apply on this Mac&quot; hands the config to the app, and the site ships a social card.</li>
+</ul>
+<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
+]]></description>
+            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.0/Nameplate-0.2.0.zip" length="2980484" type="application/octet-stream" sparkle:edSignature="6oC+//f57PeqNOE2TixRT+B3+mlnSGL1yI9gdtb3fz/y2qPfX1eB0FnMY7Z8ckcCgYyQihFPqQl63Jh6xiRuAQ=="/>
+        </item>
+        <item>
             <title>0.1.1</title>
             <pubDate>Tue, 07 Jul 2026 18:29:42 +0100</pubDate>
             <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
