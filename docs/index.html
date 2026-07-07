@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nameplate — Brand every Mac in your fleet</title>
+<meta name="description" content="Nameplate gives each Mac an unmistakable identity — colored frame, name tag, watermark, and connect splash rendered as click-through overlays. Never wonder which Mac you just remoted into.">
+<meta property="og:title" content="Nameplate">
+<meta property="og:description" content="Brand every Mac in your fleet so you always know which one you just remoted into.">
+<meta property="og:url" content="https://nameplate.dev">
+<meta property="og:type" content="website">
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --accent: #1D9E75;
+  --bg: #0c0e10;
+  --bg-raised: #14171a;
+  --ink: #e8e4dc;
+  --ink-dim: #8f918f;
+  --frame-w: 5px;
+  --radius: 22px;
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-mono: "Fragment Mono", monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 340;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+::selection { background: var(--accent); color: #fff; }
+
+/* ---------- the nameplate layers (the site wears the product) ---------- */
+#frame {
+  position: fixed; inset: 0; z-index: 90; pointer-events: none;
+  border: var(--frame-w) solid var(--accent);
+  /* app default: bottom corners round, top straight — the menu bar owns the top */
+  border-radius: 0 0 var(--radius) var(--radius);
+  transition: border-color .45s ease;
+}
+#tag {
+  position: fixed; left: 22px; bottom: 20px; z-index: 91;
+  background: var(--accent); color: #fff;
+  font-family: var(--font-mono); font-size: 13px;
+  padding: 5px 14px; border-radius: 999px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.45);
+  transition: background .45s ease;
+  outline: none; cursor: text; white-space: nowrap;
+}
+#tag:empty::before { content: "megaclaw"; opacity: .6; }
+#watermark {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+#watermark span {
+  font-family: var(--font-display); font-weight: 750;
+  font-size: clamp(120px, 24vw, 340px);
+  letter-spacing: -.04em;
+  color: var(--accent); opacity: .05;
+  transform: rotate(-8deg);
+  transition: color .45s ease;
+  user-select: none;
+}
+#splash {
+  position: fixed; inset: 0; z-index: 200; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+}
+#splash.on { animation: splash 2.4s ease forwards; }
+#splash .card {
+  background: var(--accent); color: #fff;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(40px, 8vw, 110px); letter-spacing: -.02em;
+  padding: .25em .8em; border-radius: .35em;
+  box-shadow: 0 30px 90px rgba(0,0,0,.6);
+}
+@keyframes splash {
+  0% { opacity: 0; transform: scale(.92); }
+  12% { opacity: 1; transform: scale(1); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+/* grain for atmosphere */
+#grain {
+  position: fixed; inset: 0; z-index: 95; pointer-events: none; opacity: .35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- layout ---------- */
+main { position: relative; z-index: 1; max-width: 1060px; margin: 0 auto; padding: 0 32px; }
+a { color: inherit; }
+
+header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 34px 0 0;
+}
+header .brand {
+  display: flex; align-items: center; gap: 12px;
+  font-family: var(--font-mono); font-size: 15px; text-decoration: none;
+}
+header .brand .dot {
+  width: 26px; height: 17px; border: 2.5px solid var(--accent);
+  border-radius: 0 0 6px 6px; transition: border-color .45s ease;
+}
+header nav { display: flex; gap: 26px; font-family: var(--font-mono); font-size: 13px; }
+header nav a { color: var(--ink-dim); text-decoration: none; }
+header nav a:hover { color: var(--ink); }
+@media (max-width: 640px) {
+  header nav a:not(:last-child) { display: none; }
+  .hero { padding-top: 11vh; }
+}
+
+.hero { padding: 15vh 0 9vh; }
+.hero h1 {
+  font-size: clamp(44px, 7.4vw, 92px);
+  font-weight: 720; line-height: 1.02; letter-spacing: -.035em;
+  max-width: 14ch;
+  opacity: 0; animation: rise .8s ease .1s forwards;
+}
+.hero h1 em {
+  font-style: normal; color: var(--accent); transition: color .45s ease;
+}
+.hero p.sub {
+  margin-top: 28px; max-width: 52ch;
+  font-size: 19px; color: var(--ink-dim);
+  opacity: 0; animation: rise .8s ease .25s forwards;
+}
+.hero .cta {
+  margin-top: 40px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+  opacity: 0; animation: rise .8s ease .4s forwards;
+}
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.btn {
+  font-family: var(--font-mono); font-size: 14px; text-decoration: none;
+  padding: 13px 24px; border-radius: 999px; cursor: pointer; border: 0;
+  transition: transform .15s ease, background .45s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn.primary { background: var(--accent); color: #fff; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid #2c3136; }
+
+/* palette */
+.palette { margin-top: 54px; opacity: 0; animation: rise .8s ease .55s forwards; }
+.palette .label { font-family: var(--font-mono); font-size: 12px; color: var(--ink-dim); margin-bottom: 14px; }
+.palette .swatches { display: flex; gap: 12px; flex-wrap: wrap; }
+.swatch {
+  width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer;
+  outline: 2px solid transparent; outline-offset: 3px;
+  transition: transform .15s ease, outline-color .2s ease;
+}
+.swatch:hover { transform: scale(1.18); }
+.swatch[aria-pressed="true"] { outline-color: var(--ink); }
+
+/* sections */
+section { padding: 72px 0; }
+.kicker {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--accent); transition: color .45s ease;
+}
+h2 {
+  font-size: clamp(30px, 4vw, 46px); font-weight: 680;
+  letter-spacing: -.025em; line-height: 1.1; margin: 14px 0 18px; max-width: 22ch;
+}
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; margin-top: 44px; }
+.card {
+  background: var(--bg-raised); border: 1px solid #1e2328;
+  border-radius: 16px; padding: 26px 26px 28px;
+  transition: border-color .3s ease, transform .3s ease;
+}
+.card:hover { border-color: var(--accent); transform: translateY(-3px); }
+.card h3 { font-size: 19px; font-weight: 600; margin-bottom: 8px; display: flex; gap: 10px; align-items: baseline; }
+.card h3 .n { font-family: var(--font-mono); font-size: 12px; color: var(--accent); transition: color .45s ease; }
+.card p { font-size: 15px; color: var(--ink-dim); }
+
+/* code blocks */
+pre {
+  background: #0a0c0e; border: 1px solid #1e2328; border-radius: 14px;
+  padding: 22px 26px; overflow-x: auto;
+  font-family: var(--font-mono); font-size: 13.5px; line-height: 1.75;
+  color: #c9cdc9;
+}
+pre .c { color: #5c6660; }
+pre .a { color: var(--accent); transition: color .45s ease; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
+@media (max-width: 840px) { .two-col { grid-template-columns: 1fr; } }
+.two-col .copy p { color: var(--ink-dim); font-size: 16px; margin-bottom: 14px; }
+.two-col .copy p strong { color: var(--ink); font-weight: 600; }
+
+.shot { margin-top: 44px; text-align: center; }
+.shot img {
+  max-width: min(520px, 100%); border-radius: 14px;
+  border: 1px solid #23282e; box-shadow: 0 40px 100px rgba(0,0,0,.5);
+}
+
+footer {
+  padding: 60px 0 90px; border-top: 1px solid #1a1f24; margin-top: 40px;
+  display: flex; flex-wrap: wrap; gap: 18px; justify-content: space-between;
+  font-family: var(--font-mono); font-size: 13px; color: var(--ink-dim);
+}
+footer a { color: var(--ink-dim); }
+footer a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<div id="watermark" aria-hidden="true"><span>megaclaw</span></div>
+<div id="frame" aria-hidden="true"></div>
+<div id="grain" aria-hidden="true"></div>
+<div id="splash" aria-hidden="true"><div class="card">MEGACLAW</div></div>
+<div id="tag" contenteditable="true" spellcheck="false" enterkeyhint="done" aria-label="Try your Mac's name">megaclaw</div>
+
+<main>
+  <header>
+    <a class="brand" href="/"><span class="dot"></span>nameplate</a>
+    <nav>
+      <a href="#layers">Layers</a>
+      <a href="#fleet">Fleet</a>
+      <a href="#agents">Agents</a>
+      <a href="https://github.com/steipete/nameplate">GitHub</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Never wonder <em>which Mac</em> you just remoted into.</h1>
+    <p class="sub">Nameplate brands every Mac in your fleet with an unmistakable identity — a colored frame, a name tag, a watermark, a connect splash. All click-through overlays. Your wallpaper stays untouched, and fullscreen apps can't hide it.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/steipete/nameplate">Get Nameplate</a>
+      <button class="btn ghost" id="replay">Replay connect splash</button>
+    </div>
+    <div class="palette">
+      <div class="label">This page is wearing one. Pick a livery — and the pill in the corner takes your Mac's name.</div>
+      <div class="swatches" id="swatches"></div>
+    </div>
+  </section>
+
+  <section id="layers">
+    <div class="kicker">The layers</div>
+    <h2>An aircraft livery for your Mac.</h2>
+    <div class="grid">
+      <div class="card"><h3><span class="n">01</span>Frame</h3><p>A colored border around every display, rounded corners following the screen's curve. Always visible, costs zero pixels of workspace, survives fullscreen apps.</p></div>
+      <div class="card"><h3><span class="n">02</span>Name tag</h3><p>A small pill with the Mac's name and an optional emoji glyph, pinned to a corner. Like the one at the bottom of this page.</p></div>
+      <div class="card"><h3><span class="n">03</span>Watermark</h3><p>A big translucent name across the screen, readable from across the room. It's behind this text right now.</p></div>
+      <div class="card"><h3><span class="n">04</span>Connect splash</h3><p>The Mac's name flashes center-screen when a remote session likely just started, then fades out. No more typing <code>hostname</code> to be sure.</p></div>
+      <div class="card"><h3><span class="n">05</span>Menu bar plate</h3><p>A colored mini-nameplate in the menu bar. Its menu is a glanceable dashboard: uptime, IP (click to copy), CPU, RAM, free disk.</p></div>
+      <div class="card"><h3><span class="n">06</span>Attention alerts</h3><p>A bundled CLI summons a topmost message card with pulsating borders when an agent or script needs the human at the keyboard.</p></div>
+    </div>
+    <div class="shot"><img src="settings.png" alt="Nameplate settings window with live preview" width="460" loading="lazy"></div>
+  </section>
+
+  <section id="fleet">
+    <div class="kicker">Fleet file</div>
+    <h2>Brand the whole herd from one dotfile.</h2>
+    <div class="two-col">
+      <div class="copy">
+        <p>Nameplate reads <strong>~/.config/nameplate/fleet.json</strong>, keyed by short hostname. Sync it via your dotfiles and every Mac picks up its own entry — live, no restart.</p>
+        <p>Even an unconfigured fleet is instantly tellable-apart: each Mac gets a <strong>stable default color derived from its hostname</strong>.</p>
+        <p>Decorations can show <strong>only when viewed remotely</strong> — Nameplate detects virtual displays (Jump Desktop and friends) and active Screen Sharing/VNC connections, and stays invisible while you're sitting at the Mac.</p>
+      </div>
+      <pre>{
+  <span class="a">"megaclaw"</span>: { "name": "MEGACLAW",
+                "color": "#1D9E75",
+                "glyph": "🦞" },
+  <span class="a">"clawmac"</span>:  { "name": "clawmac",
+                "color": "#E24B30",
+                "glyph": "🔥" },
+  <span class="a">"studio-1"</span>: { "color": "#7F77DD" }
+}</pre>
+    </div>
+  </section>
+
+  <section id="agents">
+    <div class="kicker">For agents</div>
+    <h2>Your AI can now knock on the screen.</h2>
+    <div class="two-col">
+      <div class="copy">
+        <p>The bundled CLI lets agents and scripts summon a <strong>topmost attention card with pulsating screen borders</strong> — with the reason right in the alert. Built for the moment right before a 1Password prompt, when the agent needs a human and the human is making coffee.</p>
+        <p>An <a href="https://github.com/steipete/nameplate/blob/main/skills/nameplate-attention/SKILL.md">agent skill</a> ships in the repo. Darwin notifications work from anywhere, including SSH, with no app activation.</p>
+      </div>
+      <pre><span class="c"># agent needs the human</span>
+nameplate attention \
+  "Need 1Password approval" \
+  --title <span class="a">"Codex → 1Password"</span> --duration 12
+
+<span class="c"># replay the identity splash, from ssh too</span>
+notifyutil -p com.steipete.nameplate.splash</pre>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="kicker">Install</div>
+    <h2>Build from source. Two commands.</h2>
+    <div class="two-col">
+      <div class="copy">
+        <p>Requires <strong>Xcode 26 / Swift 6.2+</strong>. Release builds auto-update via Sparkle.</p>
+        <p>MIT licensed. No accounts, no telemetry, no network calls except the update check.</p>
+      </div>
+      <pre>git clone https://github.com/steipete/nameplate.git
+cd nameplate && ./Scripts/package_app.sh release
+open Nameplate.app</pre>
+    </div>
+  </section>
+
+  <footer>
+    <span>MIT © 2026 <a href="https://steipete.me">Peter Steinberger</a></span>
+    <span><a href="https://github.com/steipete/nameplate">github.com/steipete/nameplate</a></span>
+    <span>nameplate.dev · nameplate.sh · nameplate.at</span>
+  </footer>
+</main>
+
+<script>
+const PALETTE = [
+  ["Lobster", "#E24B30"], ["Amber", "#EF9F27"], ["Lime", "#8BC34A"],
+  ["Jade", "#1D9E75"], ["Cyan", "#22B8CF"], ["Azure", "#378ADD"],
+  ["Violet", "#7F77DD"], ["Magenta", "#D4537E"],
+];
+const root = document.documentElement;
+const swatches = document.getElementById("swatches");
+PALETTE.forEach(([name, hex]) => {
+  const b = document.createElement("button");
+  b.className = "swatch"; b.style.background = hex; b.title = name;
+  b.setAttribute("aria-label", name);
+  b.setAttribute("aria-pressed", hex === "#1D9E75");
+  b.addEventListener("click", () => {
+    root.style.setProperty("--accent", hex);
+    document.querySelectorAll(".swatch").forEach(s => s.setAttribute("aria-pressed", s === b));
+  });
+  swatches.appendChild(b);
+});
+
+const tag = document.getElementById("tag");
+const splash = document.getElementById("splash");
+const splashCard = splash.querySelector(".card");
+const watermark = document.querySelector("#watermark span");
+const currentName = () => (tag.textContent.trim() || "megaclaw");
+tag.addEventListener("input", () => { watermark.textContent = currentName(); });
+tag.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); tag.blur(); } });
+
+document.getElementById("replay").addEventListener("click", () => {
+  splashCard.textContent = currentName().toUpperCase();
+  splash.classList.remove("on");
+  void splash.offsetWidth; // restart animation
+  splash.classList.add("on");
+});
+</script>
+</body>
+</html>

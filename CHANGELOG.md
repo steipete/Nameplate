@@ -2,6 +2,8 @@
 
 ## 0.1.1 - Unreleased
 
+- Project website in `docs/`, served at [nameplate.dev](https://nameplate.dev) via GitHub Pages.
+
 ## 0.1.0 - 2026-07-07
 
 - Initial release: frame, name tag, watermark, and connect-splash overlays with per-host default colors.
