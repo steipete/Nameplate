@@ -9,6 +9,9 @@
 DerivedData/
 Nameplate.app
 
+# Release artifacts
+Nameplate-*.zip
+
 # Xcode workspace/user data
 xcuserdata/
 .swiftpm/
