@@ -35,7 +35,7 @@ open Nameplate.app
 Click the nameplate in the menu bar → **Settings…** (opens automatically on first launch):
 
 - **Identity** — name, color (8 presets or custom), optional glyph. Empty name = computer name.
-- **Layers** — frame thickness/corners/opacity, tag corner, watermark corner/opacity.
+- **Layers** — frame thickness/opacity and per-corner rounding (default: bottom corners round, top straight — the menu bar owns the top), tag corner, watermark corner/opacity.
 - **Splash** — duration and triggers (display wake, screen unlock, display reconfiguration).
 - **General** — start at login, menu bar appearance.
 
@@ -66,7 +66,7 @@ nameplate splash      # replay the identity splash
 nameplate settings    # open settings
 ```
 
-`attention` shows a topmost card (click to dismiss) plus pulsating borders on every display — built for AI agents that need a human at the keyboard, with the *reason* right in the alert. It launches the app if needed.
+`attention` shows a topmost card (click to dismiss) plus pulsating borders on every display — built for AI agents that need a human at the keyboard, with the *reason* right in the alert. It launches the app if needed. An agent skill ships in [skills/nameplate-attention](skills/nameplate-attention/SKILL.md) — copy it into your agent's skills directory.
 
 ### Scripting without the CLI
 
