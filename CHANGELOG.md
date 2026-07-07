@@ -4,7 +4,6 @@
 
 - Windows port in `windows/` (C#/.NET 8 WPF): click-through frame/tag/watermark/splash overlays per monitor, real remote-connect splash via WTS session events, tray dashboard, named-pipe CLI (`nameplate attention|splash`), fleet.json compatibility, and hostname-color parity with macOS. Verified on Windows 11 (21 core tests + on-VM overlay/attention proof).
 - Linux port in `linux/` (Rust + GTK4): the same overlay set for X11 (xrdp/VNC fleets; Wayland renders best-effort), unix-socket CLI, logind unlock splash, fleet.json compatibility, and color parity. Verified on Ubuntu 26.04 (8 core tests + on-VM overlay/attention proof).
-
 - Releases now ship a notarized DMG with a branded drag-to-install background, plus stable `Nameplate.dmg` / `Nameplate.zip` download URLs via `releases/latest`; website and README link the DMG.
 - Per-Mac location: optional `location` field (fleet file or Settings) shown in the status menu, connect splash, and identity.
 
