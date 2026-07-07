@@ -52,6 +52,10 @@ body {
   opacity: var(--frame-opacity);
   transition: border-color .45s ease;
 }
+/* on macOS, match Apple's continuous display-corner curve (squircle) */
+@supports (corner-shape: squircle) {
+  body.squircle #frame, body.squircle .mini-screen, body.squircle .mini-frame { corner-shape: squircle; }
+}
 #tag {
   position: fixed; left: 22px; bottom: 20px; right: auto; top: auto; z-index: 91;
   background: var(--accent); color: #fff;
@@ -692,6 +696,7 @@ const DOWNLOADS = {
 const heroDownload = document.querySelector(".hero .btn.primary");
 function setOS(os) {
   win.dataset.os = os;
+  document.body.classList.toggle("squircle", os === "mac");
   document.querySelectorAll("#osToggle button").forEach(b => b.classList.toggle("on", b.dataset.os === os));
   const [label, href] = DOWNLOADS[os];
   heroDownload.textContent = label;
