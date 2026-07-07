@@ -1,4 +1,5 @@
 import AppKit
+import NameplateCore
 
 // Plain AppKit lifecycle. The SwiftUI scene machinery (MenuBarExtra menus,
 // Settings scene, URL-event routing) proved unreliable for menu-bar-only apps
@@ -48,6 +49,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.services?.showSplash(force: true)
             case "settings":
                 self.services?.showSettings()
+            case "config":
+                if let proposal = ConfigProposal(url: url) {
+                    self.services?.showConfig(proposal)
+                } else {
+                    self.services?.showSettings()
+                }
             default:
                 break
             }

@@ -11,6 +11,7 @@ final class AppServices {
     private var overlay: OverlayController?
     private var splash: SplashController?
     private var attention: AttentionController?
+    private var configImport: ConfigImportController?
     private var monitor: ConnectionMonitor?
     private var statusItem: StatusItemController?
     private var settingsWindow: SettingsWindowController?
@@ -31,6 +32,13 @@ final class AppServices {
             self.settingsWindow = SettingsWindowController(settings: self.settings, services: self)
         }
         self.settingsWindow?.show(tab: tab)
+    }
+
+    func showConfig(_ proposal: ConfigProposal) {
+        if self.configImport == nil {
+            self.configImport = ConfigImportController(settings: self.settings, services: self)
+        }
+        self.configImport?.show(proposal)
     }
 
     /// Same per-screen rule the overlay uses: in remote-only mode a screen is
