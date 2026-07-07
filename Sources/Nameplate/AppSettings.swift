@@ -24,6 +24,7 @@ final class AppSettings: ObservableObject {
     @AppStorage("customName") var customName: String = ""
     @AppStorage("colorHex") var colorHex: String = ""
     @AppStorage("glyph") var glyph: String = ""
+    @AppStorage("customLocation") var customLocation: String = ""
 
     // Master switch, mirrored as the top toggle in the menu.
     @AppStorage("overlaysEnabled") var overlaysEnabled: Bool = true
@@ -119,7 +120,8 @@ final class AppSettings: ObservableObject {
         let hex = ColorHex.normalize(hexSource)
             ?? NameplatePalette.defaultColor(forHost: self.hostName).hex
         let glyph = fleet?.glyph ?? self.glyph.trimmingCharacters(in: .whitespacesAndNewlines)
-        return MacIdentity(name: name, colorHex: hex, glyph: glyph)
+        let location = fleet?.location ?? self.customLocation.trimmingCharacters(in: .whitespacesAndNewlines)
+        return MacIdentity(name: name, colorHex: hex, glyph: glyph, location: location)
     }
 
     var identityIsFleetManaged: Bool {

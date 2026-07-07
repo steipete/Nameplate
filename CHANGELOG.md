@@ -3,6 +3,7 @@
 ## 0.2.1 - Unreleased
 
 - Releases now ship a notarized DMG with a branded drag-to-install background, plus stable `Nameplate.dmg` / `Nameplate.zip` download URLs via `releases/latest`; website and README link the DMG.
+- Per-Mac location: optional `location` field (fleet file or Settings) shown in the status menu, connect splash, and identity.
 
 ## 0.2.0 - 2026-07-07
 

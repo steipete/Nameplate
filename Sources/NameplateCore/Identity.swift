@@ -6,11 +6,13 @@ public struct MacIdentity: Equatable, Sendable {
     public var name: String
     public var colorHex: String
     public var glyph: String
+    public var location: String
 
-    public init(name: String, colorHex: String, glyph: String = "") {
+    public init(name: String, colorHex: String, glyph: String = "", location: String = "") {
         self.name = name
         self.colorHex = ColorHex.normalize(colorHex) ?? NameplatePalette.fallback.hex
         self.glyph = glyph
+        self.location = location
     }
 }
 

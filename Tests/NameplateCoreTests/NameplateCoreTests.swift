@@ -152,15 +152,17 @@ struct FleetFileTests {
     @Test func parsesAndNormalizesKeys() throws {
         let json = """
         {
-          "Megaclaw.local": { "name": "MEGACLAW", "color": "#1D9E75", "glyph": "🦞" },
+          "Megaclaw.local": { "name": "MEGACLAW", "color": "#1D9E75", "glyph": "🦞", "location": "Phoenix" },
           "clawmac": { "color": "#E24B30" }
         }
         """
         let entries = try FleetFile.parse(Data(json.utf8))
         #expect(entries.count == 2)
         #expect(FleetFile.entry(in: entries, forHost: "megaclaw.fritz.box")?.name == "MEGACLAW")
+        #expect(FleetFile.entry(in: entries, forHost: "megaclaw.local")?.location == "Phoenix")
         #expect(FleetFile.entry(in: entries, forHost: "CLAWMAC")?.color == "#E24B30")
         #expect(FleetFile.entry(in: entries, forHost: "CLAWMAC")?.name == nil)
+        #expect(FleetFile.entry(in: entries, forHost: "CLAWMAC")?.location == nil)
         #expect(FleetFile.entry(in: entries, forHost: "unknown") == nil)
     }
 

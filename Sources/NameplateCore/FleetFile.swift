@@ -13,11 +13,18 @@ public struct FleetEntry: Codable, Equatable, Sendable {
     public var name: String?
     public var color: String?
     public var glyph: String?
+    public var location: String?
 
-    public init(name: String? = nil, color: String? = nil, glyph: String? = nil) {
+    public init(
+        name: String? = nil,
+        color: String? = nil,
+        glyph: String? = nil,
+        location: String? = nil)
+    {
         self.name = name
         self.color = color
         self.glyph = glyph
+        self.location = location
     }
 }
 

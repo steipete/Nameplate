@@ -16,6 +16,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let ipItem = NSMenuItem()
     private let statsItem = NSMenuItem()
     private let diskItem = NSMenuItem()
+    private let locationItem = NSMenuItem()
     private let overlaysItem = NSMenuItem()
     private let frameItem = NSMenuItem()
     private let tagItem = NSMenuItem()
@@ -60,6 +61,8 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
         self.headerItem.isEnabled = false
         menu.addItem(self.headerItem)
+        self.locationItem.isEnabled = false
+        menu.addItem(self.locationItem)
         menu.addItem(.separator())
 
         for item in [self.uptimeItem, self.statsItem, self.diskItem] {
@@ -113,6 +116,13 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         let identity = self.settings.identity
         let glyph = identity.glyph.isEmpty ? "" : "\(identity.glyph) "
         self.headerItem.title = "\(glyph)\(identity.name)"
+        self.locationItem.title = identity.location
+        self.locationItem.isHidden = identity.location.isEmpty
+        if !identity.location.isEmpty {
+            self.locationItem.image = NSImage(
+                systemSymbolName: "mappin.and.ellipse",
+                accessibilityDescription: "Location")
+        }
 
         self.uptimeItem.title = "Uptime \(SystemInfo.uptime() ?? "–")"
         if let ip = SystemInfo.primaryIPv4() {

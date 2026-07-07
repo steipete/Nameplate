@@ -51,13 +51,13 @@ Manage the whole fleet from one dotfile. Nameplate reads `~/.config/nameplate/fl
 
 ```json
 {
-  "megaclaw": { "name": "MEGACLAW", "color": "#1D9E75", "glyph": "🦞" },
-  "clawmac":  { "name": "clawmac",  "color": "#E24B30", "glyph": "🔥" },
+  "megaclaw": { "name": "MEGACLAW", "color": "#1D9E75", "glyph": "🦞", "location": "Phoenix" },
+  "clawmac":  { "name": "clawmac",  "color": "#E24B30", "glyph": "🔥", "location": "Atlanta (MacStadium)" },
   "studio-1": { "color": "#7F77DD" }
 }
 ```
 
-All fields are optional; anything missing falls back to local settings. Sync the file via your dotfiles and every Mac picks up its own entry. Changes are applied live.
+All fields are optional; anything missing falls back to local settings. `location` (when set) shows in the status menu and connect splash. Sync the file via your dotfiles and every Mac picks up its own entry. Changes are applied live.
 
 ### CLI
 

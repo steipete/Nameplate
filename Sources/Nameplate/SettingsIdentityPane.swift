@@ -36,6 +36,11 @@ struct IdentitySettingsPane: View {
                     text: self.$settings.glyph,
                     prompt: Text("Optional, e.g. 🦞"))
                     .disabled(self.settings.identityIsFleetManaged)
+                TextField(
+                    "Location",
+                    text: self.$settings.customLocation,
+                    prompt: Text("Optional, e.g. Paris (Scaleway)"))
+                    .disabled(self.settings.identityIsFleetManaged)
                 LabeledContent("Color") {
                     ColorSwatchRow(settings: self.settings)
                         .disabled(self.settings.identityIsFleetManaged)
@@ -107,7 +112,8 @@ struct IdentitySettingsPane: View {
         let entry = FleetEntry(
             name: identity.name,
             color: identity.colorHex,
-            glyph: identity.glyph.isEmpty ? nil : identity.glyph)
+            glyph: identity.glyph.isEmpty ? nil : identity.glyph,
+            location: identity.location.isEmpty ? nil : identity.location)
         let url = FleetFile.defaultPath
         do {
             let encoder = JSONEncoder()

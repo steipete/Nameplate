@@ -109,6 +109,11 @@ struct SplashView: View {
             Text(Hostnames.current())
                 .font(.system(size: 15, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.55))
+            if !self.identity.location.isEmpty {
+                Label(self.identity.location, systemImage: "mappin.and.ellipse")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.7))
+            }
         }
         .padding(.horizontal, 64)
         .padding(.vertical, 44)
