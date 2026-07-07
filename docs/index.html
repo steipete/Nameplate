@@ -491,7 +491,7 @@ footer a:hover { color: var(--ink); }
         <img src="icon.png" alt="Nameplate app icon">
         <h4>Nameplate</h4>
         <p>Version 0.2.1 · MIT · © 2026 Peter Steinberger</p>
-        <a href="https://github.com/steipete/Nameplate/releases/latest/download/Nameplate.dmg">Download</a> · <a href="https://github.com/steipete/Nameplate">GitHub</a>
+        <a id="aboutDownload" href="https://github.com/steipete/Nameplate/releases/latest/download/Nameplate.dmg">Download</a> · <a href="https://github.com/steipete/Nameplate">GitHub</a>
       </div>
       <div class="winfooter">
         <span>Happy with it? Send it to the app.</span>
@@ -701,16 +701,17 @@ function setOS(os) {
   const [label, href] = DOWNLOADS[os];
   heroDownload.textContent = label;
   heroDownload.href = href;
+  document.getElementById("aboutDownload").href = href;
   document.getElementById("applyOnMac").textContent = os === "mac" ? "Apply on this Mac" : "Apply on this machine";
 }
 document.querySelectorAll("#osToggle button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os)));
-const detectedOS = (() => {
-  const p = (navigator.userAgentData?.platform || navigator.platform || "").toLowerCase();
+function detectOS(p) {
+  p = (p || "").toLowerCase();
   if (p.includes("win")) return "windows";
-  if (p.includes("linux") || p.includes("x11")) return "linux";
+  if (p.includes("linux") || p.includes("x11") || p.includes("bsd")) return "linux";
   return "mac";
-})();
-setOS(detectedOS);
+}
+setOS(detectOS(navigator.userAgentData?.platform || navigator.platform));
 
 // apply on this mac: hand the current config to the app via nameplate://config
 function buildConfigURL() {
