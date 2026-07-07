@@ -53,9 +53,15 @@ body {
   opacity: var(--frame-opacity);
   transition: border-color .45s ease;
 }
-/* on macOS, match Apple's continuous display-corner curve (squircle) */
+/* modern path: square outer edge (window clips it flush), rounded inner edge */
+body.pathframe #frame {
+  border: 0; border-radius: 0;
+  background: var(--accent);
+  transition: background .45s ease;
+}
+/* mini preview keeps simple borders; squircle where supported */
 @supports (corner-shape: squircle) {
-  body.squircle #frame, body.squircle .mini-screen, body.squircle .mini-frame { corner-shape: squircle; }
+  body.squircle .mini-screen, body.squircle .mini-frame { corner-shape: squircle; }
 }
 #tag {
   position: fixed; left: 22px; bottom: 20px; right: auto; top: auto; z-index: 91;
@@ -686,12 +692,49 @@ win.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
 
 // layers: frame sliders + per-corner rounding
 const corners = { tl: false, tr: false, bl: true, br: true };
+// The frame is drawn as an accent-filled layer with an evenodd clip-path: the
+// outer boundary stays square (the browser window clips it flush along its own
+// corner curve, like the app hugging a screen edge) and only the inner edge is
+// rounded — with iOS-style continuous corners on macOS, circular elsewhere.
+const framePathSupported = CSS.supports("clip-path", 'path("M0 0 Z")');
+if (framePathSupported) document.body.classList.add("pathframe");
+function applyFrameShape() {
+  if (!framePathSupported) return;
+  const W = window.innerWidth, H = window.innerHeight;
+  const t = parseFloat($("setFrameW").value);
+  const smooth = document.body.classList.contains("squircle");
+  const D = smooth ? 1.528665 : 1; // edge run consumed by one corner, in units of r
+  const rMax = Math.max(0, (Math.min(W, H) / 2 - t) / D);
+  const r = Math.min(parseFloat($("setRadius").value), rMax);
+  // per-corner: point P, unit vector u (into corner along incoming edge), v (out of corner)
+  const p = (x, y) => x.toFixed(2) + " " + y.toFixed(2);
+  function seg(P, u, v, on) {
+    if (!on || r <= 0) return "L" + p(P[0], P[1]);
+    const at = (ku, kv) => p(P[0] - u[0] * ku * r + v[0] * kv * r, P[1] - u[1] * ku * r + v[1] * kv * r);
+    if (!smooth) return "L" + at(1, 0) + " A" + r.toFixed(2) + " " + r.toFixed(2) + " 0 0 1 " + at(0, 1);
+    return "L" + at(D, 0) +
+      " C" + at(1.08849, 0) + " " + at(0.86840, 0) + " " + at(0.63149, 0.07615) +
+      " C" + at(0.37282, 0.16905) + " " + at(0.16905, 0.37282) + " " + at(0.07615, 0.63149) +
+      " C" + at(0, 0.86840) + " " + at(0, 1.08849) + " " + at(0, D);
+  }
+  const TL = [t, t], TR = [W - t, t], BR = [W - t, H - t], BL = [t, H - t];
+  const inner =
+    "M" + p(t + (corners.tl ? D * r : 0), t) +
+    seg(TR, [-1, 0], [0, 1], corners.tr) +
+    seg(BR, [0, -1], [-1, 0], corners.br) +
+    seg(BL, [1, 0], [0, -1], corners.bl) +
+    seg(TL, [0, 1], [1, 0], corners.tl) + "Z";
+  const outer = "M0 0 H" + W + " V" + H + " H0 Z";
+  $("frame").style.clipPath = 'path(evenodd, "' + outer + " " + inner + '")';
+}
+window.addEventListener("resize", applyFrameShape);
 function applyCorners() {
   const r = $("setRadius").value + "px";
   for (const c of ["tl", "tr", "bl", "br"]) root.style.setProperty("--r-" + c, corners[c] ? r : "0px");
   $("valRadius").textContent = $("setRadius").value;
+  applyFrameShape();
 }
-$("setRadius").addEventListener("input", e => { e.target.dataset.userSet = "1"; applyCorners(); });
+$("setRadius").addEventListener("input", applyCorners);
 win.querySelectorAll(".corner-tile").forEach(b => b.addEventListener("click", () => {
   corners[b.dataset.c] = !corners[b.dataset.c];
   b.classList.toggle("on", corners[b.dataset.c]);
@@ -700,6 +743,7 @@ win.querySelectorAll(".corner-tile").forEach(b => b.addEventListener("click", ()
 $("setFrameW").addEventListener("input", e => {
   root.style.setProperty("--frame-w", e.target.value + "px");
   $("valFrameW").textContent = e.target.value + " pt";
+  applyFrameShape();
 });
 $("setFrameO").addEventListener("input", e => {
   root.style.setProperty("--frame-opacity", e.target.value / 100);
@@ -728,11 +772,7 @@ const heroDownload = document.querySelector(".hero .btn.primary");
 function setOS(os) {
   win.dataset.os = os;
   document.body.classList.toggle("squircle", os === "mac");
-  const radius = $("setRadius");
-  if (!radius.dataset.userSet) {
-    radius.value = os === "mac" && !supportsSquircle ? 34 : 22;
-    applyCorners();
-  }
+  applyFrameShape();
   document.querySelectorAll("#osToggle button").forEach(b => b.classList.toggle("on", b.dataset.os === os));
   const [label, href] = DOWNLOADS[os];
   heroDownload.textContent = label;
@@ -741,9 +781,6 @@ function setOS(os) {
   document.getElementById("applyOnMac").textContent = os === "mac" ? "Apply on this Mac" : "Apply on this machine";
 }
 document.querySelectorAll("#osToggle button").forEach(b => b.addEventListener("click", () => setOS(b.dataset.os)));
-// Safari/Firefox lack corner-shape; a larger radius nests inside macOS Tahoe's
-// window corner curve instead of getting clipped into a wedge.
-const supportsSquircle = CSS.supports("corner-shape", "squircle");
 function detectOS(p) {
   p = (p || "").toLowerCase();
   if (p.includes("win")) return "windows";
