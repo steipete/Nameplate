@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.1 - Unreleased
+## 0.1.1 - 2026-07-07
 
 - Project website in `docs/`, served at [nameplate.sh](https://nameplate.sh) via GitHub Pages.
 - Fixed: the rounded-corner toggle tiles in Settings → Layers only accepted clicks on their border; the whole tile is now clickable.
