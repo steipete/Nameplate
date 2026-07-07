@@ -3,6 +3,9 @@ import SwiftUI
 
 @MainActor
 struct AboutPane: View {
+    @ObservedObject var settings: AppSettings
+    weak var updater: UpdaterProviding?
+
     var body: some View {
         SettingsPaneLayout {
             VStack(alignment: .leading, spacing: 16) {
@@ -35,11 +38,39 @@ struct AboutPane: View {
                     }
                 }
 
+                Divider()
+
+                if let updater = self.updater, updater.isAvailable {
+                    VStack(alignment: .leading, spacing: 10) {
+                        PreferenceToggleRow(
+                            title: "Automatically download and install updates",
+                            subtitle: nil,
+                            binding: self.autoUpdateBinding)
+                        Button("Check for Updates…") {
+                            self.updater?.checkForUpdates(nil)
+                        }
+                    }
+                } else {
+                    Text(self.updater?.unavailableReason ?? "Updates unavailable in this build.")
+                        .font(.footnote)
+                        .foregroundStyle(.tertiary)
+                }
+
                 Text("© 2026 Peter Steinberger. MIT licensed.")
                     .font(.footnote)
                     .foregroundStyle(.tertiary)
             }
         }
+    }
+
+    private var autoUpdateBinding: Binding<Bool> {
+        Binding(
+            get: { self.settings.autoUpdateEnabled },
+            set: { newValue in
+                self.settings.autoUpdateEnabled = newValue
+                self.updater?.automaticallyChecksForUpdates = newValue
+                self.updater?.automaticallyDownloadsUpdates = newValue
+            })
     }
 
     private static var version: String {

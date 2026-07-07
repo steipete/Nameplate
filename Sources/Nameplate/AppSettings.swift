@@ -39,6 +39,7 @@ final class AppSettings: ObservableObject {
     @AppStorage("splashDuration") var splashDuration: Double = 1.8
 
     // App behavior.
+    @AppStorage("autoUpdateEnabled") var autoUpdateEnabled: Bool = true
     @AppStorage("showNameInMenuBar") var showNameInMenuBar: Bool = true
     @AppStorage("hideMenuBarIcon") var hideMenuBarIcon: Bool = false
     @AppStorage("launchAtLogin") var launchAtLogin: Bool = false {

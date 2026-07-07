@@ -7,6 +7,9 @@ let package = Package(
     platforms: [
         .macOS(.v15),
     ],
+    dependencies: [
+        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.9.3"),
+    ],
     targets: [
         .target(
             name: "NameplateCore",
@@ -15,6 +18,15 @@ let package = Package(
             ]),
         .executableTarget(
             name: "Nameplate",
+            dependencies: [
+                "NameplateCore",
+                .product(name: "Sparkle", package: "Sparkle"),
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency"),
+            ]),
+        .executableTarget(
+            name: "NameplateCLI",
             dependencies: [
                 "NameplateCore",
             ],
