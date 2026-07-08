@@ -3,6 +3,25 @@
     <channel>
         <title>Nameplate</title>
         <item>
+            <title>0.2.2</title>
+            <pubDate>Wed, 08 Jul 2026 12:06:42 +0100</pubDate>
+            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
+            <sparkle:version>5</sparkle:version>
+            <sparkle:shortVersionString>0.2.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Nameplate 0.2.2</h2>
+<ul>
+<li>Fixed: fleet-file watcher no longer triggers status/overlay redraws every 15 s when <code>fleet.json</code> is absent. Thanks @abhinavgautam01!</li>
+<li>Fixed: <code>nameplate://</code> deep links now match case-insensitively (<code>Nameplate://Config</code> works). Thanks @abhinavgautam01!</li>
+<li>Fixed: future-dated attention requests (clock drift, spoofed handoff) are rejected by the freshness filter. Thanks @abhinavgautam01!</li>
+<li>Status menu falls back to a routable IPv6 address when no IPv4 is available (IPv6-only/NAT64 networks). Thanks @abhinavgautam01!</li>
+<li>Website: &quot;Summon me&quot; demo fires a real attention alert (card + pulsating frame) on the page; one subtle frame-pulse hint per session when the agents section scrolls into view — never uninvited.</li>
+</ul>
+<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
+]]></description>
+            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.2/Nameplate-0.2.2.zip" length="2985168" type="application/octet-stream" sparkle:edSignature="MEhRyllrUO3VfYft01U5TM3oAWeEd7VAPMAhAVy96e08BHJg/zXxyE35fyD/BujCx+Bv70eMhqWdzDtFTe2vCQ=="/>
+        </item>
+        <item>
             <title>0.2.1</title>
             <pubDate>Tue, 07 Jul 2026 20:46:01 +0100</pubDate>
             <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
@@ -38,22 +57,6 @@
 <p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
 ]]></description>
             <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.0/Nameplate-0.2.0.zip" length="2980484" type="application/octet-stream" sparkle:edSignature="6oC+//f57PeqNOE2TixRT+B3+mlnSGL1yI9gdtb3fz/y2qPfX1eB0FnMY7Z8ckcCgYyQihFPqQl63Jh6xiRuAQ=="/>
-        </item>
-        <item>
-            <title>0.1.1</title>
-            <pubDate>Tue, 07 Jul 2026 18:29:42 +0100</pubDate>
-            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
-            <sparkle:version>2</sparkle:version>
-            <sparkle:shortVersionString>0.1.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<h2>Nameplate 0.1.1</h2>
-<ul>
-<li>Project website in <code>docs/</code>, served at <a href="https://nameplate.sh">nameplate.sh</a> via GitHub Pages.</li>
-<li>Fixed: the rounded-corner toggle tiles in Settings → Layers only accepted clicks on their border; the whole tile is now clickable.</li>
-</ul>
-<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
-]]></description>
-            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.1.1/Nameplate-0.1.1.zip" length="2939511" type="application/octet-stream" sparkle:edSignature="qgIA7YMOXFHO7IlWTOUqVjVlhFyF68bdANqLylYZDBNhFk2IlElX50hFgvq7J7VzCWbifrd5dSpgyMTMmaLfAQ=="/>
         </item>
     </channel>
 </rss>
