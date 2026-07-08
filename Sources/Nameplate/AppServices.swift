@@ -18,6 +18,8 @@ final class AppServices {
     private(set) var updater: UpdaterProviding?
     private let remoteMonitor = RemoteViewMonitor()
     private var settingsCancellable: AnyCancellable?
+    private var pendingAttentionRequests: [AttentionRequest] = []
+    private var attentionShowing = false
 
     init(settings: AppSettings) {
         self.settings = settings
@@ -130,8 +132,7 @@ final class AppServices {
             services.showSettings()
         }
         self.registerDarwinTrigger(name: AttentionRequest.notificationName) { services in
-            guard let request = AttentionRequest.consume() else { return }
-            services.attention?.show(request)
+            services.drainAttentionRequests()
         }
         self.registerDarwinTrigger(name: "com.steipete.nameplate.attention.dismiss") { services in
             services.attention?.dismissActive()
@@ -139,8 +140,22 @@ final class AppServices {
 
         // Darwin notifications are not queued: a CLI-triggered cold launch can
         // post before our observer exists. Pick up anything already on disk.
-        if let pending = AttentionRequest.consume() {
-            self.attention?.show(pending)
+        self.drainAttentionRequests()
+    }
+
+    private func drainAttentionRequests() {
+        self.pendingAttentionRequests.append(contentsOf: AttentionRequest.consumeAll())
+        self.showNextAttentionRequest()
+    }
+
+    private func showNextAttentionRequest() {
+        guard !self.attentionShowing, !self.pendingAttentionRequests.isEmpty else { return }
+        let request = self.pendingAttentionRequests.removeFirst()
+        self.attentionShowing = true
+        self.attention?.show(request) { [weak self] in
+            guard let self else { return }
+            self.attentionShowing = false
+            self.showNextAttentionRequest()
         }
     }
 

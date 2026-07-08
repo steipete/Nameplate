@@ -121,6 +121,11 @@ struct AttentionRequestTests {
             .appending(path: "attention-\(UUID().uuidString).json")
     }
 
+    private func temporaryDirectory() -> URL {
+        FileManager.default.temporaryDirectory
+            .appending(path: "attention-\(UUID().uuidString)", directoryHint: .isDirectory)
+    }
+
     @Test func roundTripsAndConsumesOnce() throws {
         let url = self.temporaryURL()
         let request = AttentionRequest(
@@ -155,6 +160,25 @@ struct AttentionRequestTests {
         let url = self.temporaryURL()
         try AttentionRequest(message: "no timestamp").write(to: url)
         #expect(AttentionRequest.consume(from: url)?.message == "no timestamp")
+    }
+
+    @Test func queuedWritesDoNotOverwriteEachOther() throws {
+        let directory = self.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let firstID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
+        let secondID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000002"))
+
+        try AttentionRequest(message: "first", createdAt: now)
+            .writeQueued(to: directory, now: now, uuid: firstID)
+        try AttentionRequest(message: "second", createdAt: now)
+            .writeQueued(to: directory, now: now.addingTimeInterval(0.001), uuid: secondID)
+
+        let consumed = AttentionRequest.consumeAll(from: directory, legacyURL: nil, now: now)
+        #expect(consumed.map(\.message) == ["first", "second"])
+
+        let leftovers = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        #expect(leftovers.isEmpty)
     }
 }
 

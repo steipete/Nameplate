@@ -33,12 +33,38 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
 
     public static let notificationName = "com.steipete.nameplate.attention"
 
-    public static var handoffURL: URL {
+    public static var handoffDirectory: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appending(path: "Library/Application Support/Nameplate/AttentionRequests")
+    }
+
+    public static var legacyHandoffURL: URL {
         FileManager.default.homeDirectoryForCurrentUser
             .appending(path: "Library/Application Support/Nameplate/attention.json")
     }
 
-    public func write(to url: URL = handoffURL) throws {
+    public static func handoffURL(
+        in directory: URL = handoffDirectory,
+        now: Date = Date(),
+        uuid: UUID = UUID()) -> URL
+    {
+        let microseconds = Int64((now.timeIntervalSince1970 * 1_000_000).rounded())
+        return directory.appending(path: "attention-\(microseconds)-\(uuid.uuidString).json")
+    }
+
+    public func write() throws {
+        try self.writeQueued()
+    }
+
+    public func writeQueued(
+        to directory: URL = handoffDirectory,
+        now: Date = Date(),
+        uuid: UUID = UUID()) throws
+    {
+        try self.write(to: Self.handoffURL(in: directory, now: now, uuid: uuid))
+    }
+
+    public func write(to url: URL) throws {
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),
             withIntermediateDirectories: true)
@@ -48,7 +74,7 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
 
     /// Reads and removes the pending request (one-shot handoff). Stale
     /// requests are consumed but not returned.
-    public static func consume(from url: URL = handoffURL, now: Date = Date()) -> AttentionRequest? {
+    public static func consume(from url: URL = legacyHandoffURL, now: Date = Date()) -> AttentionRequest? {
         guard let data = try? Data(contentsOf: url) else { return nil }
         try? FileManager.default.removeItem(at: url)
         guard let request = try? JSONDecoder().decode(AttentionRequest.self, from: data) else { return nil }
@@ -56,5 +82,33 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
             return nil
         }
         return request
+    }
+
+    public static func consumeAll(
+        from directory: URL = handoffDirectory,
+        legacyURL: URL? = legacyHandoffURL,
+        now: Date = Date()) -> [AttentionRequest]
+    {
+        var requests: [AttentionRequest] = []
+        if let legacyURL, let request = self.consume(from: legacyURL, now: now) {
+            requests.append(request)
+        }
+
+        let urls = (try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil)) ?? []
+        let queued = urls
+            .filter {
+                $0.pathExtension == "json"
+                    && $0.lastPathComponent.hasPrefix("attention-")
+            }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+
+        for url in queued {
+            if let request = self.consume(from: url, now: now) {
+                requests.append(request)
+            }
+        }
+        return requests
     }
 }

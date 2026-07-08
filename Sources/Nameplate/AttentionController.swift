@@ -15,6 +15,7 @@ final class AttentionController {
     private var cardPanel: NSPanel?
     private var generation = 0
     private var isDismissing = false
+    private var onDismiss: (@MainActor () -> Void)?
 
     var isActive: Bool {
         !self.borderPanels.isEmpty || self.cardPanel != nil
@@ -90,10 +91,11 @@ final class AttentionController {
         }
     }
 
-    func show(_ request: AttentionRequest) {
+    func show(_ request: AttentionRequest, onDismiss: (@MainActor () -> Void)? = nil) {
         self.dismissImmediately()
         self.generation += 1
         let generation = self.generation
+        self.onDismiss = onDismiss
 
         let identity = self.settings.identity
         let colorHex = ColorHex.normalize(request.color ?? "") ?? identity.colorHex
@@ -172,7 +174,10 @@ final class AttentionController {
         } completionHandler: {
             Task { @MainActor [weak self] in
                 guard let self, self.generation == generation else { return }
+                let onDismiss = self.onDismiss
+                self.onDismiss = nil
                 self.dismissImmediately()
+                onDismiss?()
             }
         }
     }
