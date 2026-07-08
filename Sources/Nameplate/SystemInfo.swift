@@ -19,10 +19,18 @@ enum SystemInfo {
         return "\(minutes)m"
     }
 
-    /// First non-loopback IPv4, preferring wired/Wi-Fi (enX) interfaces over
-    /// VPN/tunnel interfaces so the LAN address wins.
-    static func primaryIPv4() -> (address: String, interface: String)? {
-        var addresses: [(address: String, interface: String)] = []
+    struct IPAddressCandidate {
+        var address: String
+        var interface: String
+        var family: Int32
+        var ipv6Bytes: [UInt8] = []
+    }
+
+    /// First non-loopback IP address, preferring IPv4 and wired/Wi-Fi (enX)
+    /// interfaces over VPN/tunnel interfaces so the LAN address wins.
+    static func primaryIPAddress() -> (address: String, interface: String)? {
+        var ipv4: [IPAddressCandidate] = []
+        var ipv6: [IPAddressCandidate] = []
         var pointer: UnsafeMutablePointer<ifaddrs>?
         guard getifaddrs(&pointer) == 0 else { return nil }
         defer { freeifaddrs(pointer) }
@@ -31,7 +39,7 @@ enum SystemInfo {
         while let ifa = current {
             defer { current = ifa.pointee.ifa_next }
             guard let addr = ifa.pointee.ifa_addr,
-                  addr.pointee.sa_family == UInt8(AF_INET),
+                  (addr.pointee.sa_family == UInt8(AF_INET) || addr.pointee.sa_family == UInt8(AF_INET6)),
                   (ifa.pointee.ifa_flags & UInt32(IFF_UP)) != 0,
                   (ifa.pointee.ifa_flags & UInt32(IFF_LOOPBACK)) == 0 else { continue }
             let interface = self.string(from: ifa.pointee.ifa_name)
@@ -41,10 +49,31 @@ enum SystemInfo {
                 &host, socklen_t(host.count),
                 nil, 0, NI_NUMERICHOST) == 0 else { continue }
             let address = host.withUnsafeBufferPointer { self.string(from: $0.baseAddress!) }
-            addresses.append((address, interface))
+            if addr.pointee.sa_family == UInt8(AF_INET) {
+                ipv4.append(IPAddressCandidate(address: address, interface: interface, family: AF_INET))
+            } else {
+                let bytes = self.ipv6Bytes(from: addr)
+                guard self.isUsableIPv6(bytes) else { continue }
+                ipv6.append(IPAddressCandidate(
+                    address: address,
+                    interface: interface,
+                    family: AF_INET6,
+                    ipv6Bytes: bytes))
+            }
         }
 
-        let ranked = addresses.sorted { lhs, rhs in
+        return self.primaryIPAddress(from: ipv4 + ipv6)
+    }
+
+    static func primaryIPAddress(from addresses: [IPAddressCandidate]) -> (address: String, interface: String)? {
+        let ipv4 = addresses.filter { $0.family == AF_INET }
+        let ipv6 = addresses.filter { $0.family == AF_INET6 && self.isUsableIPv6($0.ipv6Bytes) }
+        return self.ranked(ipv4).first.map { ($0.address, $0.interface) }
+            ?? self.ranked(ipv6).first.map { ($0.address, $0.interface) }
+    }
+
+    static func ranked(_ addresses: [IPAddressCandidate]) -> [IPAddressCandidate] {
+        addresses.sorted { lhs, rhs in
             func rank(_ name: String) -> Int {
                 name.hasPrefix("en") ? 0 : 1
             }
@@ -53,7 +82,22 @@ enum SystemInfo {
             }
             return lhs.interface < rhs.interface
         }
-        return ranked.first
+    }
+
+    static func isUsableIPv6(_ bytes: [UInt8]) -> Bool {
+        guard bytes.count == 16 else { return false }
+        if bytes.allSatisfy({ $0 == 0 }) { return false } // ::
+        if bytes.dropLast().allSatisfy({ $0 == 0 }) && bytes.last == 1 { return false } // ::1
+        if bytes[0] == 0xFF { return false } // multicast
+        if bytes[0] == 0xFE && (bytes[1] & 0xC0) == 0x80 { return false } // fe80::/10 link-local
+        if (bytes[0] & 0xFE) == 0xFC { return false } // fc00::/7 unique-local
+        return true
+    }
+
+    private static func ipv6Bytes(from pointer: UnsafePointer<sockaddr>) -> [UInt8] {
+        pointer.withMemoryRebound(to: sockaddr_in6.self, capacity: 1) { address in
+            withUnsafeBytes(of: address.pointee.sin6_addr) { Array($0) }
+        }
     }
 
     static func loadAverage() -> Double? {

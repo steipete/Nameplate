@@ -125,7 +125,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         }
 
         self.uptimeItem.title = "Uptime \(SystemInfo.uptime() ?? "–")"
-        if let ip = SystemInfo.primaryIPv4() {
+        if let ip = SystemInfo.primaryIPAddress() {
             self.copyableIP = ip.address
             self.ipItem.title = "IP \(ip.address) (\(ip.interface))"
             self.ipItem.isEnabled = true
