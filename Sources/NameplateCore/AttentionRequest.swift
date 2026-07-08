@@ -52,7 +52,7 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
         guard let data = try? Data(contentsOf: url) else { return nil }
         try? FileManager.default.removeItem(at: url)
         guard let request = try? JSONDecoder().decode(AttentionRequest.self, from: data) else { return nil }
-        if let createdAt = request.createdAt, now.timeIntervalSince(createdAt) > self.maxAge {
+        if let createdAt = request.createdAt, abs(now.timeIntervalSince(createdAt)) > self.maxAge {
             return nil
         }
         return request
