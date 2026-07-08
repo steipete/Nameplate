@@ -140,6 +140,15 @@ struct AttentionRequestTests {
         #expect(!FileManager.default.fileExists(atPath: url.path))
     }
 
+    @Test func dropsFutureDatedRequests() throws {
+        let url = self.temporaryURL()
+        let now = Date()
+        let request = AttentionRequest(message: "not yet", createdAt: now.addingTimeInterval(600))
+        try request.write(to: url)
+        #expect(AttentionRequest.consume(from: url, now: now) == nil)
+        #expect(!FileManager.default.fileExists(atPath: url.path))
+    }
+
     @Test func keepsUndatedRequests() throws {
         let url = self.temporaryURL()
         try AttentionRequest(message: "no timestamp").write(to: url)
