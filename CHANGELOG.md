@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.2.3 - Unreleased
+
 ## 0.2.2 - 2026-07-08
 
 - Fixed: fleet-file watcher no longer triggers status/overlay redraws every 15 s when `fleet.json` is absent. Thanks @abhinavgautam01!
