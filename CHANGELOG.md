@@ -6,7 +6,6 @@
 - Fixed: `nameplate://` deep links now match case-insensitively (`Nameplate://Config` works). Thanks @abhinavgautam01!
 - Fixed: future-dated attention requests (clock drift, spoofed handoff) are rejected by the freshness filter. Thanks @abhinavgautam01!
 - Status menu falls back to a routable IPv6 address when no IPv4 is available (IPv6-only/NAT64 networks). Thanks @abhinavgautam01!
-
 - Website: "Summon me" demo fires a real attention alert (card + pulsating frame) on the page; one subtle frame-pulse hint per session when the agents section scrolls into view — never uninvited.
 
 ## 0.2.1 - 2026-07-07
