@@ -62,8 +62,13 @@ struct ConfigProposalTests {
         #expect(proposal.frameThickness == 20)
         #expect(proposal.frameOpacity == 0.1)
         #expect(proposal.cornerRadius == 0)
-        #expect(proposal.watermarkOpacity == 0.3)
+        #expect(proposal.watermarkOpacity == 0.5)
         #expect(proposal.splashDuration == 0.5)
+    }
+
+    @Test func preservesWatermarkOpacityWithinSettingsRange() throws {
+        let proposal = try #require(self.proposal("watermarkOpacity=0.45"))
+        #expect(proposal.watermarkOpacity == 0.45)
     }
 
     @Test func ignoresUnknownParameters() throws {
