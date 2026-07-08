@@ -197,7 +197,8 @@ final class FleetFileWatcher {
         self.source?.cancel()
     }
 
-    private func arm() {
+    @discardableResult
+    private func arm() -> Bool {
         self.source?.cancel()
         self.source = nil
 
@@ -205,7 +206,7 @@ final class FleetFileWatcher {
         guard descriptor >= 0 else {
             // File absent — retry occasionally so dropping the file in later "just works".
             self.scheduleRearm(after: 15)
-            return
+            return false
         }
 
         let source = DispatchSource.makeFileSystemObjectSource(
@@ -227,6 +228,7 @@ final class FleetFileWatcher {
         }
         source.resume()
         self.source = source
+        return true
     }
 
     private func scheduleRearm(after delay: TimeInterval) {
@@ -234,8 +236,9 @@ final class FleetFileWatcher {
         self.rearmTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self else { return }
-                self.arm()
-                self.onChange()
+                if self.arm() {
+                    self.onChange()
+                }
             }
         }
     }
