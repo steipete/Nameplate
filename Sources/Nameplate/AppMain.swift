@@ -43,8 +43,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls where url.scheme == "nameplate" {
-            switch url.host() {
+        for url in urls {
+            guard url.scheme?.lowercased() == "nameplate" else { continue }
+            switch url.host()?.lowercased() {
             case "splash":
                 self.services?.showSplash(force: true)
             case "settings":
