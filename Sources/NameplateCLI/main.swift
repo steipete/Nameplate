@@ -92,7 +92,12 @@ case "attention":
         case "--duration":
             guard let value = Double(flagValue()) else { fail("--duration expects seconds") }
             duration = value
-        case "--color": color = flagValue()
+        case "--color":
+            let value = flagValue()
+            guard let normalized = ColorHex.normalize(value) else {
+                fail("--color must be a 3- or 6-digit hex color")
+            }
+            color = normalized
         case "--help", "-h": usage()
         default: messageParts.append(argument)
         }
