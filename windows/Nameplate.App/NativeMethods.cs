@@ -32,6 +32,18 @@ internal static partial class NativeMethods
         _ = SetWindowPos(handle, new nint(-1), bounds.X, bounds.Y, bounds.Width, bounds.Height, SwpNoActivate | SwpShowWindow);
     }
 
+    /// <summary>DPI scale (1.0 = 96dpi) for the monitor hosting the window.
+    /// Correct as soon as the HWND exists, unlike VisualTreeHelper.GetDpi which
+    /// WPF only populates after the window is shown.</summary>
+    public static double DpiScale(nint handle)
+    {
+        var dpi = GetDpiForWindow(handle);
+        return dpi == 0 ? 1.0 : dpi / 96.0;
+    }
+
+    [LibraryImport("user32.dll")]
+    private static partial uint GetDpiForWindow(nint hwnd);
+
     [LibraryImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
     private static partial int GetWindowLong(nint window, int index);
 

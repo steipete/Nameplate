@@ -41,6 +41,16 @@ internal abstract class OverlayWindow : Window
     {
         var handle = new WindowInteropHelper(this).Handle;
         NativeMethods.ConfigureOverlay(handle, ClickThrough);
+        // Screen.Bounds are physical pixels; WPF's Left/Top/Width/Height are
+        // DIPs. On a scaled display (e.g. 150%) the overlay is then dpi-scale×
+        // too large, pushing the right/bottom border and its rounded corners
+        // off-screen. GetDpiForWindow (not VisualTreeHelper.GetDpi, which WPF
+        // only fills in after the window is shown) gives the correct scale now.
+        var scale = NativeMethods.DpiScale(handle);
+        Left = Screen.Bounds.Left / scale;
+        Top = Screen.Bounds.Top / scale;
+        Width = Screen.Bounds.Width / scale;
+        Height = Screen.Bounds.Height / scale;
         NativeMethods.PositionWindow(handle, Screen.Bounds);
     }
 }
