@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.2.5 - Unreleased
+
 ## 0.2.4 - 2026-07-09
 
 - Fixed: the DMG installer window no longer clips the bottom of the drag-to-install background (window height now accounts for the title bar).
