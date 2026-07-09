@@ -60,7 +60,7 @@ create-dmg \
   --volname "$APP_NAME" \
   --volicon "Icon.icns" \
   --background "assets/dmg-background.tiff" \
-  --window-size 660 400 \
+  --window-size 660 428 \
   --icon-size 128 \
   --icon "$APP_BUNDLE" 165 190 \
   --app-drop-link 495 190 \

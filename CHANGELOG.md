@@ -2,6 +2,8 @@
 
 ## 0.2.4 - 2026-07-09
 
+- Fixed: the DMG installer window no longer clips the bottom of the drag-to-install background (window height now accounts for the title bar).
+
 - Fixed (Windows): DPI-correct overlay sizing so frame corners aren't clipped on scaled displays.
 - Fixed: overlay frames now track display size changes reliably — screen frames are re-synced after display reconfiguration settles (remote-session window resizes reported stale sizes before). Sticky attention borders and the card re-anchor too.
 
