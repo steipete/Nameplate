@@ -3,6 +3,22 @@
     <channel>
         <title>Nameplate</title>
         <item>
+            <title>0.2.4</title>
+            <pubDate>Thu, 09 Jul 2026 10:24:43 +0100</pubDate>
+            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
+            <sparkle:version>7</sparkle:version>
+            <sparkle:shortVersionString>0.2.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Nameplate 0.2.4</h2>
+<ul>
+<li>Fixed (Windows): DPI-correct overlay sizing so frame corners aren&#x27;t clipped on scaled displays.</li>
+<li>Fixed: overlay frames now track display size changes reliably — screen frames are re-synced after display reconfiguration settles (remote-session window resizes reported stale sizes before). Sticky attention borders and the card re-anchor too.</li>
+</ul>
+<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
+]]></description>
+            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.4/Nameplate-0.2.4.zip" length="2989233" type="application/octet-stream" sparkle:edSignature="fJNXb8+yOG93EoZdO52WnrRJDwwnJkYOo1i/9I9r3VHGgXrVDqZZYtRS1sTFwAdTTFb/CRyD+eetbYlm51rsCA=="/>
+        </item>
+        <item>
             <title>0.2.3</title>
             <pubDate>Thu, 09 Jul 2026 09:25:50 +0100</pubDate>
             <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
@@ -36,26 +52,6 @@
 <p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
 ]]></description>
             <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.2/Nameplate-0.2.2.zip" length="2985168" type="application/octet-stream" sparkle:edSignature="MEhRyllrUO3VfYft01U5TM3oAWeEd7VAPMAhAVy96e08BHJg/zXxyE35fyD/BujCx+Bv70eMhqWdzDtFTe2vCQ=="/>
-        </item>
-        <item>
-            <title>0.2.1</title>
-            <pubDate>Tue, 07 Jul 2026 20:46:01 +0100</pubDate>
-            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
-            <sparkle:version>4</sparkle:version>
-            <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<h2>Nameplate 0.2.1</h2>
-<ul>
-<li>Windows port in <code>windows/</code> (C#/.NET 8 WPF): click-through frame/tag/watermark/splash overlays per monitor, real remote-connect splash via WTS session events, tray dashboard, named-pipe CLI (<code>nameplate attention|splash</code>), fleet.json compatibility, and hostname-color parity with macOS. Verified on Windows 11 (21 core tests + on-VM overlay/attention proof).</li>
-<li>Linux port in <code>linux/</code> (Rust + GTK4): the same overlay set for X11 (xrdp/VNC fleets; Wayland renders best-effort), unix-socket CLI, logind unlock splash, fleet.json compatibility, and color parity. Verified on Ubuntu 26.04 (8 core tests + on-VM overlay/attention proof).</li>
-<li>Releases now ship per-platform artifacts: <code>Nameplate-Windows-{x64,arm64}.zip</code> and <code>Nameplate-Linux-{x86_64,arm64}.tar.gz</code> alongside the Mac zip/DMG, with stable <code>releases/latest</code> download URLs.</li>
-<li>Website: cross-platform — the live settings window auto-adopts your OS&#x27;s chrome (macOS / Windows 11 / GNOME) with a manual OS toggle, and the download button targets your platform.</li>
-<li>Releases now ship a notarized DMG with a branded drag-to-install background, plus stable <code>Nameplate.dmg</code> / <code>Nameplate.zip</code> download URLs via <code>releases/latest</code>; website and README link the DMG.</li>
-<li>Per-Mac location: optional <code>location</code> field (fleet file or Settings) shown in the status menu, connect splash, and identity.</li>
-</ul>
-<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
-]]></description>
-            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.1/Nameplate-0.2.1.zip" length="2982536" type="application/octet-stream" sparkle:edSignature="2mToajd7KOttQHpsgzXn+NVsFXLBpu9nPhtUlYBiqcGP030/4V/VYXcet6iRXBHEJYodLbQLJZDLaLOcWeKUDQ=="/>
         </item>
     </channel>
 </rss>
