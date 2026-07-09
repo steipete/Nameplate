@@ -77,6 +77,17 @@ public sealed class CoreTests
     }
 
     [Fact]
+    public void LayerDefaultsUseSquareFrameCorners()
+    {
+        var layers = new LayerSettings();
+
+        Assert.False(layers.RoundTopLeft);
+        Assert.False(layers.RoundTopRight);
+        Assert.False(layers.RoundBottomLeft);
+        Assert.False(layers.RoundBottomRight);
+    }
+
+    [Fact]
     public void AttentionRequestJsonRoundTrips()
     {
         var request = new AttentionRequest

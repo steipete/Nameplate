@@ -47,10 +47,10 @@ public sealed record LayerSettings
     public bool RoundTopRight { get; init; }
 
     [JsonPropertyName("roundBottomLeft")]
-    public bool RoundBottomLeft { get; init; } = true;
+    public bool RoundBottomLeft { get; init; }
 
     [JsonPropertyName("roundBottomRight")]
-    public bool RoundBottomRight { get; init; } = true;
+    public bool RoundBottomRight { get; init; }
 
     [JsonPropertyName("tagCorner")]
     [JsonConverter(typeof(JsonStringEnumConverter))]

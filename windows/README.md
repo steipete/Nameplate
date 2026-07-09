@@ -61,8 +61,8 @@ Local overrides:
     "frameCornerRadius": 18,
     "roundTopLeft": false,
     "roundTopRight": false,
-    "roundBottomLeft": true,
-    "roundBottomRight": true,
+    "roundBottomLeft": false,
+    "roundBottomRight": false,
     "tagCorner": "TopRight",
     "watermarkCorner": "BottomRight",
     "watermarkOpacity": 0.14
@@ -74,6 +74,8 @@ Local overrides:
   }
 }
 ```
+
+Windows defaults to square frame corners. Set any per-corner value to `true` to opt into rounding.
 
 The tray menu toggles frame, tag, and watermark and persists those choices here. **Open config folder** opens the local override directory.
 

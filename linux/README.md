@@ -68,7 +68,7 @@ Fleet identity is read from `~/.config/nameplate/fleet.json`, or `$XDG_CONFIG_HO
 }
 ```
 
-Local overrides and visual settings live beside it in `settings.json`. Unknown fields are ignored; omitted fields use macOS defaults.
+Local overrides and visual settings live beside it in `settings.json`. Unknown fields are ignored; omitted fields use Linux application defaults.
 
 ```json
 {
@@ -82,8 +82,8 @@ Local overrides and visual settings live beside it in `settings.json`. Unknown f
   "frameCornerRadius": 16,
   "frameRoundTopLeft": false,
   "frameRoundTopRight": false,
-  "frameRoundBottomLeft": true,
-  "frameRoundBottomRight": true,
+  "frameRoundBottomLeft": false,
+  "frameRoundBottomRight": false,
   "tagEnabled": true,
   "tagCorner": "bottomLeft",
   "tagShowsGlyph": true,
@@ -94,6 +94,8 @@ Local overrides and visual settings live beside it in `settings.json`. Unknown f
   "splashDuration": 1.8
 }
 ```
+
+Linux defaults to square frame corners. Set any per-corner value to `true` to opt into rounding.
 
 Changes to either file are applied live, including editor/sync tools that replace files atomically. Fleet values take precedence over local identity values; missing values fall back to local settings and then hostname defaults.
 

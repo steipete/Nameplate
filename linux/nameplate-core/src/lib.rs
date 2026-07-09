@@ -167,8 +167,8 @@ impl Default for Settings {
             frame_corner_radius: 16.0,
             frame_round_top_left: false,
             frame_round_top_right: false,
-            frame_round_bottom_left: true,
-            frame_round_bottom_right: true,
+            frame_round_bottom_left: false,
+            frame_round_bottom_right: false,
             tag_enabled: true,
             tag_corner: Corner::BottomLeft,
             tag_shows_glyph: true,
@@ -298,6 +298,16 @@ mod tests {
         assert!(!prefers_dark_text("#378ADD"));
         assert!(prefers_dark_text("#FFFFFF"));
         assert!(!prefers_dark_text("#000000"));
+    }
+
+    #[test]
+    fn settings_default_to_square_frame_corners() {
+        let settings: Settings = serde_json::from_str("{}").unwrap();
+
+        assert!(!settings.frame_round_top_left);
+        assert!(!settings.frame_round_top_right);
+        assert!(!settings.frame_round_bottom_left);
+        assert!(!settings.frame_round_bottom_right);
     }
 
     #[test]

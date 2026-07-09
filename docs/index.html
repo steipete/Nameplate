@@ -48,7 +48,7 @@ body {
 #frame {
   position: fixed; inset: 0; z-index: 90; pointer-events: none;
   border: var(--frame-w) solid var(--accent);
-  /* app default: bottom corners round, top straight — the menu bar owns the top */
+  /* JavaScript applies the selected platform's frame-corner defaults. */
   border-radius: var(--r-tl) var(--r-tr) var(--r-br) var(--r-bl);
   opacity: var(--frame-opacity);
   transition: border-color .45s ease;
@@ -492,7 +492,7 @@ footer a:hover { color: var(--ink); }
           </span></span></div>
           <div class="srow"><label for="setWmO">Watermark opacity</label><span class="ctl"><input type="range" id="setWmO" min="0" max="18" value="5"><span class="val" id="valWmO">5%</span></span></div>
         </div>
-        <div class="scaption">Default rounds only the bottom corners — the menu bar owns the top. Yes, the corner tiles take clicks anywhere now, not just on the border.</div>
+        <div class="scaption" id="cornerDefaultsCaption">macOS defaults to rounded bottom corners — the menu bar owns the top. Yes, the corner tiles take clicks anywhere now, not just on the border.</div>
       </div>
 
       <div class="pane" id="pane-splash">
@@ -520,7 +520,7 @@ footer a:hover { color: var(--ink); }
       <div class="pane about-pane" id="pane-about">
         <img src="icon.png" alt="Nameplate app icon">
         <h4>Nameplate</h4>
-        <p>Version 0.2.4 · MIT · © 2026 Peter Steinberger</p>
+        <p>Version 0.2.5 · MIT · © 2026 Peter Steinberger</p>
         <a id="aboutDownload" href="https://github.com/steipete/Nameplate/releases/latest/download/Nameplate.dmg">Download</a> · <a href="https://github.com/steipete/Nameplate">GitHub</a>
       </div>
       <div class="winfooter">
@@ -686,6 +686,11 @@ win.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
 
 // layers: frame sliders + per-corner rounding
 const corners = { tl: false, tr: false, bl: true, br: true };
+const CORNER_DEFAULTS = {
+  mac: { tl: false, tr: false, bl: true, br: true },
+  windows: { tl: false, tr: false, bl: false, br: false },
+  linux: { tl: false, tr: false, bl: false, br: false },
+};
 function applyCorners() {
   const r = $("setRadius").value + "px";
   for (const c of ["tl", "tr", "bl", "br"]) root.style.setProperty("--r-" + c, corners[c] ? r : "0px");
@@ -728,6 +733,12 @@ const heroDownload = document.querySelector(".hero .btn.primary");
 function setOS(os) {
   win.dataset.os = os;
   document.body.classList.toggle("squircle", os === "mac");
+  Object.assign(corners, CORNER_DEFAULTS[os]);
+  win.querySelectorAll(".corner-tile").forEach(b => b.classList.toggle("on", corners[b.dataset.c]));
+  applyCorners();
+  document.getElementById("cornerDefaultsCaption").textContent = os === "mac"
+    ? "macOS defaults to rounded bottom corners — the menu bar owns the top. Yes, the corner tiles take clicks anywhere now, not just on the border."
+    : `${os === "windows" ? "Windows" : "Linux"} defaults to square frame corners. Use the corner tiles to opt into rounding.`;
   document.querySelectorAll("#osToggle button").forEach(b => b.classList.toggle("on", b.dataset.os === os));
   const [label, href] = DOWNLOADS[os];
   heroDownload.textContent = label;
