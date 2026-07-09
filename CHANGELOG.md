@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.2.6 - Unreleased
+
 ## 0.2.5 - 2026-07-09
 
 - Changed (Windows/Linux): new and unconfigured installs now default to square frame corners; macOS keeps its rounded bottom-corner default.
