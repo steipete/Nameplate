@@ -3,7 +3,8 @@ import NameplateCore
 import SwiftUI
 
 /// "The agent needs you": pulsating borders on every screen plus a topmost
-/// message card. Click the card (or wait out the duration) to dismiss.
+/// message card. Stays until the card is clicked; an explicit duration
+/// auto-dismisses instead.
 @MainActor
 final class AttentionController {
     private let settings: AppSettings
@@ -22,7 +23,8 @@ final class AttentionController {
 
         let identity = self.settings.identity
         let colorHex = ColorHex.normalize(request.color ?? "") ?? identity.colorHex
-        let duration = max(2, min(request.duration ?? 10, 120))
+        // No duration = sticky: the agent said something, keep it up until acknowledged.
+        let duration: Double? = request.duration.map { max(2, min($0, 120)) }
 
         let level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 2)
         self.borderPanels = NSScreen.screens.map { screen in
@@ -44,13 +46,18 @@ final class AttentionController {
                     colorHex: colorHex,
                     identity: identity,
                     onDismiss: { [weak self] in self?.dismiss(generation: generation) }))
-            let size = hosting.fittingSize
+            var size = hosting.fittingSize
             panel.contentView = hosting
             let visible = screen.visibleFrame
+            // Clamp to the visible frame so the card is fully on-screen even on
+            // small or low-resolution displays.
+            size.width = min(size.width, visible.width - 40)
+            size.height = min(size.height, visible.height - 40)
+            let y = max(visible.minY + 20, visible.maxY - size.height - 90)
             panel.setFrame(
                 NSRect(
-                    x: visible.midX - size.width / 2,
-                    y: visible.maxY - size.height - 90,
+                    x: max(visible.minX + 20, visible.midX - size.width / 2),
+                    y: y,
                     width: size.width,
                     height: size.height),
                 display: true)
@@ -58,9 +65,11 @@ final class AttentionController {
             self.cardPanel = panel
         }
 
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .seconds(duration))
-            self?.dismiss(generation: generation)
+        if let duration {
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(duration))
+                self?.dismiss(generation: generation)
+            }
         }
     }
 

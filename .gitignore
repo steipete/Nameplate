@@ -7,7 +7,7 @@
 /.build
 /Packages
 DerivedData/
-Nameplate.app
+/Nameplate.app
 
 # Release artifacts
 Nameplate-*.zip

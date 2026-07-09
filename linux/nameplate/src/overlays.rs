@@ -175,11 +175,14 @@ impl OverlayManager {
             }
             gtk::glib::ControlFlow::Continue
         });
-        let timeout_windows = windows.clone();
-        gtk::glib::timeout_add_local_once(
-            Duration::from_secs_f64(duration.unwrap_or(10.0).clamp(2.0, 120.0)),
-            move || fade_out(timeout_windows),
-        );
+        // No duration = sticky until the card is clicked.
+        if let Some(seconds) = duration {
+            let timeout_windows = windows.clone();
+            gtk::glib::timeout_add_local_once(
+                Duration::from_secs_f64(seconds.clamp(2.0, 120.0)),
+                move || fade_out(timeout_windows),
+            );
+        }
         self.transient_windows = windows;
     }
 }

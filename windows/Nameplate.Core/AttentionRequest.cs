@@ -15,7 +15,7 @@ public sealed record AttentionRequest
     public string? Title { get; init; }
 
     [JsonPropertyName("duration")]
-    public double Duration { get; init; } = 12;
+    public double? Duration { get; init; }
 
     [JsonPropertyName("color")]
     public string? Color { get; init; }

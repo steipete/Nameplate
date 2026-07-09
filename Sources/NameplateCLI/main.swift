@@ -20,6 +20,7 @@ func usage() -> Never {
     print("""
     usage:
       nameplate attention <message> [--title <title>] [--duration <seconds>] [--color <hex>]
+        (no --duration: card stays until clicked)
       nameplate splash
       nameplate settings
 

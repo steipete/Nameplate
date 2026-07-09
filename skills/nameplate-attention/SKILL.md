@@ -13,7 +13,7 @@ Grab the human's attention at the Mac: a topmost message card plus pulsating col
 - `nameplate attention "<why you need the human>" --title "<agent> → <system>" [--duration <seconds>] [--color <hex>]`
 - Example, right before an interactive 1Password `op` prompt (which carries no reason field of its own):
   `nameplate attention "Need 1Password approval for release verification; no secret read." --title "Codex → 1Password"`
-- Launches Nameplate.app if it is not running. Default duration 10 s (max 120); the human clicks the card to dismiss.
+- Launches Nameplate.app if it is not running. By default the card stays until the human clicks it; pass `--duration <seconds>` (max 120) for auto-dismiss.
 - Requests are timestamped; anything older than 2 minutes is dropped, so a login-time launch never replays stale alerts.
 
 ## Extras

@@ -2,6 +2,9 @@
 
 ## 0.2.3 - Unreleased
 
+- Attention alerts now stay on screen until clicked by default (all platforms); pass `--duration <seconds>` for the old auto-dismiss behavior.
+- The attention card clamps to the visible screen area so it stays fully readable on small displays.
+
 ## 0.2.2 - 2026-07-08
 
 - Fixed: fleet-file watcher no longer triggers status/overlay redraws every 15 s when `fleet.json` is absent. Thanks @abhinavgautam01!
