@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.2.4 - Unreleased
+
 ## 0.2.3 - 2026-07-08
 
 - Attention alerts now stay on screen until clicked by default (all platforms); pass `--duration <seconds>` for the old auto-dismiss behavior.
