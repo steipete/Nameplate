@@ -3,6 +3,23 @@
     <channel>
         <title>Nameplate</title>
         <item>
+            <title>0.2.5</title>
+            <pubDate>Thu, 09 Jul 2026 12:58:28 +0100</pubDate>
+            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
+            <sparkle:version>8</sparkle:version>
+            <sparkle:shortVersionString>0.2.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description><![CDATA[<h2>Nameplate 0.2.5</h2>
+<ul>
+<li>Changed (Windows/Linux): new and unconfigured installs now default to square frame corners; macOS keeps its rounded bottom-corner default.</li>
+<li>Fixed: the DMG installer window no longer clips the bottom of the drag-to-install background (window height now accounts for the title bar).</li>
+</ul>
+<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
+]]></description>
+            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.5/Nameplate-0.2.5.zip" length="2989227" type="application/octet-stream" sparkle:edSignature="6ls67UE4ugJIypfWXJ4iDQ0zXLgw4O/FobR4jzRkSx96cbGdGROq4JN55UnReSJpHYQh+nFP6KsV59jeyk3uAQ=="/>
+        </item>
+        <item>
             <title>0.2.4</title>
             <pubDate>Thu, 09 Jul 2026 10:24:43 +0100</pubDate>
             <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
