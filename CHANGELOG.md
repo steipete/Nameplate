@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.2.4 - Unreleased
+## 0.2.4 - 2026-07-09
+
+- Fixed: overlay frames now track display size changes reliably — screen frames are re-synced after display reconfiguration settles (remote-session window resizes reported stale sizes before). Sticky attention borders and the card re-anchor too.
 
 ## 0.2.3 - 2026-07-08
 

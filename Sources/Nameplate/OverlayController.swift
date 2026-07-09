@@ -61,8 +61,36 @@ final class OverlayController {
         { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.rebuildPanels()
+                self?.scheduleFrameSync()
             }
         }
+    }
+
+    /// Display reconfiguration often delivers stale NSScreen frames at
+    /// notification time (virtual displays resized by a remote client are the
+    /// worst offenders), so re-sync panel frames again once the dust settles.
+    private func scheduleFrameSync() {
+        for delay: TimeInterval in [0.5, 1.5] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                self?.syncPanelFrames()
+            }
+        }
+    }
+
+    private func syncPanelFrames() {
+        let screens = NSScreen.screens
+        guard screens.count == self.panels.count else {
+            self.rebuildPanels()
+            return
+        }
+        for (index, screen) in screens.enumerated() {
+            let panel = self.panels[index].panel
+            if panel.frame != screen.frame {
+                panel.setFrame(screen.frame, display: true)
+            }
+            self.panels[index].screen = screen
+        }
+        self.applyVisibility()
     }
 
     private var anyLayerEnabled: Bool {

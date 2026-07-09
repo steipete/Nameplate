@@ -14,6 +14,46 @@ final class AttentionController {
 
     init(settings: AppSettings) {
         self.settings = settings
+        // Sticky alerts can outlive display reconfigurations; keep the
+        // pulsating borders and card on-screen when frames change. Delayed
+        // passes because NSScreen data can lag the notification.
+        _ = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main)
+        { [weak self] _ in
+            MainActor.assumeIsolated {
+                for delay: TimeInterval in [0, 0.5, 1.5] {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                        self?.syncFrames()
+                    }
+                }
+            }
+        }
+    }
+
+    private func syncFrames() {
+        guard !self.borderPanels.isEmpty || self.cardPanel != nil else { return }
+        let screens = NSScreen.screens
+        for (index, panel) in self.borderPanels.enumerated() where index < screens.count {
+            if panel.frame != screens[index].frame {
+                panel.setFrame(screens[index].frame, display: true)
+            }
+        }
+        if let card = self.cardPanel, let screen = NSScreen.main {
+            let visible = screen.visibleFrame
+            var size = card.frame.size
+            size.width = min(size.width, visible.width - 40)
+            size.height = min(size.height, visible.height - 40)
+            let y = max(visible.minY + 20, visible.maxY - size.height - 90)
+            card.setFrame(
+                NSRect(
+                    x: max(visible.minX + 20, visible.midX - size.width / 2),
+                    y: y,
+                    width: size.width,
+                    height: size.height),
+                display: true)
+        }
     }
 
     func show(_ request: AttentionRequest) {
