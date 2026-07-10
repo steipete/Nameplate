@@ -1,16 +1,20 @@
 import Darwin
 import Foundation
 
-/// Cheap one-shot samples for the status menu. Everything here is a fast
-/// syscall — safe to call from menuNeedsUpdate on the main thread.
+/// Cheap one-shot samples for the status menu and name-tag info lines.
+/// Everything here is a fast syscall — safe to call on the main thread.
 enum SystemInfo {
-    static func uptime() -> String? {
+    static func uptimeSeconds() -> Int? {
         var boottime = timeval()
         var size = MemoryLayout<timeval>.size
         guard sysctlbyname("kern.boottime", &boottime, &size, nil, 0) == 0,
               boottime.tv_sec > 0 else { return nil }
         let seconds = Int(Date().timeIntervalSince1970) - Int(boottime.tv_sec)
-        guard seconds > 0 else { return nil }
+        return seconds > 0 ? seconds : nil
+    }
+
+    static func uptime() -> String? {
+        guard let seconds = self.uptimeSeconds() else { return nil }
         let days = seconds / 86400
         let hours = (seconds % 86400) / 3600
         let minutes = (seconds % 3600) / 60

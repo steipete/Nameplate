@@ -47,7 +47,7 @@ open Nameplate.app
 Click the nameplate in the menu bar → **Settings…** (opens automatically on first launch):
 
 - **Identity** — name, color (8 presets or custom), optional glyph. Empty name = computer name.
-- **Layers** — frame thickness/opacity and per-corner rounding (macOS defaults to rounded bottom corners; Windows and Linux default to square corners), tag corner, watermark corner/opacity.
+- **Layers** — frame thickness/opacity and per-corner rounding (macOS defaults to rounded bottom corners; Windows and Linux default to square corners), tag corner and optional IP/uptime/macOS/location info lines, watermark corner/opacity.
 - **Splash** — duration and triggers (display wake, screen unlock, display reconfiguration).
 - **General** — start at login, menu bar appearance, and decoration visibility: **Always** or **Only when viewed remotely** — frame, tag, watermark, and splash appear only on virtual displays (Jump Desktop and similar identify themselves by display name/vendor) or while a Screen Sharing/VNC connection is established. Attention alerts always show, so agents can still reach you when you're sitting at the Mac.
 
