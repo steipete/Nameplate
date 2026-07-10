@@ -84,7 +84,15 @@ struct NameTagPill: View {
             .foregroundStyle(self.identity.textOnColor)
             .padding(.horizontal, 10 * self.scale)
             .padding(.vertical, 4 * self.scale)
-            .background(self.identity.color, in: Capsule())
+            .background {
+                if self.infoLines.isEmpty {
+                    Capsule()
+                        .fill(self.identity.color)
+                } else {
+                    RoundedRectangle(cornerRadius: 8 * self.scale, style: .continuous)
+                        .fill(self.identity.color)
+                }
+            }
             .shadow(color: .black.opacity(0.35), radius: 3 * self.scale, y: 1 * self.scale)
     }
 
