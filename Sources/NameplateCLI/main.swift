@@ -153,6 +153,12 @@ case "attention":
     let message = messageParts.joined(separator: " ")
     guard !message.isEmpty else { fail("attention needs a message — say why you need the human.") }
     let requestID = shouldWait ? UUID().uuidString : nil
+    let displacedRequestID: String? = {
+        guard let data = try? Data(contentsOf: AttentionRequest.handoffURL),
+              let request = try? JSONDecoder().decode(AttentionRequest.self, from: data)
+        else { return nil }
+        return request.id
+    }()
 
     do {
         try AttentionRequest(
@@ -164,6 +170,14 @@ case "attention":
             createdAt: Date()).write()
     } catch {
         fail("could not write attention request: \(error.localizedDescription)")
+    }
+    if let displacedRequestID, displacedRequestID != requestID {
+        do {
+            try AttentionAck(id: displacedRequestID, outcome: .superseded).write()
+            notify_post(AttentionAck.notificationName)
+        } catch {
+            fail("could not acknowledge displaced attention request: \(error.localizedDescription)")
+        }
     }
     // On a cold launch the app consumes the request file at startup, so a
     // missed notification cannot drop the alert.
