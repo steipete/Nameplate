@@ -79,6 +79,7 @@ func post(_ name: String, retryAfterColdLaunch coldLaunched: Bool) {
 /// Waits on the Darwin notification and polls the file because notifications
 /// are not queued and can be missed between posting the request and registering.
 func waitForAttentionAck(id: String, timeout: TimeInterval) -> AttentionAck? {
+    AttentionAck.pruneStale()
     let semaphore = DispatchSemaphore(value: 0)
     var token: Int32 = 0
     let status = notify_register_dispatch(
@@ -176,7 +177,8 @@ case "attention":
             try AttentionAck(id: displacedRequestID, outcome: .superseded).write()
             notify_post(AttentionAck.notificationName)
         } catch {
-            fail("could not acknowledge displaced attention request: \(error.localizedDescription)")
+            writeToStandardError(
+                "warning: could not acknowledge displaced attention request: \(error.localizedDescription)")
         }
     }
     // On a cold launch the app consumes the request file at startup, so a
@@ -186,6 +188,7 @@ case "attention":
 
     if let requestID {
         guard let ack = waitForAttentionAck(id: requestID, timeout: timeout) else {
+            AttentionAck.remove(matching: requestID)
             writeToStandardError("attention outcome: timed out")
             exit(4)
         }

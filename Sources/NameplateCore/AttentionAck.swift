@@ -29,6 +29,7 @@ public struct AttentionAck: Codable, Equatable, Sendable {
     }
 
     public func write(to url: URL = handoffURL) throws {
+        Self.pruneStale(from: url)
         let url = Self.handoffURL(matching: self.id, from: url)
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),
@@ -54,6 +55,28 @@ public struct AttentionAck: Codable, Equatable, Sendable {
         try? FileManager.default.removeItem(at: url)
         guard abs(now.timeIntervalSince(ack.at)) <= self.maxAge else { return nil }
         return ack
+    }
+
+    public static func remove(matching id: String, from url: URL = handoffURL) {
+        try? FileManager.default.removeItem(at: self.handoffURL(matching: id, from: url))
+    }
+
+    public static func pruneStale(from url: URL = handoffURL, now: Date = Date()) {
+        let directory = url.deletingLastPathComponent()
+        let prefix = url.deletingPathExtension().lastPathComponent + "-"
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: [.skipsHiddenFiles])
+        else { return }
+
+        for file in files where file.lastPathComponent.hasPrefix(prefix) && file.pathExtension == "json" {
+            guard let modifiedAt = try? file.resourceValues(
+                forKeys: [.contentModificationDateKey]).contentModificationDate,
+                now.timeIntervalSince(modifiedAt) > self.maxAge
+            else { continue }
+            try? FileManager.default.removeItem(at: file)
+        }
     }
 
     static func handoffURL(matching id: String, from url: URL = handoffURL) -> URL {

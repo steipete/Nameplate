@@ -45,4 +45,34 @@ struct AttentionAckTests {
         let ackURL = AttentionAck.handoffURL(matching: ack.id, from: url)
         #expect(!FileManager.default.fileExists(atPath: ackURL.path))
     }
+
+    @Test func writingAckPrunesOldAckFiles() throws {
+        let url = self.temporaryURL()
+        let now = Date()
+        let stale = AttentionAck(id: "stale", outcome: .clicked)
+        let fresh = AttentionAck(id: "fresh", outcome: .clicked)
+        try stale.write(to: url)
+
+        let staleURL = AttentionAck.handoffURL(matching: stale.id, from: url)
+        try FileManager.default.setAttributes(
+            [.modificationDate: now.addingTimeInterval(-AttentionAck.maxAge - 1)],
+            ofItemAtPath: staleURL.path)
+        try fresh.write(to: url)
+
+        let freshURL = AttentionAck.handoffURL(matching: fresh.id, from: url)
+        #expect(!FileManager.default.fileExists(atPath: staleURL.path))
+        #expect(FileManager.default.fileExists(atPath: freshURL.path))
+        AttentionAck.remove(matching: fresh.id, from: url)
+    }
+
+    @Test func removesMatchingAckFile() throws {
+        let url = self.temporaryURL()
+        let ack = AttentionAck(id: "timed-out", outcome: .clicked)
+        try ack.write(to: url)
+        let ackURL = AttentionAck.handoffURL(matching: ack.id, from: url)
+
+        AttentionAck.remove(matching: ack.id, from: url)
+
+        #expect(!FileManager.default.fileExists(atPath: ackURL.path))
+    }
 }
