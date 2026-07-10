@@ -1,6 +1,7 @@
 import AppKit
 import NameplateCore
 import SwiftUI
+import notify
 
 /// "The agent needs you": pulsating borders on every screen plus a topmost
 /// message card. Stays until the card is clicked; an explicit duration
@@ -16,6 +17,7 @@ final class AttentionController {
     private var generation = 0
     private var isDismissing = false
     private var onDismiss: (@MainActor () -> Void)?
+    private var activeRequestID: String?
 
     var isActive: Bool {
         !self.borderPanels.isEmpty || self.cardPanel != nil
@@ -92,11 +94,15 @@ final class AttentionController {
     }
 
     func show(_ request: AttentionRequest, onDismiss: (@MainActor () -> Void)? = nil) {
+        if self.activeRequestID != nil {
+            self.acknowledge(.superseded)
+        }
         self.resetPresentation()
         self.onDismiss = nil
         self.generation += 1
         let generation = self.generation
         self.onDismiss = onDismiss
+        self.activeRequestID = request.id
 
         let identity = self.settings.identity
         let colorHex = ColorHex.normalize(request.color ?? "") ?? identity.colorHex
@@ -120,7 +126,9 @@ final class AttentionController {
                     request: request,
                     colorHex: colorHex,
                     identity: identity,
-                    onDismiss: { [weak self] in self?.dismiss(generation: generation) }))
+                    onDismiss: { [weak self] in
+                        self?.dismiss(generation: generation, outcome: .clicked)
+                    }))
             let visible = screen.visibleFrame
             let available = NSSize(
                 width: min(Self.cardMaximumWidth, max(0, visible.width - 40)),
@@ -156,13 +164,14 @@ final class AttentionController {
         if let duration {
             Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .seconds(duration))
-                self?.dismiss(generation: generation)
+                self?.dismiss(generation: generation, outcome: .autoDismissed)
             }
         }
     }
 
-    private func dismiss(generation: Int) {
+    private func dismiss(generation: Int, outcome: AttentionAck.Outcome) {
         guard self.generation == generation else { return }
+        self.acknowledge(outcome)
         self.isDismissing = true
         let panels = self.borderPanels + [self.cardPanel].compactMap(\.self)
         // Never leave a fading or interrupted card intercepting input.
@@ -209,6 +218,17 @@ final class AttentionController {
         panel.ignoresMouseEvents = false
     }
 
+    private func acknowledge(_ outcome: AttentionAck.Outcome) {
+        guard let id = self.activeRequestID else { return }
+        self.activeRequestID = nil
+        do {
+            try AttentionAck(id: id, outcome: outcome).write()
+            notify_post(AttentionAck.notificationName)
+        } catch {
+            NSLog("Nameplate: writing attention acknowledgment failed: \(error)")
+        }
+    }
+
     private func finishImmediately() {
         let onDismiss = self.onDismiss
         self.onDismiss = nil
@@ -223,6 +243,7 @@ final class AttentionController {
         self.borderPanels = []
         self.cardPanel?.close()
         self.cardPanel = nil
+        self.activeRequestID = nil
         self.isDismissing = false
     }
 }

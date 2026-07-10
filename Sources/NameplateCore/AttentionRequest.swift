@@ -5,6 +5,8 @@ import Foundation
 /// JSON handoff, announced via the Darwin notification
 /// `com.steipete.nameplate.attention`.
 public struct AttentionRequest: Codable, Equatable, Sendable {
+    /// Correlates a request with its acknowledgment when the sender waits.
+    public var id: String?
     public var title: String?
     public var message: String
     /// Seconds the alert stays up without interaction. Nil stays until dismissed.
@@ -16,12 +18,14 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
     public var createdAt: Date?
 
     public init(
+        id: String? = nil,
         title: String? = nil,
         message: String,
         duration: Double? = nil,
         color: String? = nil,
         createdAt: Date? = nil)
     {
+        self.id = id
         self.title = title
         self.message = message
         self.duration = duration

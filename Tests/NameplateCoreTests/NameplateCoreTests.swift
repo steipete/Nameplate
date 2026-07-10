@@ -129,6 +129,7 @@ struct AttentionRequestTests {
     @Test func roundTripsAndConsumesOnce() throws {
         let url = self.temporaryURL()
         let request = AttentionRequest(
+            id: "request-1",
             title: "Codex → 1Password",
             message: "Need approval",
             duration: 8,
@@ -257,6 +258,13 @@ struct AttentionRequestTests {
         let retained = try #require(AttentionRequest.consume(from: legacyURL, now: writtenAfter))
         #expect(retained.message == "legacy after dismissal")
         #expect(retained.createdAt == writtenAfter)
+    }
+
+    @Test func decodesRequestsWithoutID() throws {
+        let data = Data(#"{"message":"old writer"}"#.utf8)
+        let request = try JSONDecoder().decode(AttentionRequest.self, from: data)
+        #expect(request.id == nil)
+        #expect(request.message == "old writer")
     }
 }
 
