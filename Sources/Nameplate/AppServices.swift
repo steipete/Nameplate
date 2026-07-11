@@ -154,14 +154,28 @@ final class AppServices {
     }
 
     private func showNextAttentionRequest() {
-        guard !self.attentionShowing, !self.pendingAttentionRequests.isEmpty else { return }
-        let request = self.pendingAttentionRequests.removeFirst()
+        guard !self.attentionShowing,
+              let request = Self.takeNextFreshAttentionRequest(from: &self.pendingAttentionRequests)
+        else { return }
         self.attentionShowing = true
         self.attention?.show(request) { [weak self] in
             guard let self else { return }
             self.attentionShowing = false
             self.showNextAttentionRequest()
         }
+    }
+
+    static func takeNextFreshAttentionRequest(
+        from requests: inout [AttentionRequest],
+        now: Date = Date()) -> AttentionRequest?
+    {
+        while !requests.isEmpty {
+            let request = requests.removeFirst()
+            if request.isFresh(at: now) {
+                return request
+            }
+        }
+        return nil
     }
 
     private func registerDarwinTrigger(name: String, action: @escaping @MainActor (AppServices) -> Void) {

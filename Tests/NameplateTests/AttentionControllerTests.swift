@@ -79,4 +79,22 @@ struct AttentionControllerTests {
         controller.dismissActive()
         #expect(completionCount == 1)
     }
+
+    @Test func queuedPresentationSkipsRequestsThatExpiredWhileWaiting() throws {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var requests = [
+            AttentionRequest(
+                message: "stale past",
+                createdAt: now.addingTimeInterval(-AttentionRequest.maxAge - 1)),
+            AttentionRequest(
+                message: "stale future",
+                createdAt: now.addingTimeInterval(AttentionRequest.maxAge + 1)),
+            AttentionRequest(message: "fresh", createdAt: now),
+        ]
+
+        let next = try #require(AppServices.takeNextFreshAttentionRequest(from: &requests, now: now))
+
+        #expect(next.message == "fresh")
+        #expect(requests.isEmpty)
+    }
 }

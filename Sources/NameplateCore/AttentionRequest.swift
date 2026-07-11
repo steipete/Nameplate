@@ -72,15 +72,18 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
         try data.write(to: url, options: .atomic)
     }
 
+    public func isFresh(at now: Date = Date()) -> Bool {
+        guard let createdAt else { return true }
+        return abs(now.timeIntervalSince(createdAt)) <= Self.maxAge
+    }
+
     /// Reads and removes the pending request (one-shot handoff). Stale
     /// requests are consumed but not returned.
     public static func consume(from url: URL = legacyHandoffURL, now: Date = Date()) -> AttentionRequest? {
         guard let data = try? Data(contentsOf: url) else { return nil }
         try? FileManager.default.removeItem(at: url)
         guard let request = try? JSONDecoder().decode(AttentionRequest.self, from: data) else { return nil }
-        if let createdAt = request.createdAt, abs(now.timeIntervalSince(createdAt)) > self.maxAge {
-            return nil
-        }
+        guard request.isFresh(at: now) else { return nil }
         return request
     }
 
