@@ -1,13 +1,13 @@
 import Foundation
 
 /// A request from the CLI (or any script) to grab the human's attention:
-/// a topmost message card plus pulsating screen borders. Written as JSON to
-/// the handoff file, announced via the Darwin notification
+/// a topmost message card plus pulsating screen borders. Written as a queued
+/// JSON handoff, announced via the Darwin notification
 /// `com.steipete.nameplate.attention`.
 public struct AttentionRequest: Codable, Equatable, Sendable {
     public var title: String?
     public var message: String
-    /// Seconds the alert stays up without interaction. Defaults to 10.
+    /// Seconds the alert stays up without interaction. Nil stays until dismissed.
     public var duration: Double?
     /// Optional hex border color; defaults to the Mac's identity color.
     public var color: String?

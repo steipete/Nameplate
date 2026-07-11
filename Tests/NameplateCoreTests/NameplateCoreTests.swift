@@ -180,6 +180,28 @@ struct AttentionRequestTests {
         let leftovers = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
         #expect(leftovers.isEmpty)
     }
+
+    @Test func consumeAllDrainsLegacyRequestBeforeQueuedRequests() throws {
+        let root = self.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let directory = root.appending(path: "queue", directoryHint: .isDirectory)
+        let legacyURL = root.appending(path: "attention.json")
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let queuedID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
+
+        try AttentionRequest(message: "legacy", createdAt: now).write(to: legacyURL)
+        try AttentionRequest(message: "queued", createdAt: now)
+            .writeQueued(to: directory, now: now, uuid: queuedID)
+
+        let consumed = AttentionRequest.consumeAll(
+            from: directory,
+            legacyURL: legacyURL,
+            now: now)
+        #expect(consumed.map(\.message) == ["legacy", "queued"])
+        #expect(!FileManager.default.fileExists(atPath: legacyURL.path))
+        let leftovers = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        #expect(leftovers.isEmpty)
+    }
 }
 
 @Suite("FleetFile")

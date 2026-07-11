@@ -63,4 +63,20 @@ struct AttentionControllerTests {
         #expect(panel.collectionBehavior.contains(.canJoinAllSpaces))
         #expect(!panel.collectionBehavior.contains(.stationary))
     }
+
+    @Test func explicitDismissCompletesPresentedRequestExactlyOnce() {
+        let controller = AttentionController(settings: AppSettings())
+        var completionCount = 0
+        controller.show(AttentionRequest(title: "Queue proof", message: "First")) {
+            completionCount += 1
+        }
+
+        #expect(controller.isActive)
+        controller.dismissActive()
+        #expect(!controller.isActive)
+        #expect(completionCount == 1)
+
+        controller.dismissActive()
+        #expect(completionCount == 1)
+    }
 }

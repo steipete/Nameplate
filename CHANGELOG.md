@@ -5,6 +5,7 @@
 - Fixed (macOS): imported config links now preserve watermark opacity values through the full Settings range instead of silently clamping them to 30%. Thanks @abhinavgautam01!
 - Fixed (macOS): `nameplate attention --color` now rejects invalid values and normalizes valid hex colors before handing requests to the app. Thanks @abhinavgautam01!
 - Fixed (macOS): Settings window placement now persists across app restarts. Thanks @abhinavgautam01!
+- Fixed (macOS): rapid attention requests now queue and display in order instead of overwriting each other, while legacy handoffs still migrate. Thanks @abhinavgautam01!
 - Fixed (macOS): attention cards now stay visibly bounded and click-through until presentation succeeds, recover safely across display and Space changes, and can be cleared with `nameplate dismiss` without quitting the app.
 - Fixed (macOS): Sparkle now stays disabled for Homebrew-managed installs even when the app lives directly in `/Applications`. Thanks @abhinavgautam01!
 

@@ -44,11 +44,16 @@ final class AppServices {
     }
 
     var hasActiveAttention: Bool {
-        self.attention?.isActive ?? false
+        self.attentionShowing || !self.pendingAttentionRequests.isEmpty
+            || (self.attention?.isActive ?? false)
     }
 
     func dismissAttention() {
+        self.pendingAttentionRequests.removeAll()
+        // Also clear requests that arrived before the dismiss notification.
+        _ = AttentionRequest.consumeAll()
         self.attention?.dismissActive()
+        self.attentionShowing = false
     }
 
     /// Same per-screen rule the overlay uses: in remote-only mode a screen is
@@ -135,7 +140,7 @@ final class AppServices {
             services.drainAttentionRequests()
         }
         self.registerDarwinTrigger(name: "com.steipete.nameplate.attention.dismiss") { services in
-            services.attention?.dismissActive()
+            services.dismissAttention()
         }
 
         // Darwin notifications are not queued: a CLI-triggered cold launch can
