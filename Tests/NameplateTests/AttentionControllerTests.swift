@@ -35,6 +35,25 @@ struct AttentionControllerTests {
             fitting: available))
     }
 
+    @Test func longMessagesStayWithinTheCardHeightLimit() {
+        let controller = NSHostingController(
+            rootView: AttentionCardView(
+                request: AttentionRequest(
+                    title: "Long attention request",
+                    message: String(repeating: "This message must not create a full-screen input panel. ", count: 100)),
+                colorHex: "#1D9E75",
+                identity: MacIdentity(name: "miniclaw", colorHex: "#1D9E75"),
+                onDismiss: {}))
+        let available = NSSize(
+            width: AttentionController.cardMaximumWidth,
+            height: AttentionController.cardMaximumHeight)
+
+        let size = controller.sizeThatFits(in: available)
+
+        #expect(AttentionController.isValidCardSize(size, fitting: available))
+        #expect(size.height <= AttentionController.cardMaximumHeight)
+    }
+
     @Test func interactivePanelStartsClickThroughAndAvoidsStationaryBehavior() throws {
         let screen = try #require(NSScreen.main ?? NSScreen.screens.first)
         let panel = OverlayPanelFactory.makeAttentionCardPanel(for: screen, level: .floating)

@@ -8,6 +8,7 @@ import SwiftUI
 @MainActor
 final class AttentionController {
     static let cardMaximumWidth: CGFloat = 584
+    static let cardMaximumHeight: CGFloat = 360
 
     private let settings: AppSettings
     private var borderPanels: [NSPanel] = []
@@ -120,7 +121,7 @@ final class AttentionController {
             let visible = screen.visibleFrame
             let available = NSSize(
                 width: min(Self.cardMaximumWidth, max(0, visible.width - 40)),
-                height: max(0, visible.height - 40))
+                height: min(Self.cardMaximumHeight, max(0, visible.height / 2)))
             let size = hosting.sizeThatFits(in: available)
             guard Self.isValidCardSize(size, fitting: available) else {
                 self.dismissImmediately()
@@ -264,6 +265,8 @@ struct AttentionCardView: View {
                 .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(.white.opacity(0.92))
                 .multilineTextAlignment(.center)
+                .lineLimit(8)
+                .truncationMode(.tail)
                 .fixedSize(horizontal: false, vertical: true)
             Text("\(self.identity.name) · click to dismiss")
                 .font(.system(size: 12, weight: .medium, design: .monospaced))
