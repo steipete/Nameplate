@@ -31,4 +31,11 @@ struct InstallOriginTests {
             caskroomRoots: [URL(fileURLWithPath: "/test/Caskroom")],
             fileExists: { _ in false }))
     }
+
+    @Test func receiptDoesNotClaimUnrelatedAppCopy() {
+        #expect(!InstallOrigin.isHomebrewCask(
+            appBundleURL: URL(fileURLWithPath: "/Users/test/Downloads/Nameplate.app"),
+            caskroomRoots: [URL(fileURLWithPath: "/test/Caskroom")],
+            fileExists: { _ in true }))
+    }
 }
