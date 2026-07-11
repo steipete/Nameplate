@@ -110,4 +110,20 @@ struct AttentionControllerTests {
 
         #expect(retained.map(\.message) == ["after"])
     }
+
+    // A forced teardown (the `nameplate dismiss` recovery command, or any
+    // fail-safe path that can't keep the card presented) must complete a
+    // waiting `--wait` CLI instead of leaving it blocked until timeout.
+    @Test func forcedDismissAcknowledgesTheWaitingRequest() {
+        let controller = AttentionController(settings: AppSettings())
+        let id = "test-forced-dismiss-\(UUID().uuidString)"
+        defer { AttentionAck.remove(matching: id) }
+
+        // No duration = sticky: the card would otherwise stay up until clicked.
+        controller.show(AttentionRequest(id: id, message: "needs a human"))
+        controller.dismissActive()
+
+        let ack = AttentionAck.consume(matching: id)
+        #expect(ack?.outcome == .autoDismissed)
+    }
 }

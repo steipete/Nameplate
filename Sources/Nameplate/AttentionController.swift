@@ -243,7 +243,13 @@ final class AttentionController {
         self.borderPanels = []
         self.cardPanel?.close()
         self.cardPanel = nil
-        self.activeRequestID = nil
+        // Every teardown funnels through here, including the fail-safe and
+        // recovery paths (dismissActive/`nameplate dismiss`, an unpresentable
+        // card, a lost Space) that never run dismiss(generation:outcome:).
+        // Acknowledge the correlated request so a waiting CLI unblocks with an
+        // outcome instead of hanging until its timeout. A no-op once dismiss()
+        // or a supersede already acknowledged and cleared the id.
+        self.acknowledge(.autoDismissed)
         self.isDismissing = false
     }
 }
