@@ -76,9 +76,10 @@ nameplate attention "Need 1Password approval for release verification — no sec
   --title "Codex → 1Password" --duration 12
 nameplate splash      # replay the identity splash
 nameplate settings    # open settings
+nameplate dismiss     # clear any active attention alert
 ```
 
-`attention` shows a topmost card (click to dismiss) plus pulsating borders on every display — built for AI agents that need a human at the keyboard, with the *reason* right in the alert. The card stays until clicked; pass `--duration <seconds>` to auto-dismiss instead. It launches the app if needed. An agent skill ships in [skills/nameplate-attention](skills/nameplate-attention/SKILL.md) — copy it into your agent's skills directory.
+`attention` shows a topmost card (click to dismiss) plus pulsating borders on every display — built for AI agents that need a human at the keyboard, with the *reason* right in the alert. The card stays until clicked; pass `--duration <seconds>` to auto-dismiss instead. `nameplate dismiss` clears an active alert without quitting Nameplate. It launches the app if needed. An agent skill ships in [skills/nameplate-attention](skills/nameplate-attention/SKILL.md) — copy it into your agent's skills directory.
 
 ### Scripting without the CLI
 

@@ -2,6 +2,8 @@
 
 ## 0.2.6 - Unreleased
 
+- Fixed (macOS): attention cards now stay visibly bounded and click-through until presentation succeeds, recover safely across display and Space changes, and can be cleared with `nameplate dismiss` without quitting the app.
+
 ## 0.2.5 - 2026-07-09
 
 - Changed (Windows/Linux): new and unconfigured installs now default to square frame corners; macOS keeps its rounded bottom-corner default.

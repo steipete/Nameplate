@@ -39,4 +39,10 @@ let package = Package(
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency"),
             ]),
+        .testTarget(
+            name: "NameplateTests",
+            dependencies: ["Nameplate"],
+            swiftSettings: [
+                .enableUpcomingFeature("StrictConcurrency"),
+            ]),
     ])

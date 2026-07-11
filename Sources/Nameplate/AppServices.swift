@@ -41,6 +41,14 @@ final class AppServices {
         self.configImport?.show(proposal)
     }
 
+    var hasActiveAttention: Bool {
+        self.attention?.isActive ?? false
+    }
+
+    func dismissAttention() {
+        self.attention?.dismissActive()
+    }
+
     /// Same per-screen rule the overlay uses: in remote-only mode a screen is
     /// decorated when it is virtual or someone is screen-shared in.
     /// Attention alerts ignore this.
@@ -124,6 +132,9 @@ final class AppServices {
         self.registerDarwinTrigger(name: AttentionRequest.notificationName) { services in
             guard let request = AttentionRequest.consume() else { return }
             services.attention?.show(request)
+        }
+        self.registerDarwinTrigger(name: "com.steipete.nameplate.attention.dismiss") { services in
+            services.attention?.dismissActive()
         }
 
         // Darwin notifications are not queued: a CLI-triggered cold launch can

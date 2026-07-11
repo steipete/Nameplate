@@ -8,6 +8,7 @@ import notify
 //   nameplate attention <message> [--title <t>] [--duration <s>] [--color <hex>]
 //   nameplate splash
 //   nameplate settings
+//   nameplate dismiss
 
 let bundleID = "com.steipete.nameplate"
 
@@ -23,6 +24,7 @@ func usage() -> Never {
         (no --duration: card stays until clicked)
       nameplate splash
       nameplate settings
+      nameplate dismiss
 
     attention shows a topmost message card with pulsating screen borders —
     use it when an agent needs the human, and always say why.
@@ -122,6 +124,9 @@ case "splash":
 case "settings":
     let coldLaunched = ensureAppRunning()
     post("com.steipete.nameplate.settings", retryAfterColdLaunch: coldLaunched)
+
+case "dismiss":
+    notify_post("com.steipete.nameplate.attention.dismiss")
 
 case "--help", "-h", "help":
     usage()

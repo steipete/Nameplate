@@ -1,0 +1,47 @@
+import AppKit
+import NameplateCore
+import SwiftUI
+import Testing
+@testable import Nameplate
+
+@MainActor
+@Suite("Attention card presentation")
+struct AttentionControllerTests {
+    @Test func constrainedMeasurementDoesNotCreateFullHeightInputPanel() {
+        let controller = NSHostingController(
+            rootView: AttentionCardView(
+                request: AttentionRequest(
+                    title: "Codex to Nameplate",
+                    message: "Issue 22 regression"),
+                colorHex: "#1D9E75",
+                identity: MacIdentity(name: "miniclaw", colorHex: "#1D9E75"),
+                onDismiss: {}))
+        let available = NSSize(width: AttentionController.cardMaximumWidth, height: 680)
+
+        let size = controller.sizeThatFits(in: available)
+
+        #expect(AttentionController.isValidCardSize(size, fitting: available))
+        #expect(size.height < 250)
+    }
+
+    @Test func rejectsInvalidOrOversizedCardMeasurements() {
+        let available = NSSize(width: 584, height: 680)
+        #expect(!AttentionController.isValidCardSize(.zero, fitting: available))
+        #expect(!AttentionController.isValidCardSize(
+            NSSize(width: 584, height: 681),
+            fitting: available))
+        #expect(!AttentionController.isValidCardSize(
+            NSSize(width: CGFloat.infinity, height: 100),
+            fitting: available))
+    }
+
+    @Test func interactivePanelStartsClickThroughAndAvoidsStationaryBehavior() throws {
+        let screen = try #require(NSScreen.main ?? NSScreen.screens.first)
+        let panel = OverlayPanelFactory.makeAttentionCardPanel(for: screen, level: .floating)
+        defer { panel.close() }
+
+        #expect(panel.ignoresMouseEvents)
+        #expect(panel.collectionBehavior.contains(.canJoinAllSpaces))
+        #expect(!panel.collectionBehavior.contains(.stationary))
+    }
+}

@@ -21,6 +21,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     private let frameItem = NSMenuItem()
     private let tagItem = NSMenuItem()
     private let watermarkItem = NSMenuItem()
+    private let dismissAttentionItem = NSMenuItem()
 
     private var copyableIP: String?
 
@@ -88,6 +89,11 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         let splashItem = NSMenuItem(title: "Show splash", action: #selector(self.showSplash), keyEquivalent: "")
         splashItem.target = self
         menu.addItem(splashItem)
+
+        self.dismissAttentionItem.title = "Dismiss attention"
+        self.dismissAttentionItem.target = self
+        self.dismissAttentionItem.action = #selector(self.dismissAttention)
+        menu.addItem(self.dismissAttentionItem)
         menu.addItem(.separator())
 
         let settingsItem = NSMenuItem(title: "Settings…", action: #selector(self.openSettings), keyEquivalent: ",")
@@ -147,6 +153,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         self.frameItem.state = self.settings.frameEnabled ? .on : .off
         self.tagItem.state = self.settings.tagEnabled ? .on : .off
         self.watermarkItem.state = self.settings.watermarkEnabled ? .on : .off
+        self.dismissAttentionItem.isEnabled = self.services.hasActiveAttention
     }
 
     @objc private func copyIPAddress() {
@@ -162,6 +169,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
 
     @objc private func showSplash() {
         self.services.showSplash(force: true)
+    }
+
+    @objc private func dismissAttention() {
+        self.services.dismissAttention()
     }
 
     @objc private func openSettings() {

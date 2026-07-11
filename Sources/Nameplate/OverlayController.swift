@@ -26,6 +26,15 @@ enum OverlayPanelFactory {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         return panel
     }
+
+    /// Interactive cards follow users across Spaces but do not use the
+    /// stationary Mission Control behavior intended for click-through frames.
+    @MainActor
+    static func makeAttentionCardPanel(for screen: NSScreen, level: NSWindow.Level) -> NSPanel {
+        let panel = self.makePanel(for: screen, level: level)
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
+        return panel
+    }
 }
 
 /// Owns one overlay panel per screen and keeps them alive across display
