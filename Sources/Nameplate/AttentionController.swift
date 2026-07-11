@@ -7,10 +7,18 @@ import SwiftUI
 /// auto-dismisses instead.
 @MainActor
 final class AttentionController {
+    static let cardMaximumWidth: CGFloat = 584
+    static let cardMaximumHeight: CGFloat = 360
+
     private let settings: AppSettings
     private var borderPanels: [NSPanel] = []
     private var cardPanel: NSPanel?
     private var generation = 0
+    private var isDismissing = false
+
+    var isActive: Bool {
+        !self.borderPanels.isEmpty || self.cardPanel != nil
+    }
 
     init(settings: AppSettings) {
         self.settings = settings
@@ -23,16 +31,35 @@ final class AttentionController {
             queue: .main)
         { [weak self] _ in
             MainActor.assumeIsolated {
-                for delay: TimeInterval in [0, 0.5, 1.5] {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-                        self?.syncFrames()
+                self?.cardPanel?.ignoresMouseEvents = true
+                let passes: [(delay: TimeInterval, restoreInteraction: Bool)] = [
+                    (0, false),
+                    (0.5, false),
+                    (1.5, true),
+                ]
+                for pass in passes {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + pass.delay) { [weak self] in
+                        self?.syncFrames(restoreInteraction: pass.restoreInteraction)
                     }
+                }
+            }
+        }
+
+        _ = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.activeSpaceDidChangeNotification,
+            object: nil,
+            queue: .main)
+        { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.cardPanel?.ignoresMouseEvents = true
+                DispatchQueue.main.async { [weak self] in
+                    self?.syncFrames(restoreInteraction: true)
                 }
             }
         }
     }
 
-    private func syncFrames() {
+    private func syncFrames(restoreInteraction: Bool) {
         guard !self.borderPanels.isEmpty || self.cardPanel != nil else { return }
         let screens = NSScreen.screens
         for (index, panel) in self.borderPanels.enumerated() where index < screens.count {
@@ -40,7 +67,7 @@ final class AttentionController {
                 panel.setFrame(screens[index].frame, display: true)
             }
         }
-        if let card = self.cardPanel, let screen = NSScreen.main {
+        if let card = self.cardPanel, let screen = NSScreen.main ?? NSScreen.screens.first {
             let visible = screen.visibleFrame
             var size = card.frame.size
             size.width = min(size.width, visible.width - 40)
@@ -53,6 +80,13 @@ final class AttentionController {
                     width: size.width,
                     height: size.height),
                 display: true)
+            card.orderFrontRegardless()
+            if restoreInteraction {
+                self.enableCardInteractionIfPresented(card)
+            }
+        } else if self.cardPanel != nil, restoreInteraction {
+            // A stale topmost input window is worse than a dropped card.
+            self.dismissImmediately()
         }
     }
 
@@ -76,23 +110,25 @@ final class AttentionController {
             return panel
         }
 
-        if let screen = NSScreen.main {
-            let panel = OverlayPanelFactory.makePanel(for: screen, level: level)
-            // Sized to the card only, so the rest of the screen stays clickable.
-            panel.ignoresMouseEvents = false
-            let hosting = NSHostingView(
+        if let screen = NSScreen.main ?? NSScreen.screens.first {
+            let panel = OverlayPanelFactory.makeAttentionCardPanel(for: screen, level: level)
+            let hosting = NSHostingController(
                 rootView: AttentionCardView(
                     request: request,
                     colorHex: colorHex,
                     identity: identity,
                     onDismiss: { [weak self] in self?.dismiss(generation: generation) }))
-            var size = hosting.fittingSize
-            panel.contentView = hosting
             let visible = screen.visibleFrame
-            // Clamp to the visible frame so the card is fully on-screen even on
-            // small or low-resolution displays.
-            size.width = min(size.width, visible.width - 40)
-            size.height = min(size.height, visible.height - 40)
+            let available = NSSize(
+                width: min(Self.cardMaximumWidth, max(0, visible.width - 40)),
+                height: min(Self.cardMaximumHeight, max(0, visible.height / 2)))
+            let size = hosting.sizeThatFits(in: available)
+            guard Self.isValidCardSize(size, fitting: available) else {
+                self.dismissImmediately()
+                return
+            }
+            hosting.sizingOptions = []
+            panel.contentViewController = hosting
             let y = max(visible.minY + 20, visible.maxY - size.height - 90)
             panel.setFrame(
                 NSRect(
@@ -103,6 +139,15 @@ final class AttentionController {
                 display: true)
             panel.orderFrontRegardless()
             self.cardPanel = panel
+            // Ordering and SwiftUI's first render finish on the next main-loop
+            // turn. Until then the panel remains click-through.
+            DispatchQueue.main.async { [weak self, weak panel] in
+                guard let self, let panel, self.generation == generation else { return }
+                self.enableCardInteractionIfPresented(panel)
+            }
+        } else {
+            self.dismissImmediately()
+            return
         }
 
         if let duration {
@@ -115,7 +160,10 @@ final class AttentionController {
 
     private func dismiss(generation: Int) {
         guard self.generation == generation else { return }
+        self.isDismissing = true
         let panels = self.borderPanels + [self.cardPanel].compactMap(\.self)
+        // Never leave a fading or interrupted card intercepting input.
+        self.cardPanel?.ignoresMouseEvents = true
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.4
             for panel in panels {
@@ -129,6 +177,35 @@ final class AttentionController {
         }
     }
 
+    func dismissActive() {
+        guard self.isActive else { return }
+        self.generation += 1
+        self.isDismissing = true
+        self.cardPanel?.ignoresMouseEvents = true
+        self.dismissImmediately()
+    }
+
+    static func isValidCardSize(_ size: NSSize, fitting available: NSSize) -> Bool {
+        size.width.isFinite && size.height.isFinite
+            && size.width > 0 && size.height > 0
+            && size.width <= available.width && size.height <= available.height
+    }
+
+    private func enableCardInteractionIfPresented(_ panel: NSPanel) {
+        guard panel === self.cardPanel,
+              !self.isDismissing,
+              panel.isVisible,
+              panel.isOnActiveSpace,
+              panel.alphaValue > 0,
+              panel.contentView != nil,
+              NSScreen.screens.contains(where: { $0.visibleFrame.contains(panel.frame) })
+        else {
+            self.dismissImmediately()
+            return
+        }
+        panel.ignoresMouseEvents = false
+    }
+
     private func dismissImmediately() {
         for panel in self.borderPanels {
             panel.close()
@@ -136,6 +213,7 @@ final class AttentionController {
         self.borderPanels = []
         self.cardPanel?.close()
         self.cardPanel = nil
+        self.isDismissing = false
     }
 }
 
@@ -187,6 +265,8 @@ struct AttentionCardView: View {
                 .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(.white.opacity(0.92))
                 .multilineTextAlignment(.center)
+                .lineLimit(8)
+                .truncationMode(.tail)
                 .fixedSize(horizontal: false, vertical: true)
             Text("\(self.identity.name) · click to dismiss")
                 .font(.system(size: 12, weight: .medium, design: .monospaced))
