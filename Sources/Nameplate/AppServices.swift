@@ -53,8 +53,14 @@ final class AppServices {
     func dismissAttention(upTo cutoff: Date) {
         let effectiveCutoff = max(self.latestAttentionDismissalCutoff ?? cutoff, cutoff)
         self.latestAttentionDismissalCutoff = effectiveCutoff
-        self.pendingAttentionRequests.removeAll { !$0.wasCreated(after: effectiveCutoff) }
-        AttentionRequest.discardAll(upTo: effectiveCutoff)
+        let drained = AttentionRequest.drainAll()
+        let pending = Self.partitionByDismissal(
+            self.pendingAttentionRequests + drained.pending,
+            cutoff: effectiveCutoff)
+        let expired = Self.partitionByDismissal(drained.expired, cutoff: effectiveCutoff)
+        self.pendingAttentionRequests = pending.after
+        self.acknowledge(pending.dismissed + expired.dismissed, outcome: .autoDismissed)
+        self.acknowledge(expired.after, outcome: .expired)
         guard !(self.activeAttentionRequest?.wasCreated(after: effectiveCutoff) ?? false) else { return }
         self.attentionShowing = false
         self.activeAttentionRequest = nil
@@ -159,10 +165,18 @@ final class AppServices {
     }
 
     private func drainAttentionRequests() {
-        let requests = Self.requestsCreatedAfterDismissal(
-            AttentionRequest.consumeAll(),
-            cutoff: self.latestAttentionDismissalCutoff)
-        self.pendingAttentionRequests.append(contentsOf: requests)
+        let drained = AttentionRequest.drainAll()
+        guard let cutoff = self.latestAttentionDismissalCutoff else {
+            self.pendingAttentionRequests.append(contentsOf: drained.pending)
+            self.acknowledge(drained.expired, outcome: .expired)
+            self.showNextAttentionRequest()
+            return
+        }
+        let pending = Self.partitionByDismissal(drained.pending, cutoff: cutoff)
+        let expired = Self.partitionByDismissal(drained.expired, cutoff: cutoff)
+        self.pendingAttentionRequests.append(contentsOf: pending.after)
+        self.acknowledge(pending.dismissed + expired.dismissed, outcome: .autoDismissed)
+        self.acknowledge(expired.after, outcome: .expired)
         self.showNextAttentionRequest()
     }
 
@@ -174,10 +188,20 @@ final class AppServices {
         return requests.filter { $0.wasCreated(after: cutoff) }
     }
 
+    private static func partitionByDismissal(
+        _ requests: [AttentionRequest],
+        cutoff: Date) -> (after: [AttentionRequest], dismissed: [AttentionRequest])
+    {
+        let after = requests.filter { $0.wasCreated(after: cutoff) }
+        let dismissed = requests.filter { !$0.wasCreated(after: cutoff) }
+        return (after, dismissed)
+    }
+
     private func showNextAttentionRequest() {
-        guard !self.attentionShowing,
-              let request = Self.takeNextFreshAttentionRequest(from: &self.pendingAttentionRequests)
-        else { return }
+        guard !self.attentionShowing else { return }
+        let selection = Self.takeNextFreshAttentionRequest(from: &self.pendingAttentionRequests)
+        self.acknowledge(selection.expired, outcome: .expired)
+        guard let request = selection.request else { return }
         self.attentionShowing = true
         self.activeAttentionRequest = request
         self.attention?.show(request) { [weak self] in
@@ -190,15 +214,33 @@ final class AppServices {
 
     static func takeNextFreshAttentionRequest(
         from requests: inout [AttentionRequest],
-        now: Date = Date()) -> AttentionRequest?
+        now: Date = Date()) -> (request: AttentionRequest?, expired: [AttentionRequest])
     {
+        var expired: [AttentionRequest] = []
         while !requests.isEmpty {
             let request = requests.removeFirst()
             if request.isFresh(at: now) {
-                return request
+                return (request, expired)
+            }
+            expired.append(request)
+        }
+        return (nil, expired)
+    }
+
+    private func acknowledge(_ requests: [AttentionRequest], outcome: AttentionAck.Outcome) {
+        var wroteAcknowledgment = false
+        for request in requests {
+            guard let id = request.id else { continue }
+            do {
+                try AttentionAck(id: id, outcome: outcome).write()
+                wroteAcknowledgment = true
+            } catch {
+                NSLog("Nameplate: writing attention acknowledgment failed: \(error)")
             }
         }
-        return nil
+        if wroteAcknowledgment {
+            notify_post(AttentionAck.notificationName)
+        }
     }
 
     private func registerDarwinTrigger(name: String, action: @escaping @MainActor (AppServices) -> Void) {

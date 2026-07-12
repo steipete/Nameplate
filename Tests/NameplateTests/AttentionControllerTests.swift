@@ -92,9 +92,11 @@ struct AttentionControllerTests {
             AttentionRequest(message: "fresh", createdAt: now),
         ]
 
-        let next = try #require(AppServices.takeNextFreshAttentionRequest(from: &requests, now: now))
+        let selection = AppServices.takeNextFreshAttentionRequest(from: &requests, now: now)
+        let next = try #require(selection.request)
 
         #expect(next.message == "fresh")
+        #expect(selection.expired.map(\.message) == ["stale past", "stale future"])
         #expect(requests.isEmpty)
     }
 
@@ -109,5 +111,21 @@ struct AttentionControllerTests {
         let retained = AppServices.requestsCreatedAfterDismissal(requests, cutoff: cutoff)
 
         #expect(retained.map(\.message) == ["after"])
+    }
+
+    // A forced teardown (the `nameplate dismiss` recovery command, or any
+    // fail-safe path that can't keep the card presented) must complete a
+    // waiting `--wait` CLI instead of leaving it blocked until timeout.
+    @Test func forcedDismissAcknowledgesTheWaitingRequest() {
+        let controller = AttentionController(settings: AppSettings())
+        let id = "test-forced-dismiss-\(UUID().uuidString)"
+        defer { AttentionAck.remove(matching: id) }
+
+        // No duration = sticky: the card would otherwise stay up until clicked.
+        controller.show(AttentionRequest(id: id, message: "needs a human"))
+        controller.dismissActive()
+
+        let ack = AttentionAck.consume(matching: id)
+        #expect(ack?.outcome == .autoDismissed)
     }
 }
