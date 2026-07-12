@@ -27,7 +27,13 @@ brew install --cask steipete/tap/nameplate
 
 **Windows** — grab [Nameplate-Windows-x64.zip](https://github.com/steipete/Nameplate/releases/latest/download/Nameplate-Windows-x64.zip) (or `arm64`) from the latest release: a single self-contained `nameplate.exe` (tray app + CLI in one binary). Source lives in [`windows/`](windows/).
 
-**Linux** — grab [Nameplate-Linux-x86_64.tar.gz](https://github.com/steipete/Nameplate/releases/latest/download/Nameplate-Linux-x86_64.tar.gz) (or `arm64`) from the latest release; requires `libgtk-4`, built for X11 fleets (xrdp/VNC), Wayland best-effort. Source lives in [`linux/`](linux/).
+**Linux** — install with Homebrew:
+
+```sh
+brew install steipete/tap/nameplate
+```
+
+Or grab [Nameplate-Linux-x86_64.tar.gz](https://github.com/steipete/Nameplate/releases/latest/download/Nameplate-Linux-x86_64.tar.gz) (or `arm64`) from the latest release; the tarball requires the system GTK4 runtime. Built for X11 fleets (xrdp/VNC), Wayland best-effort. Source lives in [`linux/`](linux/).
 
 All three share the same fleet file, the same hostname-derived default colors, and the same `nameplate attention` / `nameplate splash` CLI.
 
