@@ -6,6 +6,7 @@ public struct AttentionAck: Codable, Equatable, Sendable {
     public enum Outcome: String, Codable, Equatable, Sendable {
         case clicked
         case autoDismissed
+        case expired
         case superseded
     }
 
@@ -81,7 +82,10 @@ public struct AttentionAck: Codable, Equatable, Sendable {
 
     static func handoffURL(matching id: String, from url: URL = handoffURL) -> URL {
         let basename = url.deletingPathExtension().lastPathComponent
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-_")
+        let encodedID = id.addingPercentEncoding(withAllowedCharacters: allowed) ?? "invalid"
         return url.deletingLastPathComponent()
-            .appending(path: "\(basename)-\(id).json")
+            .appending(path: "\(basename)-\(encodedID).json")
     }
 }

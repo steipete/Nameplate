@@ -8,7 +8,7 @@
 - Fixed (macOS): rapid attention requests now queue and display in order instead of overwriting each other, while legacy handoffs still migrate. Thanks @abhinavgautam01!
 - Fixed (macOS): attention cards now stay visibly bounded and click-through until presentation succeeds, recover safely across display and Space changes, and can be cleared with `nameplate dismiss` without quitting the app.
 - Fixed (macOS): Sparkle now stays disabled for Homebrew-managed installs even when the app lives directly in `/Applications`. Thanks @abhinavgautam01!
-- macOS: `nameplate attention --wait` now blocks until the human clicks, the alert auto-dismisses, a newer alert supersedes it, or the wait times out, with distinct exit codes for agents.
+- macOS: `nameplate attention --wait` now blocks until the human clicks, app-driven dismissal, request expiry, or wait timeout, with scriptable exit codes and FIFO behavior for concurrent alerts. Thanks @mvanhorn!
 
 ## 0.2.5 - 2026-07-09
 

@@ -5,6 +5,11 @@ import Foundation
 /// JSON handoff, announced via the Darwin notification
 /// `com.steipete.nameplate.attention`.
 public struct AttentionRequest: Codable, Equatable, Sendable {
+    public struct DrainResult: Sendable {
+        public var pending: [AttentionRequest]
+        public var expired: [AttentionRequest]
+    }
+
     /// Correlates a request with its acknowledgment when the sender waits.
     public var id: String?
     public var title: String?
@@ -88,14 +93,41 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
     /// Reads and removes the pending request (one-shot handoff). Stale
     /// requests are consumed but not returned.
     public static func consume(from url: URL = legacyHandoffURL, now: Date = Date()) -> AttentionRequest? {
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        let modificationDate = try? url.resourceValues(forKeys: [.contentModificationDateKey])
-            .contentModificationDate
-        try? FileManager.default.removeItem(at: url)
-        guard var request = try? JSONDecoder().decode(AttentionRequest.self, from: data) else { return nil }
-        request.createdAt = request.createdAt ?? modificationDate
+        guard let request = self.readAndRemove(from: url) else { return nil }
         guard request.isFresh(at: now) else { return nil }
         return request
+    }
+
+    public static func drainAll(
+        from directory: URL = handoffDirectory,
+        legacyURL: URL? = legacyHandoffURL,
+        now: Date = Date()) -> DrainResult
+    {
+        var urls: [URL] = []
+        if let legacyURL {
+            urls.append(legacyURL)
+        }
+        let queued = ((try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil)) ?? [])
+            .filter {
+                $0.pathExtension == "json"
+                    && $0.lastPathComponent.hasPrefix("attention-")
+            }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        urls.append(contentsOf: queued)
+
+        var pending: [AttentionRequest] = []
+        var expired: [AttentionRequest] = []
+        for url in urls {
+            guard let request = self.readAndRemove(from: url) else { continue }
+            if request.isFresh(at: now) {
+                pending.append(request)
+            } else {
+                expired.append(request)
+            }
+        }
+        return DrainResult(pending: pending, expired: expired)
     }
 
     public static func consumeAll(
@@ -103,27 +135,17 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
         legacyURL: URL? = legacyHandoffURL,
         now: Date = Date()) -> [AttentionRequest]
     {
-        var requests: [AttentionRequest] = []
-        if let legacyURL, let request = self.consume(from: legacyURL, now: now) {
-            requests.append(request)
-        }
+        self.drainAll(from: directory, legacyURL: legacyURL, now: now).pending
+    }
 
-        let urls = (try? FileManager.default.contentsOfDirectory(
-            at: directory,
-            includingPropertiesForKeys: nil)) ?? []
-        let queued = urls
-            .filter {
-                $0.pathExtension == "json"
-                    && $0.lastPathComponent.hasPrefix("attention-")
-            }
-            .sorted { $0.lastPathComponent < $1.lastPathComponent }
-
-        for url in queued {
-            if let request = self.consume(from: url, now: now) {
-                requests.append(request)
-            }
-        }
-        return requests
+    private static func readAndRemove(from url: URL) -> AttentionRequest? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        let modificationDate = try? url.resourceValues(forKeys: [.contentModificationDateKey])
+            .contentModificationDate
+        try? FileManager.default.removeItem(at: url)
+        guard var request = try? JSONDecoder().decode(AttentionRequest.self, from: data) else { return nil }
+        request.createdAt = request.createdAt ?? modificationDate
+        return request
     }
 
     public static func discardAll(

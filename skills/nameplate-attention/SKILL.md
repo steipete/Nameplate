@@ -15,7 +15,7 @@ Grab the human's attention at the Mac: a topmost message card plus pulsating col
   `nameplate attention "Need 1Password approval for release verification; no secret read." --title "Codex → 1Password" --wait`
 - Launches Nameplate.app if it is not running. By default the card stays until the human clicks it; pass `--duration <seconds>` (max 120) for auto-dismiss.
 - Pass `--wait` to block until the human clicks or the alert ends. The default wait timeout is 600 seconds; override it with `--timeout <seconds>`.
-- With `--wait`, exit `0` means clicked, `3` means auto-dismissed, and `4` means the wait timed out or a newer alert superseded this one.
+- With `--wait`, exit `0` means clicked, `3` means app-driven dismissal, and `4` means the wait timed out or the request expired before presentation. Concurrent alerts queue in order.
 - Requests are timestamped; anything older than 2 minutes is dropped, so a login-time launch never replays stale alerts.
 
 ## Extras

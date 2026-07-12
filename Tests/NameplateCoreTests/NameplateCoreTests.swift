@@ -260,6 +260,27 @@ struct AttentionRequestTests {
         #expect(retained.createdAt == writtenAfter)
     }
 
+    @Test func drainAllSeparatesExpiredRequestsForAcknowledgment() throws {
+        let directory = self.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let staleID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
+        let freshID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000002"))
+
+        try AttentionRequest(
+            id: "stale-waiter",
+            message: "stale",
+            createdAt: now.addingTimeInterval(-AttentionRequest.maxAge - 1))
+            .writeQueued(to: directory, now: now, uuid: staleID)
+        try AttentionRequest(id: "fresh-waiter", message: "fresh", createdAt: now)
+            .writeQueued(to: directory, now: now.addingTimeInterval(0.001), uuid: freshID)
+
+        let drained = AttentionRequest.drainAll(from: directory, legacyURL: nil, now: now)
+
+        #expect(drained.expired.map(\.id) == ["stale-waiter"])
+        #expect(drained.pending.map(\.id) == ["fresh-waiter"])
+    }
+
     @Test func decodesRequestsWithoutID() throws {
         let data = Data(#"{"message":"old writer"}"#.utf8)
         let request = try JSONDecoder().decode(AttentionRequest.self, from: data)

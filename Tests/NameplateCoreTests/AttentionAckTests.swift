@@ -75,4 +75,15 @@ struct AttentionAckTests {
 
         #expect(!FileManager.default.fileExists(atPath: ackURL.path))
     }
+
+    @Test func encodesRequestIDAsOneSafeFilenameComponent() throws {
+        let url = self.temporaryURL()
+        let ack = AttentionAck(id: "../nested/request", outcome: .expired)
+        let ackURL = AttentionAck.handoffURL(matching: ack.id, from: url)
+
+        #expect(ackURL.deletingLastPathComponent() == url.deletingLastPathComponent())
+        #expect(!ackURL.lastPathComponent.contains("/"))
+        try ack.write(to: url)
+        #expect(AttentionAck.consume(matching: ack.id, from: url) == ack)
+    }
 }

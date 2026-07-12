@@ -92,9 +92,11 @@ struct AttentionControllerTests {
             AttentionRequest(message: "fresh", createdAt: now),
         ]
 
-        let next = try #require(AppServices.takeNextFreshAttentionRequest(from: &requests, now: now))
+        let selection = AppServices.takeNextFreshAttentionRequest(from: &requests, now: now)
+        let next = try #require(selection.request)
 
         #expect(next.message == "fresh")
+        #expect(selection.expired.map(\.message) == ["stale past", "stale future"])
         #expect(requests.isEmpty)
     }
 
