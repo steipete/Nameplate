@@ -57,7 +57,9 @@ public enum ColorHex {
     public static func normalize(_ raw: String) -> String? {
         var text = raw.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         if text.hasPrefix("#") { text.removeFirst() }
-        guard text.allSatisfy(\.isHexDigit) else { return nil }
+        guard text.utf8.allSatisfy({ byte in
+            (48...57).contains(byte) || (65...70).contains(byte)
+        }) else { return nil }
         switch text.count {
         case 3:
             text = text.map { "\($0)\($0)" }.joined()

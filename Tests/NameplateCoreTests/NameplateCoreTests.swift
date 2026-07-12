@@ -20,6 +20,7 @@ struct ColorHexTests {
         #expect(ColorHex.normalize("#12345") == nil)
         #expect(ColorHex.normalize("nope") == nil)
         #expect(ColorHex.normalize("#GGGGGG") == nil)
+        #expect(ColorHex.normalize("ＦＦＦ") == nil)
     }
 
     @Test func parsesComponents() throws {
