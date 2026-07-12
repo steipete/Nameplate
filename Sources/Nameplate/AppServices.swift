@@ -142,6 +142,9 @@ final class AppServices {
             services.drainAttentionRequests()
         }
         self.registerDarwinTrigger(name: "com.steipete.nameplate.attention.dismiss") { services in
+            services.dismissAttention(upTo: Date())
+        }
+        self.registerDarwinTrigger(name: AttentionDismissal.notificationName) { services in
             let cutoff = AttentionDismissal.read()?.createdAt ?? Date()
             services.dismissAttention(upTo: cutoff)
         }

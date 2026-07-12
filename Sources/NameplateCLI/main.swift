@@ -138,7 +138,7 @@ case "dismiss":
         fail("could not write attention dismissal: \(error.localizedDescription)")
     }
     AttentionRequest.discardAll(upTo: cutoff)
-    notify_post("com.steipete.nameplate.attention.dismiss")
+    notify_post(AttentionDismissal.notificationName)
 
 case "--help", "-h", "help":
     usage()

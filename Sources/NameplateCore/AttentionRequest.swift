@@ -151,6 +151,8 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
 public struct AttentionDismissal: Codable, Sendable {
     public var createdAt: Date
 
+    public static let notificationName = "com.steipete.nameplate.attention.dismiss.cutoff"
+
     public init(createdAt: Date) {
         self.createdAt = createdAt
     }
