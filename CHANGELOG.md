@@ -9,7 +9,7 @@
 - Fixed (macOS): attention cards now stay visibly bounded and click-through until presentation succeeds, recover safely across display and Space changes, and can be cleared with `nameplate dismiss` without quitting the app.
 - Fixed (macOS): Sparkle now stays disabled for Homebrew-managed installs even when the app lives directly in `/Applications`. Thanks @abhinavgautam01!
 - macOS: `nameplate attention --wait` now blocks until the human clicks, app-driven dismissal, request expiry, or wait timeout, with scriptable exit codes and FIFO behavior for concurrent alerts. Thanks @mvanhorn!
-- Optional name-tag info lines show the current IP address, uptime, macOS version, and location without opening the menu.
+- Optional name-tag info lines show the current IP address, uptime, macOS version, and location without opening the menu. Thanks @mvanhorn!
 
 ## 0.2.5 - 2026-07-09
 

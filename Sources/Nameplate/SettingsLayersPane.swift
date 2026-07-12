@@ -58,7 +58,7 @@ struct LayersSettingsPane: View {
             } header: {
                 Text("Name tag")
             } footer: {
-                Text("A small pill with this Mac's name and optional system details, floating above everything in a corner.")
+                Text("Selected details stay visible on the name tag and may appear in screenshots and recordings.")
             }
 
             Section {
