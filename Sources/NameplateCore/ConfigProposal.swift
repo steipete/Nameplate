@@ -82,7 +82,7 @@ public struct ConfigProposal: Equatable, Sendable {
                 self.tagCorner = ScreenCorner(rawValue: value)
             case "watermarkOpacity":
                 recognizedParameter = true
-                self.watermarkOpacity = Self.number(value, clampedTo: 0...0.3)
+                self.watermarkOpacity = Self.number(value, clampedTo: 0...0.5)
             case "frameEnabled":
                 recognizedParameter = true
                 self.frameEnabled = Self.boolean(value)
