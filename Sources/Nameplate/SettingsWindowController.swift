@@ -11,13 +11,15 @@ final class SettingsWindowController {
     private var tabController: NSTabViewController?
     private let settings: AppSettings
     private weak var services: AppServices?
+    private let infoLineProvider: InfoLineProvider
 
     private static let paneWidth: CGFloat = 560
     private static let frameAutosaveName = "NameplateSettingsWindow"
 
-    init(settings: AppSettings, services: AppServices) {
+    init(settings: AppSettings, services: AppServices, infoLineProvider: InfoLineProvider) {
         self.settings = settings
         self.services = services
+        self.infoLineProvider = infoLineProvider
     }
 
     func show(tab: SettingsTab? = nil) {
@@ -52,7 +54,7 @@ final class SettingsWindowController {
 
         addPane(
             .identity, symbol: "person.text.rectangle", height: 620,
-            view: IdentitySettingsPane(settings: settings))
+            view: IdentitySettingsPane(settings: settings, infoLineProvider: self.infoLineProvider))
         addPane(
             .layers, symbol: "square.3.layers.3d", height: 680,
             view: LayersSettingsPane(settings: settings))

@@ -45,12 +45,20 @@ struct LayersSettingsPane: View {
                         }
                     }
                     Toggle("Include glyph", isOn: self.$settings.tagShowsGlyph)
+                    LabeledContent("Info lines") {
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(InfoLineField.allCases) { field in
+                                Toggle(field.label, isOn: self.infoFieldBinding(field))
+                            }
+                        }
+                        .toggleStyle(.checkbox)
+                    }
                 }
                 .disabled(!self.settings.tagEnabled)
             } header: {
                 Text("Name tag")
             } footer: {
-                Text("A small pill with this Mac's name, floating above everything in a corner.")
+                Text("Selected details stay visible on the name tag and may appear in screenshots and recordings.")
             }
 
             Section {
@@ -75,5 +83,19 @@ struct LayersSettingsPane: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    private func infoFieldBinding(_ field: InfoLineField) -> Binding<Bool> {
+        Binding(
+            get: { self.settings.tagInfoFields.contains(field) },
+            set: { enabled in
+                var fields = self.settings.tagInfoFields
+                if enabled {
+                    fields.insert(field)
+                } else {
+                    fields.remove(field)
+                }
+                self.settings.tagInfoFields = fields
+            })
     }
 }

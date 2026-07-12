@@ -17,6 +17,7 @@ final class AppServices {
     private var settingsWindow: SettingsWindowController?
     private(set) var updater: UpdaterProviding?
     private let remoteMonitor = RemoteViewMonitor()
+    private let infoLineProvider = InfoLineProvider()
     private var settingsCancellable: AnyCancellable?
     private var pendingAttentionRequests: [AttentionRequest] = []
     private var attentionShowing = false
@@ -33,7 +34,10 @@ final class AppServices {
 
     func showSettings(tab: SettingsTab? = nil) {
         if self.settingsWindow == nil {
-            self.settingsWindow = SettingsWindowController(settings: self.settings, services: self)
+            self.settingsWindow = SettingsWindowController(
+                settings: self.settings,
+                services: self,
+                infoLineProvider: self.infoLineProvider)
         }
         self.settingsWindow?.show(tab: tab)
     }
@@ -82,7 +86,13 @@ final class AppServices {
     func start() {
         guard self.monitor == nil else { return }
         let settings = self.settings
-        self.overlay = OverlayController(settings: settings, remoteMonitor: self.remoteMonitor)
+        self.infoLineProvider.configure(
+            fields: settings.tagInfoFields,
+            location: settings.identity.location)
+        self.overlay = OverlayController(
+            settings: settings,
+            remoteMonitor: self.remoteMonitor,
+            infoLineProvider: self.infoLineProvider)
         self.splash = SplashController(settings: settings)
         self.attention = AttentionController(settings: settings)
         self.statusItem = StatusItemController(settings: settings, services: self)
@@ -100,6 +110,9 @@ final class AppServices {
                 DispatchQueue.main.async {
                     guard let self else { return }
                     self.remoteMonitor.setPollingEnabled(self.settings.visibilityMode == .remoteOnly)
+                    self.infoLineProvider.configure(
+                        fields: self.settings.tagInfoFields,
+                        location: self.settings.identity.location)
                 }
             }
 

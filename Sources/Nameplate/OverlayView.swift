@@ -30,6 +30,7 @@ extension AppSettings {
 /// Nameplate never touches the actual desktop background.
 struct OverlayView: View {
     @ObservedObject var settings: AppSettings
+    @ObservedObject var infoLineProvider: InfoLineProvider
 
     var body: some View {
         let identity = self.settings.identity
@@ -52,7 +53,10 @@ struct OverlayView: View {
             }
 
             if self.settings.tagEnabled {
-                NameTagPill(identity: identity, showsGlyph: self.settings.tagShowsGlyph)
+                NameTagPill(
+                    identity: identity,
+                    showsGlyph: self.settings.tagShowsGlyph,
+                    infoLines: self.infoLineProvider.lines)
                     .frame(
                         maxWidth: .infinity,
                         maxHeight: .infinity,
@@ -72,9 +76,43 @@ struct OverlayView: View {
 struct NameTagPill: View {
     let identity: MacIdentity
     var showsGlyph: Bool = true
+    var infoLines: [String] = []
     var scale: CGFloat = 1
 
     var body: some View {
+        self.content
+            .foregroundStyle(self.identity.textOnColor)
+            .padding(.horizontal, 10 * self.scale)
+            .padding(.vertical, 4 * self.scale)
+            .background {
+                if self.infoLines.isEmpty {
+                    Capsule()
+                        .fill(self.identity.color)
+                } else {
+                    RoundedRectangle(cornerRadius: 8 * self.scale, style: .continuous)
+                        .fill(self.identity.color)
+                }
+            }
+            .shadow(color: .black.opacity(0.35), radius: 3 * self.scale, y: 1 * self.scale)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if self.infoLines.isEmpty {
+            self.nameLine
+        } else {
+            VStack(alignment: .leading, spacing: 1 * self.scale) {
+                self.nameLine
+                ForEach(self.infoLines.indices, id: \.self) { index in
+                    Text(self.infoLines[index])
+                        .font(.system(size: 9 * self.scale, weight: .medium, design: .rounded))
+                        .lineLimit(1)
+                }
+            }
+        }
+    }
+
+    private var nameLine: some View {
         HStack(spacing: 5 * self.scale) {
             if self.showsGlyph, !self.identity.glyph.isEmpty {
                 Text(self.identity.glyph)
@@ -84,11 +122,6 @@ struct NameTagPill: View {
                 .font(.system(size: 12 * self.scale, weight: .semibold, design: .rounded))
                 .lineLimit(1)
         }
-        .foregroundStyle(self.identity.textOnColor)
-        .padding(.horizontal, 10 * self.scale)
-        .padding(.vertical, 4 * self.scale)
-        .background(self.identity.color, in: Capsule())
-        .shadow(color: .black.opacity(0.35), radius: 3 * self.scale, y: 1 * self.scale)
     }
 }
 

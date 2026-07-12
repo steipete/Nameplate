@@ -4,11 +4,12 @@ import SwiftUI
 @MainActor
 struct IdentitySettingsPane: View {
     @ObservedObject var settings: AppSettings
+    @ObservedObject var infoLineProvider: InfoLineProvider
 
     var body: some View {
         Form {
             Section {
-                IdentityPreviewCard(settings: self.settings)
+                IdentityPreviewCard(settings: self.settings, infoLineProvider: self.infoLineProvider)
                     .padding(.vertical, 4)
             }
 
@@ -135,6 +136,7 @@ struct IdentitySettingsPane: View {
 @MainActor
 struct IdentityPreviewCard: View {
     @ObservedObject var settings: AppSettings
+    @ObservedObject var infoLineProvider: InfoLineProvider
 
     var body: some View {
         let identity = self.settings.identity
@@ -167,7 +169,11 @@ struct IdentityPreviewCard: View {
             }
 
             if self.settings.tagEnabled {
-                NameTagPill(identity: identity, showsGlyph: self.settings.tagShowsGlyph, scale: 0.9)
+                NameTagPill(
+                    identity: identity,
+                    showsGlyph: self.settings.tagShowsGlyph,
+                    infoLines: self.infoLineProvider.lines,
+                    scale: 0.9)
                     .frame(
                         maxWidth: .infinity,
                         maxHeight: .infinity,

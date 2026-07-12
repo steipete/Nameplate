@@ -56,6 +56,7 @@ final class AppSettings: ObservableObject {
     @AppStorage("tagEnabled") var tagEnabled: Bool = true
     @AppStorage("tagCornerRaw") private var tagCornerRaw: String = ScreenCorner.bottomLeft.rawValue
     @AppStorage("tagShowsGlyph") var tagShowsGlyph: Bool = true
+    @AppStorage("tagInfoFields") private var tagInfoFieldsRaw: String = ""
 
     // Watermark layer.
     @AppStorage("watermarkEnabled") var watermarkEnabled: Bool = false
@@ -96,6 +97,20 @@ final class AppSettings: ObservableObject {
     var tagCorner: ScreenCorner {
         get { ScreenCorner(rawValue: self.tagCornerRaw) ?? .bottomLeft }
         set { self.tagCornerRaw = newValue.rawValue }
+    }
+
+    var tagInfoFields: Set<InfoLineField> {
+        get {
+            Set(self.tagInfoFieldsRaw.split(separator: ",").compactMap {
+                InfoLineField(rawValue: String($0))
+            })
+        }
+        set {
+            self.tagInfoFieldsRaw = InfoLineField.allCases
+                .filter { newValue.contains($0) }
+                .map(\.rawValue)
+                .joined(separator: ",")
+        }
     }
 
     var watermarkCorner: ScreenCorner {
