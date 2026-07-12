@@ -86,4 +86,18 @@ struct AttentionAckTests {
         try ack.write(to: url)
         #expect(AttentionAck.consume(matching: ack.id, from: url) == ack)
     }
+
+    @Test func requestQueueDrainCannotConsumeAcknowledgments() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appending(path: "attention-ipc-\(UUID().uuidString)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let requestDirectory = root.appending(path: "AttentionRequests", directoryHint: .isDirectory)
+        let ackURL = root.appending(path: "AttentionAcks/ack.json")
+        let ack = AttentionAck(id: "isolated", outcome: .clicked)
+        try ack.write(to: ackURL)
+
+        _ = AttentionRequest.drainAll(from: requestDirectory, legacyURL: nil)
+
+        #expect(AttentionAck.consume(matching: ack.id, from: ackURL) == ack)
+    }
 }

@@ -26,7 +26,7 @@ public struct AttentionAck: Codable, Equatable, Sendable {
 
     public static var handoffURL: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appending(path: "Library/Application Support/Nameplate/attention-ack.json")
+            .appending(path: "Library/Application Support/Nameplate/AttentionAcks/ack.json")
     }
 
     public func write(to url: URL = handoffURL) throws {
