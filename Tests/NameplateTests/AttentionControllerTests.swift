@@ -97,4 +97,17 @@ struct AttentionControllerTests {
         #expect(next.message == "fresh")
         #expect(requests.isEmpty)
     }
+
+    @Test func laterDrainStillRejectsRequestsCreatedBeforeDismissal() {
+        let cutoff = Date(timeIntervalSince1970: 1_800_000_000)
+        let requests = [
+            AttentionRequest(message: "before", createdAt: cutoff.addingTimeInterval(-1)),
+            AttentionRequest(message: "undated"),
+            AttentionRequest(message: "after", createdAt: cutoff.addingTimeInterval(1)),
+        ]
+
+        let retained = AppServices.requestsCreatedAfterDismissal(requests, cutoff: cutoff)
+
+        #expect(retained.map(\.message) == ["after"])
+    }
 }

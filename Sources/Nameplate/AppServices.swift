@@ -21,6 +21,7 @@ final class AppServices {
     private var pendingAttentionRequests: [AttentionRequest] = []
     private var attentionShowing = false
     private var activeAttentionRequest: AttentionRequest?
+    private var latestAttentionDismissalCutoff: Date?
 
     init(settings: AppSettings) {
         self.settings = settings
@@ -50,9 +51,11 @@ final class AppServices {
     }
 
     func dismissAttention(upTo cutoff: Date) {
-        self.pendingAttentionRequests.removeAll { !$0.wasCreated(after: cutoff) }
-        AttentionRequest.discardAll(upTo: cutoff)
-        guard !(self.activeAttentionRequest?.wasCreated(after: cutoff) ?? false) else { return }
+        let effectiveCutoff = max(self.latestAttentionDismissalCutoff ?? cutoff, cutoff)
+        self.latestAttentionDismissalCutoff = effectiveCutoff
+        self.pendingAttentionRequests.removeAll { !$0.wasCreated(after: effectiveCutoff) }
+        AttentionRequest.discardAll(upTo: effectiveCutoff)
+        guard !(self.activeAttentionRequest?.wasCreated(after: effectiveCutoff) ?? false) else { return }
         self.attentionShowing = false
         self.activeAttentionRequest = nil
         self.attention?.dismissActive()
@@ -155,8 +158,19 @@ final class AppServices {
     }
 
     private func drainAttentionRequests() {
-        self.pendingAttentionRequests.append(contentsOf: AttentionRequest.consumeAll())
+        let requests = Self.requestsCreatedAfterDismissal(
+            AttentionRequest.consumeAll(),
+            cutoff: self.latestAttentionDismissalCutoff)
+        self.pendingAttentionRequests.append(contentsOf: requests)
         self.showNextAttentionRequest()
+    }
+
+    static func requestsCreatedAfterDismissal(
+        _ requests: [AttentionRequest],
+        cutoff: Date?) -> [AttentionRequest]
+    {
+        guard let cutoff else { return requests }
+        return requests.filter { $0.wasCreated(after: cutoff) }
     }
 
     private func showNextAttentionRequest() {
