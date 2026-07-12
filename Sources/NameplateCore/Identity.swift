@@ -55,9 +55,12 @@ public enum ColorHex {
     /// Normalizes "#3fA" / "3fa" / "#33FFAA" to canonical "#33FFAA".
     /// Returns nil for anything that is not a 3- or 6-digit hex color.
     public static func normalize(_ raw: String) -> String? {
-        var text = raw.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        var text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         if text.hasPrefix("#") { text.removeFirst() }
-        guard text.allSatisfy(\.isHexDigit) else { return nil }
+        guard text.utf8.allSatisfy({ byte in
+            (48...57).contains(byte) || (65...70).contains(byte) || (97...102).contains(byte)
+        }) else { return nil }
+        text = text.uppercased()
         switch text.count {
         case 3:
             text = text.map { "\($0)\($0)" }.joined()
