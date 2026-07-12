@@ -159,7 +159,9 @@ struct AttentionRequestTests {
     @Test func keepsUndatedRequests() throws {
         let url = self.temporaryURL()
         try AttentionRequest(message: "no timestamp").write(to: url)
-        #expect(AttentionRequest.consume(from: url)?.message == "no timestamp")
+        let consumed = try #require(AttentionRequest.consume(from: url))
+        #expect(consumed.message == "no timestamp")
+        #expect(consumed.createdAt != nil)
     }
 
     @Test func queuedWritesDoNotOverwriteEachOther() throws {
@@ -234,6 +236,27 @@ struct AttentionRequestTests {
         #expect(!FileManager.default.fileExists(atPath: legacyURL.path))
         let remaining = AttentionRequest.consumeAll(from: directory, legacyURL: nil, now: cutoff)
         #expect(remaining.map(\.message) == ["after"])
+    }
+
+    @Test func dismissalPreservesLaterUndatedLegacyHandoff() throws {
+        let root = self.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let legacyURL = root.appending(path: "attention.json")
+        let cutoff = Date(timeIntervalSince1970: 1_800_000_000)
+        let writtenAfter = cutoff.addingTimeInterval(1)
+        try AttentionRequest(message: "legacy after dismissal").write(to: legacyURL)
+        try FileManager.default.setAttributes(
+            [.modificationDate: writtenAfter],
+            ofItemAtPath: legacyURL.path)
+
+        AttentionRequest.discardAll(
+            upTo: cutoff,
+            from: root.appending(path: "queue"),
+            legacyURL: legacyURL)
+
+        let retained = try #require(AttentionRequest.consume(from: legacyURL, now: writtenAfter))
+        #expect(retained.message == "legacy after dismissal")
+        #expect(retained.createdAt == writtenAfter)
     }
 }
 

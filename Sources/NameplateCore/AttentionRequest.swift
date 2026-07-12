@@ -85,8 +85,11 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
     /// requests are consumed but not returned.
     public static func consume(from url: URL = legacyHandoffURL, now: Date = Date()) -> AttentionRequest? {
         guard let data = try? Data(contentsOf: url) else { return nil }
+        let modificationDate = try? url.resourceValues(forKeys: [.contentModificationDateKey])
+            .contentModificationDate
         try? FileManager.default.removeItem(at: url)
-        guard let request = try? JSONDecoder().decode(AttentionRequest.self, from: data) else { return nil }
+        guard var request = try? JSONDecoder().decode(AttentionRequest.self, from: data) else { return nil }
+        request.createdAt = request.createdAt ?? modificationDate
         guard request.isFresh(at: now) else { return nil }
         return request
     }
@@ -139,10 +142,13 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
 
     private static func discard(from url: URL, upTo cutoff: Date) {
         guard let data = try? Data(contentsOf: url) else { return }
-        if let request = try? JSONDecoder().decode(AttentionRequest.self, from: data),
-           request.wasCreated(after: cutoff)
-        {
-            return
+        let modificationDate = try? url.resourceValues(forKeys: [.contentModificationDateKey])
+            .contentModificationDate
+        if var request = try? JSONDecoder().decode(AttentionRequest.self, from: data) {
+            request.createdAt = request.createdAt ?? modificationDate
+            if request.wasCreated(after: cutoff) {
+                return
+            }
         }
         try? FileManager.default.removeItem(at: url)
     }
