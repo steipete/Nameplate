@@ -18,6 +18,10 @@ final class AppServices {
     private(set) var updater: UpdaterProviding?
     private let remoteMonitor = RemoteViewMonitor()
     private var settingsCancellable: AnyCancellable?
+    private var pendingAttentionRequests: [AttentionRequest] = []
+    private var attentionShowing = false
+    private var activeAttentionRequest: AttentionRequest?
+    private var latestAttentionDismissalCutoff: Date?
 
     init(settings: AppSettings) {
         self.settings = settings
@@ -42,10 +46,18 @@ final class AppServices {
     }
 
     var hasActiveAttention: Bool {
-        self.attention?.isActive ?? false
+        self.attentionShowing || !self.pendingAttentionRequests.isEmpty
+            || (self.attention?.isActive ?? false)
     }
 
-    func dismissAttention() {
+    func dismissAttention(upTo cutoff: Date) {
+        let effectiveCutoff = max(self.latestAttentionDismissalCutoff ?? cutoff, cutoff)
+        self.latestAttentionDismissalCutoff = effectiveCutoff
+        self.pendingAttentionRequests.removeAll { !$0.wasCreated(after: effectiveCutoff) }
+        AttentionRequest.discardAll(upTo: effectiveCutoff)
+        guard !(self.activeAttentionRequest?.wasCreated(after: effectiveCutoff) ?? false) else { return }
+        self.attentionShowing = false
+        self.activeAttentionRequest = nil
         self.attention?.dismissActive()
     }
 
@@ -130,18 +142,63 @@ final class AppServices {
             services.showSettings()
         }
         self.registerDarwinTrigger(name: AttentionRequest.notificationName) { services in
-            guard let request = AttentionRequest.consume() else { return }
-            services.attention?.show(request)
+            services.drainAttentionRequests()
         }
         self.registerDarwinTrigger(name: "com.steipete.nameplate.attention.dismiss") { services in
-            services.attention?.dismissActive()
+            services.dismissAttention(upTo: Date())
+        }
+        self.registerDarwinTrigger(name: AttentionDismissal.notificationName) { services in
+            let cutoff = AttentionDismissal.read()?.createdAt ?? Date()
+            services.dismissAttention(upTo: cutoff)
         }
 
         // Darwin notifications are not queued: a CLI-triggered cold launch can
         // post before our observer exists. Pick up anything already on disk.
-        if let pending = AttentionRequest.consume() {
-            self.attention?.show(pending)
+        self.latestAttentionDismissalCutoff = AttentionDismissal.read()?.createdAt
+        self.drainAttentionRequests()
+    }
+
+    private func drainAttentionRequests() {
+        let requests = Self.requestsCreatedAfterDismissal(
+            AttentionRequest.consumeAll(),
+            cutoff: self.latestAttentionDismissalCutoff)
+        self.pendingAttentionRequests.append(contentsOf: requests)
+        self.showNextAttentionRequest()
+    }
+
+    static func requestsCreatedAfterDismissal(
+        _ requests: [AttentionRequest],
+        cutoff: Date?) -> [AttentionRequest]
+    {
+        guard let cutoff else { return requests }
+        return requests.filter { $0.wasCreated(after: cutoff) }
+    }
+
+    private func showNextAttentionRequest() {
+        guard !self.attentionShowing,
+              let request = Self.takeNextFreshAttentionRequest(from: &self.pendingAttentionRequests)
+        else { return }
+        self.attentionShowing = true
+        self.activeAttentionRequest = request
+        self.attention?.show(request) { [weak self] in
+            guard let self else { return }
+            self.attentionShowing = false
+            self.activeAttentionRequest = nil
+            self.showNextAttentionRequest()
         }
+    }
+
+    static func takeNextFreshAttentionRequest(
+        from requests: inout [AttentionRequest],
+        now: Date = Date()) -> AttentionRequest?
+    {
+        while !requests.isEmpty {
+            let request = requests.removeFirst()
+            if request.isFresh(at: now) {
+                return request
+            }
+        }
+        return nil
     }
 
     private func registerDarwinTrigger(name: String, action: @escaping @MainActor (AppServices) -> Void) {

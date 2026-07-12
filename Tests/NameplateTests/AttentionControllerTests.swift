@@ -63,4 +63,51 @@ struct AttentionControllerTests {
         #expect(panel.collectionBehavior.contains(.canJoinAllSpaces))
         #expect(!panel.collectionBehavior.contains(.stationary))
     }
+
+    @Test func explicitDismissCompletesPresentedRequestExactlyOnce() {
+        let controller = AttentionController(settings: AppSettings())
+        var completionCount = 0
+        controller.show(AttentionRequest(title: "Queue proof", message: "First")) {
+            completionCount += 1
+        }
+
+        #expect(controller.isActive)
+        controller.dismissActive()
+        #expect(!controller.isActive)
+        #expect(completionCount == 1)
+
+        controller.dismissActive()
+        #expect(completionCount == 1)
+    }
+
+    @Test func queuedPresentationSkipsRequestsThatExpiredWhileWaiting() throws {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        var requests = [
+            AttentionRequest(
+                message: "stale past",
+                createdAt: now.addingTimeInterval(-AttentionRequest.maxAge - 1)),
+            AttentionRequest(
+                message: "stale future",
+                createdAt: now.addingTimeInterval(AttentionRequest.maxAge + 1)),
+            AttentionRequest(message: "fresh", createdAt: now),
+        ]
+
+        let next = try #require(AppServices.takeNextFreshAttentionRequest(from: &requests, now: now))
+
+        #expect(next.message == "fresh")
+        #expect(requests.isEmpty)
+    }
+
+    @Test func laterDrainStillRejectsRequestsCreatedBeforeDismissal() {
+        let cutoff = Date(timeIntervalSince1970: 1_800_000_000)
+        let requests = [
+            AttentionRequest(message: "before", createdAt: cutoff.addingTimeInterval(-1)),
+            AttentionRequest(message: "undated"),
+            AttentionRequest(message: "after", createdAt: cutoff.addingTimeInterval(1)),
+        ]
+
+        let retained = AppServices.requestsCreatedAfterDismissal(requests, cutoff: cutoff)
+
+        #expect(retained.map(\.message) == ["after"])
+    }
 }

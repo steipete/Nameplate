@@ -15,6 +15,7 @@ final class AttentionController {
     private var cardPanel: NSPanel?
     private var generation = 0
     private var isDismissing = false
+    private var onDismiss: (@MainActor () -> Void)?
 
     var isActive: Bool {
         !self.borderPanels.isEmpty || self.cardPanel != nil
@@ -86,14 +87,16 @@ final class AttentionController {
             }
         } else if self.cardPanel != nil, restoreInteraction {
             // A stale topmost input window is worse than a dropped card.
-            self.dismissImmediately()
+            self.finishImmediately()
         }
     }
 
-    func show(_ request: AttentionRequest) {
-        self.dismissImmediately()
+    func show(_ request: AttentionRequest, onDismiss: (@MainActor () -> Void)? = nil) {
+        self.resetPresentation()
+        self.onDismiss = nil
         self.generation += 1
         let generation = self.generation
+        self.onDismiss = onDismiss
 
         let identity = self.settings.identity
         let colorHex = ColorHex.normalize(request.color ?? "") ?? identity.colorHex
@@ -124,7 +127,7 @@ final class AttentionController {
                 height: min(Self.cardMaximumHeight, max(0, visible.height / 2)))
             let size = hosting.sizeThatFits(in: available)
             guard Self.isValidCardSize(size, fitting: available) else {
-                self.dismissImmediately()
+                self.finishImmediately()
                 return
             }
             hosting.sizingOptions = []
@@ -146,7 +149,7 @@ final class AttentionController {
                 self.enableCardInteractionIfPresented(panel)
             }
         } else {
-            self.dismissImmediately()
+            self.finishImmediately()
             return
         }
 
@@ -172,17 +175,17 @@ final class AttentionController {
         } completionHandler: {
             Task { @MainActor [weak self] in
                 guard let self, self.generation == generation else { return }
-                self.dismissImmediately()
+                self.finishImmediately()
             }
         }
     }
 
     func dismissActive() {
-        guard self.isActive else { return }
+        guard self.isActive || self.onDismiss != nil else { return }
         self.generation += 1
         self.isDismissing = true
         self.cardPanel?.ignoresMouseEvents = true
-        self.dismissImmediately()
+        self.finishImmediately()
     }
 
     static func isValidCardSize(_ size: NSSize, fitting available: NSSize) -> Bool {
@@ -200,13 +203,20 @@ final class AttentionController {
               panel.contentView != nil,
               NSScreen.screens.contains(where: { $0.visibleFrame.contains(panel.frame) })
         else {
-            self.dismissImmediately()
+            self.finishImmediately()
             return
         }
         panel.ignoresMouseEvents = false
     }
 
-    private func dismissImmediately() {
+    private func finishImmediately() {
+        let onDismiss = self.onDismiss
+        self.onDismiss = nil
+        self.resetPresentation()
+        onDismiss?()
+    }
+
+    private func resetPresentation() {
         for panel in self.borderPanels {
             panel.close()
         }

@@ -172,7 +172,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     }
 
     @objc private func dismissAttention() {
-        self.services.dismissAttention()
+        self.services.dismissAttention(upTo: Date())
     }
 
     @objc private func openSettings() {
