@@ -13,6 +13,7 @@ final class SettingsWindowController {
     private weak var services: AppServices?
 
     private static let paneWidth: CGFloat = 560
+    private static let frameAutosaveName = "NameplateSettingsWindow"
 
     init(settings: AppSettings, services: AppServices) {
         self.settings = settings
@@ -69,7 +70,11 @@ final class SettingsWindowController {
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.toolbarStyle = .preference
         window.isReleasedWhenClosed = false
-        window.center()
+        let restoredFrame = window.setFrameUsingName(Self.frameAutosaveName)
+        window.setFrameAutosaveName(Self.frameAutosaveName)
+        if !restoredFrame {
+            window.center()
+        }
         self.tabController = tabs
         self.window = window
     }
