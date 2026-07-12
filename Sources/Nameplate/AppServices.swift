@@ -154,6 +154,7 @@ final class AppServices {
 
         // Darwin notifications are not queued: a CLI-triggered cold launch can
         // post before our observer exists. Pick up anything already on disk.
+        self.latestAttentionDismissalCutoff = AttentionDismissal.read()?.createdAt
         self.drainAttentionRequests()
     }
 
