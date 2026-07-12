@@ -131,6 +131,11 @@ case "settings":
     post("com.steipete.nameplate.settings", retryAfterColdLaunch: coldLaunched)
 
 case "dismiss":
+    do {
+        try AttentionDismissal(createdAt: Date()).write()
+    } catch {
+        fail("could not write attention dismissal: \(error.localizedDescription)")
+    }
     notify_post("com.steipete.nameplate.attention.dismiss")
 
 case "--help", "-h", "help":

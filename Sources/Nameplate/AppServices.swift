@@ -20,6 +20,7 @@ final class AppServices {
     private var settingsCancellable: AnyCancellable?
     private var pendingAttentionRequests: [AttentionRequest] = []
     private var attentionShowing = false
+    private var activeAttentionRequest: AttentionRequest?
 
     init(settings: AppSettings) {
         self.settings = settings
@@ -48,12 +49,13 @@ final class AppServices {
             || (self.attention?.isActive ?? false)
     }
 
-    func dismissAttention() {
-        self.pendingAttentionRequests.removeAll()
-        // Also clear requests that arrived before the dismiss notification.
-        _ = AttentionRequest.consumeAll()
-        self.attention?.dismissActive()
+    func dismissAttention(upTo cutoff: Date) {
+        self.pendingAttentionRequests.removeAll { !$0.wasCreated(after: cutoff) }
+        AttentionRequest.discardAll(upTo: cutoff)
+        guard !(self.activeAttentionRequest?.wasCreated(after: cutoff) ?? false) else { return }
         self.attentionShowing = false
+        self.activeAttentionRequest = nil
+        self.attention?.dismissActive()
     }
 
     /// Same per-screen rule the overlay uses: in remote-only mode a screen is
@@ -140,7 +142,8 @@ final class AppServices {
             services.drainAttentionRequests()
         }
         self.registerDarwinTrigger(name: "com.steipete.nameplate.attention.dismiss") { services in
-            services.dismissAttention()
+            let cutoff = AttentionDismissal.read()?.createdAt ?? Date()
+            services.dismissAttention(upTo: cutoff)
         }
 
         // Darwin notifications are not queued: a CLI-triggered cold launch can
@@ -158,9 +161,11 @@ final class AppServices {
               let request = Self.takeNextFreshAttentionRequest(from: &self.pendingAttentionRequests)
         else { return }
         self.attentionShowing = true
+        self.activeAttentionRequest = request
         self.attention?.show(request) { [weak self] in
             guard let self else { return }
             self.attentionShowing = false
+            self.activeAttentionRequest = nil
             self.showNextAttentionRequest()
         }
     }

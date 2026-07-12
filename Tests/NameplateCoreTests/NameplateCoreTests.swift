@@ -202,6 +202,39 @@ struct AttentionRequestTests {
         let leftovers = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
         #expect(leftovers.isEmpty)
     }
+
+    @Test func dismissalCutoffRoundTrips() throws {
+        let url = self.temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let cutoff = Date(timeIntervalSince1970: 1_800_000_000)
+
+        try AttentionDismissal(createdAt: cutoff).write(to: url)
+
+        #expect(AttentionDismissal.read(from: url)?.createdAt == cutoff)
+    }
+
+    @Test func dismissalPreservesRequestsCreatedAfterItsCutoff() throws {
+        let root = self.temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let directory = root.appending(path: "queue", directoryHint: .isDirectory)
+        let legacyURL = root.appending(path: "attention.json")
+        let cutoff = Date(timeIntervalSince1970: 1_800_000_000)
+        let beforeID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
+        let afterID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000002"))
+
+        try AttentionRequest(message: "legacy", createdAt: cutoff.addingTimeInterval(-1))
+            .write(to: legacyURL)
+        try AttentionRequest(message: "before", createdAt: cutoff.addingTimeInterval(-1))
+            .writeQueued(to: directory, now: cutoff, uuid: beforeID)
+        try AttentionRequest(message: "after", createdAt: cutoff.addingTimeInterval(1))
+            .writeQueued(to: directory, now: cutoff.addingTimeInterval(1), uuid: afterID)
+
+        AttentionRequest.discardAll(upTo: cutoff, from: directory, legacyURL: legacyURL)
+
+        #expect(!FileManager.default.fileExists(atPath: legacyURL.path))
+        let remaining = AttentionRequest.consumeAll(from: directory, legacyURL: nil, now: cutoff)
+        #expect(remaining.map(\.message) == ["after"])
+    }
 }
 
 @Suite("FleetFile")

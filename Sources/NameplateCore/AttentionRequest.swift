@@ -77,6 +77,10 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
         return abs(now.timeIntervalSince(createdAt)) <= Self.maxAge
     }
 
+    public func wasCreated(after cutoff: Date) -> Bool {
+        self.createdAt.map { $0 > cutoff } ?? false
+    }
+
     /// Reads and removes the pending request (one-shot handoff). Stale
     /// requests are consumed but not returned.
     public static func consume(from url: URL = legacyHandoffURL, now: Date = Date()) -> AttentionRequest? {
@@ -113,5 +117,58 @@ public struct AttentionRequest: Codable, Equatable, Sendable {
             }
         }
         return requests
+    }
+
+    public static func discardAll(
+        upTo cutoff: Date,
+        from directory: URL = AttentionRequest.handoffDirectory,
+        legacyURL: URL? = AttentionRequest.legacyHandoffURL)
+    {
+        if let legacyURL {
+            self.discard(from: legacyURL, upTo: cutoff)
+        }
+        let urls = (try? FileManager.default.contentsOfDirectory(
+            at: directory,
+            includingPropertiesForKeys: nil)) ?? []
+        for url in urls where url.pathExtension == "json"
+            && url.lastPathComponent.hasPrefix("attention-")
+        {
+            self.discard(from: url, upTo: cutoff)
+        }
+    }
+
+    private static func discard(from url: URL, upTo cutoff: Date) {
+        guard let data = try? Data(contentsOf: url) else { return }
+        if let request = try? JSONDecoder().decode(AttentionRequest.self, from: data),
+           request.wasCreated(after: cutoff)
+        {
+            return
+        }
+        try? FileManager.default.removeItem(at: url)
+    }
+}
+
+public struct AttentionDismissal: Codable, Sendable {
+    public var createdAt: Date
+
+    public init(createdAt: Date) {
+        self.createdAt = createdAt
+    }
+
+    public static var handoffURL: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appending(path: "Library/Application Support/Nameplate/attention-dismissal.json")
+    }
+
+    public func write(to url: URL = Self.handoffURL) throws {
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true)
+        try JSONEncoder().encode(self).write(to: url, options: .atomic)
+    }
+
+    public static func read(from url: URL = Self.handoffURL) -> AttentionDismissal? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(AttentionDismissal.self, from: data)
     }
 }
