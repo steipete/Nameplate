@@ -2,6 +2,7 @@
 
 ## 0.2.6 - Unreleased
 
+- Linux: install Nameplate with `brew install steipete/tap/nameplate` and keep it current with `brew upgrade`. Thanks @officiallymarky!
 - Fixed (macOS): imported config links now preserve watermark opacity values through the full Settings range instead of silently clamping them to 30%. Thanks @abhinavgautam01!
 - Fixed (macOS): `nameplate attention --color` now rejects invalid values and normalizes valid hex colors before handing requests to the app. Thanks @abhinavgautam01!
 - Fixed (macOS): Settings window placement now persists across app restarts. Thanks @abhinavgautam01!

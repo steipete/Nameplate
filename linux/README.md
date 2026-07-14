@@ -4,6 +4,16 @@ Nameplate brands Linux machines in a remote-desktop fleet with the same stable i
 
 The X11 path is the primary target for xrdp and VNC fleets. Wayland layer-shell support is optional.
 
+## Install
+
+Homebrew on Linux installs Nameplate and its GTK4/X11 dependencies from source, then keeps it current with `brew upgrade`:
+
+```sh
+brew install steipete/tap/nameplate
+```
+
+Alternatively, download the `x86_64` or `arm64` Linux tarball from the [latest release](https://github.com/steipete/Nameplate/releases/latest). The tarball requires the system GTK4 and X11 runtime libraries.
+
 ## Build
 
 Install Rust, a C compiler, `pkg-config`, GTK4 development headers, and X11 development headers. Package names vary by distribution; on Debian/Ubuntu they are typically:
