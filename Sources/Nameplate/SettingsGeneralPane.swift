@@ -53,8 +53,8 @@ struct GeneralSettingsPane: View {
                 Text("Overlays")
             } footer: {
                 Text("\"Only when viewed remotely\" shows frame, tag, watermark, and splash only on "
-                    + "virtual displays (Jump Desktop and similar) or while a Screen Sharing/VNC "
-                    + "connection is active. Attention alerts always show.")
+                    + "virtual displays (Jump Desktop and similar) or while a Screen Sharing/VNC, "
+                    + "TeamViewer, or AnyDesk connection is active. Attention alerts always show.")
             }
 
             Section {

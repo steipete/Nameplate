@@ -33,17 +33,60 @@ public enum RemoteViewing {
     /// Screen Sharing port (5900-5901). Matches Apple Screen Sharing,
     /// classic VNC, and Jump Desktop's VNC-compatible listener.
     public static func hasEstablishedScreenSharing(netstatOutput: String) -> Bool {
+        self.establishedConnections(netstatOutput: netstatOutput).contains { connection in
+            connection.localPort == 5900 || connection.localPort == 5901
+        }
+    }
+
+    /// Extends Screen Sharing detection with vendor-specific remote-control
+    /// ports, but only while the matching client is running. Generic fallback
+    /// ports such as 80/443 are intentionally excluded because they would make
+    /// an idle client indistinguishable from unrelated network traffic.
+    public static func hasEstablishedRemoteDesktop(
+        netstatOutput: String,
+        processList: String
+    ) -> Bool {
+        let connections = self.establishedConnections(netstatOutput: netstatOutput)
+        if connections.contains(where: { $0.localPort == 5900 || $0.localPort == 5901 }) {
+            return true
+        }
+
+        let processes = processList.lowercased()
+        if processes.contains("teamviewer"), connections.contains(where: { $0.contains(5938) }) {
+            return true
+        }
+        if processes.contains("anydesk"), connections.contains(where: { $0.contains(6568) }) {
+            return true
+        }
+        return false
+    }
+
+    private struct ConnectionPorts {
+        let localPort: Int?
+        let foreignPort: Int?
+
+        func contains(_ port: Int) -> Bool {
+            self.localPort == port || self.foreignPort == port
+        }
+    }
+
+    private static func establishedConnections(netstatOutput: String) -> [ConnectionPorts] {
+        var result: [ConnectionPorts] = []
         for line in netstatOutput.split(separator: "\n") {
             guard line.contains("ESTABLISHED") else { continue }
             let columns = line.split(separator: " ", omittingEmptySubsequences: true)
-            // Local address is column 3 in `netstat -an -p tcp` output;
-            // BSD netstat formats it as ip.port (e.g. 192.168.0.10.5900).
-            guard columns.count >= 4 else { continue }
-            let local = columns[3]
-            if local.hasSuffix(".5900") || local.hasSuffix(".5901") {
-                return true
-            }
+            // Local/foreign addresses are columns 3/4 in BSD netstat and use
+            // ip.port notation, including for IPv6 addresses.
+            guard columns.count >= 5 else { continue }
+            result.append(ConnectionPorts(
+                localPort: self.port(from: columns[3]),
+                foreignPort: self.port(from: columns[4])))
         }
-        return false
+        return result
+    }
+
+    private static func port(from endpoint: Substring) -> Int? {
+        guard let separator = endpoint.lastIndex(of: ".") else { return nil }
+        return Int(endpoint[endpoint.index(after: separator)...])
     }
 }

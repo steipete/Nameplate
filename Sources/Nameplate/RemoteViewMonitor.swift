@@ -3,7 +3,7 @@ import NameplateCore
 
 /// Feeds the "only when viewed remotely" decoration mode: per-screen virtual
 /// display classification plus a low-frequency poll for active Screen
-/// Sharing / VNC connections. Polling only runs while the mode needs it.
+/// Sharing / remote-desktop connections. Polling only runs while the mode needs it.
 @MainActor
 final class RemoteViewMonitor {
     var onChange: (() -> Void)?
@@ -62,8 +62,8 @@ final class RemoteViewMonitor {
     }
 
     /// screensharingd only runs while Apple Screen Sharing is in use
-    /// (launchd socket activation); netstat catches generic VNC clients,
-    /// including Jump Desktop's VNC-compatible listener.
+    /// (launchd socket activation); netstat catches generic VNC clients plus
+    /// vendor-specific TeamViewer/AnyDesk connections while their client runs.
     nonisolated private static func checkScreenSharing() -> Bool {
         if self.runTool("/usr/bin/pgrep", ["-x", "screensharingd"]) != nil {
             return true
@@ -71,7 +71,11 @@ final class RemoteViewMonitor {
         guard let netstat = self.runTool("/usr/sbin/netstat", ["-an", "-p", "tcp"]) else {
             return false
         }
-        return RemoteViewing.hasEstablishedScreenSharing(netstatOutput: netstat)
+        let remoteProcesses = self.runTool(
+            "/usr/bin/pgrep", ["-ifl", "teamviewer|anydesk"]) ?? ""
+        return RemoteViewing.hasEstablishedRemoteDesktop(
+            netstatOutput: netstat,
+            processList: remoteProcesses)
     }
 
     /// Returns stdout on exit 0, nil otherwise.

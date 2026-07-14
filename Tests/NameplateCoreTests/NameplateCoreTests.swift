@@ -111,6 +111,40 @@ struct RemoteViewingTests {
         tcp4       0      0  192.168.0.10.5900      1.2.3.4.53211          TIME_WAIT
         """
         #expect(!RemoteViewing.hasEstablishedScreenSharing(netstatOutput: listenOnly))
+
+        let outbound = """
+        tcp4       0      0  192.168.0.10.53123     1.2.3.4.5900           ESTABLISHED
+        """
+        #expect(!RemoteViewing.hasEstablishedScreenSharing(netstatOutput: outbound))
+    }
+
+    @Test func detectsCommonRemoteDesktopSessionsConservatively() {
+        let teamViewer = """
+        tcp4  0  0  192.168.0.10.53123  1.2.3.4.5938  ESTABLISHED
+        """
+        #expect(RemoteViewing.hasEstablishedRemoteDesktop(
+            netstatOutput: teamViewer,
+            processList: "431 /Applications/TeamViewer.app/Contents/MacOS/TeamViewer"))
+        #expect(!RemoteViewing.hasEstablishedRemoteDesktop(
+            netstatOutput: teamViewer,
+            processList: ""))
+
+        let anyDesk = """
+        tcp4  0  0  192.168.0.10.53124  5.6.7.8.6568  ESTABLISHED
+        """
+        #expect(RemoteViewing.hasEstablishedRemoteDesktop(
+            netstatOutput: anyDesk,
+            processList: "912 /Applications/AnyDesk.app/Contents/MacOS/AnyDesk"))
+
+        let fallbackPort = """
+        tcp4  0  0  192.168.0.10.53125  5.6.7.8.443  ESTABLISHED
+        """
+        #expect(!RemoteViewing.hasEstablishedRemoteDesktop(
+            netstatOutput: fallbackPort,
+            processList: "912 /Applications/AnyDesk.app/Contents/MacOS/AnyDesk"))
+        #expect(!RemoteViewing.hasEstablishedRemoteDesktop(
+            netstatOutput: "tcp4  0  0  *.6568  *.*  LISTEN",
+            processList: "912 /Applications/AnyDesk.app/Contents/MacOS/AnyDesk"))
     }
 }
 
