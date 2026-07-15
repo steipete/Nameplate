@@ -4,7 +4,7 @@ import SwiftUI
 import notify
 
 /// "The agent needs you": pulsating borders on every screen plus a topmost
-/// message card. Stays until the card is clicked; an explicit duration
+/// message card. Stays until the user clicks anywhere; an explicit duration
 /// auto-dismisses instead.
 @MainActor
 final class AttentionController {
@@ -18,9 +18,19 @@ final class AttentionController {
     private var isDismissing = false
     private var onDismiss: (@MainActor () -> Void)?
     private var activeRequestID: String?
+    private var globalClickMonitor: Any?
+    private var localClickMonitor: Any?
 
     var isActive: Bool {
         !self.borderPanels.isEmpty || self.cardPanel != nil
+    }
+
+    var isMonitoringClicks: Bool {
+        self.globalClickMonitor != nil && self.localClickMonitor != nil
+    }
+
+    var cardIsClickThrough: Bool {
+        self.cardPanel?.ignoresMouseEvents ?? true
     }
 
     init(settings: AppSettings) {
@@ -35,14 +45,14 @@ final class AttentionController {
         { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.cardPanel?.ignoresMouseEvents = true
-                let passes: [(delay: TimeInterval, restoreInteraction: Bool)] = [
+                let passes: [(delay: TimeInterval, validatePresentation: Bool)] = [
                     (0, false),
                     (0.5, false),
                     (1.5, true),
                 ]
                 for pass in passes {
                     DispatchQueue.main.asyncAfter(deadline: .now() + pass.delay) { [weak self] in
-                        self?.syncFrames(restoreInteraction: pass.restoreInteraction)
+                        self?.syncFrames(validatePresentation: pass.validatePresentation)
                     }
                 }
             }
@@ -56,13 +66,13 @@ final class AttentionController {
             MainActor.assumeIsolated {
                 self?.cardPanel?.ignoresMouseEvents = true
                 DispatchQueue.main.async { [weak self] in
-                    self?.syncFrames(restoreInteraction: true)
+                    self?.syncFrames(validatePresentation: true)
                 }
             }
         }
     }
 
-    private func syncFrames(restoreInteraction: Bool) {
+    private func syncFrames(validatePresentation: Bool) {
         guard !self.borderPanels.isEmpty || self.cardPanel != nil else { return }
         let screens = NSScreen.screens
         for (index, panel) in self.borderPanels.enumerated() where index < screens.count {
@@ -84,10 +94,10 @@ final class AttentionController {
                     height: size.height),
                 display: true)
             card.orderFrontRegardless()
-            if restoreInteraction {
-                self.enableCardInteractionIfPresented(card)
+            if validatePresentation {
+                self.validateCardPresentation(card)
             }
-        } else if self.cardPanel != nil, restoreInteraction {
+        } else if self.cardPanel != nil, validatePresentation {
             // A stale topmost input window is worse than a dropped card.
             self.finishImmediately()
         }
@@ -125,10 +135,7 @@ final class AttentionController {
                 rootView: AttentionCardView(
                     request: request,
                     colorHex: colorHex,
-                    identity: identity,
-                    onDismiss: { [weak self] in
-                        self?.dismiss(generation: generation, outcome: .clicked)
-                    }))
+                    identity: identity))
             let visible = screen.visibleFrame
             let available = NSSize(
                 width: min(Self.cardMaximumWidth, max(0, visible.width - 40)),
@@ -150,11 +157,11 @@ final class AttentionController {
                 display: true)
             panel.orderFrontRegardless()
             self.cardPanel = panel
-            // Ordering and SwiftUI's first render finish on the next main-loop
-            // turn. Until then the panel remains click-through.
+            self.startClickMonitoring(generation: generation)
+            // Ordering and SwiftUI's first render finish on the next main-loop turn.
             DispatchQueue.main.async { [weak self, weak panel] in
                 guard let self, let panel, self.generation == generation else { return }
-                self.enableCardInteractionIfPresented(panel)
+                self.validateCardPresentation(panel)
             }
         } else {
             self.finishImmediately()
@@ -170,7 +177,8 @@ final class AttentionController {
     }
 
     private func dismiss(generation: Int, outcome: AttentionAck.Outcome) {
-        guard self.generation == generation else { return }
+        guard self.generation == generation, !self.isDismissing else { return }
+        self.stopClickMonitoring()
         self.acknowledge(outcome)
         self.isDismissing = true
         let panels = self.borderPanels + [self.cardPanel].compactMap(\.self)
@@ -193,8 +201,13 @@ final class AttentionController {
         guard self.isActive || self.onDismiss != nil else { return }
         self.generation += 1
         self.isDismissing = true
+        self.stopClickMonitoring()
         self.cardPanel?.ignoresMouseEvents = true
         self.finishImmediately()
+    }
+
+    func dismissFromUserClick() {
+        self.dismiss(generation: self.generation, outcome: .clicked)
     }
 
     static func isValidCardSize(_ size: NSSize, fitting available: NSSize) -> Bool {
@@ -203,7 +216,7 @@ final class AttentionController {
             && size.width <= available.width && size.height <= available.height
     }
 
-    private func enableCardInteractionIfPresented(_ panel: NSPanel) {
+    private func validateCardPresentation(_ panel: NSPanel) {
         guard panel === self.cardPanel,
               !self.isDismissing,
               panel.isVisible,
@@ -215,7 +228,45 @@ final class AttentionController {
             self.finishImmediately()
             return
         }
-        panel.ignoresMouseEvents = false
+        panel.ignoresMouseEvents = true
+    }
+
+    private func startClickMonitoring(generation: Int) {
+        self.stopClickMonitoring()
+        let mask: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+        self.globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: mask) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.generation == generation else { return }
+                self.dismissFromUserClick()
+            }
+        }
+        self.localClickMonitor = NSEvent.addLocalMonitorForEvents(matching: mask) { [weak self] event in
+            Self.forwardClick(event) {
+                Task { @MainActor [weak self] in
+                    guard let self, self.generation == generation else { return }
+                    self.dismissFromUserClick()
+                }
+            }
+        }
+    }
+
+    private func stopClickMonitoring() {
+        if let globalClickMonitor = self.globalClickMonitor {
+            NSEvent.removeMonitor(globalClickMonitor)
+            self.globalClickMonitor = nil
+        }
+        if let localClickMonitor = self.localClickMonitor {
+            NSEvent.removeMonitor(localClickMonitor)
+            self.localClickMonitor = nil
+        }
+    }
+
+    nonisolated static func forwardClick(
+        _ event: NSEvent,
+        onClick: () -> Void
+    ) -> NSEvent {
+        onClick()
+        return event
     }
 
     private func acknowledge(_ outcome: AttentionAck.Outcome) {
@@ -237,6 +288,7 @@ final class AttentionController {
     }
 
     private func resetPresentation() {
+        self.stopClickMonitoring()
         for panel in self.borderPanels {
             panel.close()
         }
@@ -281,7 +333,6 @@ struct AttentionCardView: View {
     let request: AttentionRequest
     let colorHex: String
     let identity: MacIdentity
-    let onDismiss: @MainActor () -> Void
 
     private var color: Color {
         guard let rgb = ColorHex.components(self.colorHex) else { return .red }
@@ -305,7 +356,7 @@ struct AttentionCardView: View {
                 .lineLimit(8)
                 .truncationMode(.tail)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("\(self.identity.name) · click to dismiss")
+            Text("\(self.identity.name) · click anywhere to dismiss")
                 .font(.system(size: 12, weight: .medium, design: .monospaced))
                 .foregroundStyle(.white.opacity(0.5))
         }
@@ -319,10 +370,6 @@ struct AttentionCardView: View {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .strokeBorder(self.color, lineWidth: 3)
                 }
-        }
-        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .onTapGesture {
-            self.onDismiss()
         }
         .padding(12)
     }

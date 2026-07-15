@@ -14,8 +14,7 @@ struct AttentionControllerTests {
                     title: "Codex to Nameplate",
                     message: "Issue 22 regression"),
                 colorHex: "#1D9E75",
-                identity: MacIdentity(name: "miniclaw", colorHex: "#1D9E75"),
-                onDismiss: {}))
+                identity: MacIdentity(name: "miniclaw", colorHex: "#1D9E75")))
         let available = NSSize(width: AttentionController.cardMaximumWidth, height: 680)
 
         let size = controller.sizeThatFits(in: available)
@@ -42,8 +41,7 @@ struct AttentionControllerTests {
                     title: "Long attention request",
                     message: String(repeating: "This message must not create a full-screen input panel. ", count: 100)),
                 colorHex: "#1D9E75",
-                identity: MacIdentity(name: "miniclaw", colorHex: "#1D9E75"),
-                onDismiss: {}))
+                identity: MacIdentity(name: "miniclaw", colorHex: "#1D9E75")))
         let available = NSSize(
             width: AttentionController.cardMaximumWidth,
             height: AttentionController.cardMaximumHeight)
@@ -78,6 +76,48 @@ struct AttentionControllerTests {
 
         controller.dismissActive()
         #expect(completionCount == 1)
+    }
+
+    @Test func userClickDismissesWithoutMakingTheCardInteractive() {
+        let controller = AttentionController(settings: AppSettings())
+        let id = "test-click-dismiss-\(UUID().uuidString)"
+        defer {
+            controller.dismissActive()
+            AttentionAck.remove(matching: id)
+        }
+
+        controller.show(AttentionRequest(id: id, message: "needs a human"))
+
+        #expect(controller.isActive)
+        #expect(controller.isMonitoringClicks)
+        #expect(controller.cardIsClickThrough)
+
+        controller.dismissFromUserClick()
+
+        #expect(!controller.isMonitoringClicks)
+        #expect(controller.cardIsClickThrough)
+        #expect(AttentionAck.consume(matching: id)?.outcome == .clicked)
+    }
+
+    @Test func localClickForwarderReturnsTheOriginalEvent() throws {
+        let event = try #require(NSEvent.mouseEvent(
+            with: .leftMouseDown,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            eventNumber: 1,
+            clickCount: 1,
+            pressure: 1))
+        var clickCount = 0
+
+        let forwarded = AttentionController.forwardClick(event) {
+            clickCount += 1
+        }
+
+        #expect(forwarded === event)
+        #expect(clickCount == 1)
     }
 
     @Test func queuedPresentationSkipsRequestsThatExpiredWhileWaiting() throws {

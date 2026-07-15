@@ -87,29 +87,81 @@ body.no-frame #frame, body.no-tag #tag, body.no-watermark #watermark { display: 
 }
 #splash {
   position: fixed; inset: 0; z-index: 200; pointer-events: none;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0;
+  display: none; align-items: center; justify-content: center;
+  --splash-duration: 2.4s;
+  --splash-exit-delay: 1.98s;
+  --splash-reduced-exit-delay: 2.2s;
 }
-#splash.on { animation: splash 2.4s ease forwards; }
+#splash.on { display: flex; }
+#splash .splash-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+#splash .splash-frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+#splash .splash-frame rect {
+  fill: none; stroke: var(--accent); stroke-width: 7; vector-effect: non-scaling-stroke;
+  stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 90%, transparent));
+}
+#splash .splash-glow {
+  position: absolute; inset: 7px; border: 2px solid color-mix(in srgb, var(--accent) 16%, transparent);
+  border-radius: 22px; opacity: 0; transform: scale(.78);
+}
 #splash .card {
-  background: var(--accent); color: #fff;
-  font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(40px, 8vw, 110px); letter-spacing: -.02em;
-  padding: .25em .8em; border-radius: .35em;
-  box-shadow: 0 30px 90px rgba(0,0,0,.6);
+  min-width: min(720px, calc(100vw - 48px));
+  padding: 44px 64px; border: 4px solid var(--accent); border-radius: 32px;
+  background: rgba(0,0,0,.74); color: #fff; text-align: center;
+  box-shadow: 0 0 72px color-mix(in srgb, var(--accent) 30%, transparent);
+  opacity: 0; transform: scale(.88);
 }
-@keyframes splash {
-  0% { opacity: 0; transform: scale(.92); }
-  12% { opacity: 1; transform: scale(1); }
-  70% { opacity: 1; }
-  100% { opacity: 0; transform: scale(1.02); }
+#splash .splash-glyph { font-size: 76px; line-height: 1; margin-bottom: 18px; }
+#splash .splash-name {
+  font-size: clamp(42px, 6vw, 64px); font-weight: 800; line-height: 1;
+  letter-spacing: -.025em; overflow-wrap: anywhere;
+}
+#splash .splash-hostname {
+  margin-top: 18px; font-family: var(--font-mono); font-size: 15px;
+  font-weight: 500; color: rgba(255,255,255,.55);
+}
+#splash.on .splash-frame rect { animation: splash-frame-draw .62s ease-in-out forwards; }
+#splash.on .splash-frame { animation: splash-frame-exit .38s ease-in var(--splash-exit-delay) forwards; }
+#splash.on .splash-glow {
+  animation: splash-glow-in .55s ease-out .08s forwards,
+             splash-glow-exit .38s ease-in var(--splash-exit-delay) forwards;
+}
+#splash.on .card {
+  animation: splash-card-in .48s cubic-bezier(.22, 1.38, .46, 1) .2s forwards,
+             splash-card-exit .38s ease-in var(--splash-exit-delay) forwards;
+}
+@keyframes splash-frame-draw { to { stroke-dashoffset: 0; } }
+@keyframes splash-frame-exit {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.045); }
+}
+@keyframes splash-glow-in { to { opacity: 1; transform: scale(1.03); } }
+@keyframes splash-glow-exit {
+  from { opacity: 1; transform: scale(1.03); }
+  to { opacity: 0; transform: scale(1.08); }
+}
+@keyframes splash-card-in { to { opacity: 1; transform: scale(1); } }
+@keyframes splash-card-exit {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.045); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #splash.on .splash-frame rect { animation: none; stroke-dashoffset: 0; }
+  #splash.on .splash-frame,
+  #splash.on .splash-glow,
+  #splash.on .card {
+    animation: splash-reduced-exit .2s ease-in var(--splash-reduced-exit-delay) forwards;
+    opacity: 1; transform: none;
+  }
+  @keyframes splash-reduced-exit { to { opacity: 0; } }
 }
 /* attention alert demo */
 #attention {
-  position: fixed; inset: 0; z-index: 210; display: none;
+  position: fixed; inset: 0; z-index: 210; display: none; pointer-events: none;
   align-items: center; justify-content: center;
 }
-#attention.on { display: flex; cursor: pointer; }
+#attention.on { display: flex; }
 #attention .acard {
   background: var(--accent); color: #fff; text-align: center;
   padding: 30px 44px; border-radius: 20px; max-width: 30rem;
@@ -413,7 +465,15 @@ footer a:hover { color: var(--ink); }
 <div id="watermark" aria-hidden="true"><span>megaclaw</span></div>
 <div id="frame" aria-hidden="true"></div>
 <div id="grain" aria-hidden="true"></div>
-<div id="splash" aria-hidden="true"><div class="card">MEGACLAW</div></div>
+<div id="splash" aria-hidden="true"><div class="splash-stage">
+  <svg class="splash-frame" viewBox="0 0 1000 600" preserveAspectRatio="none"><rect x="10" y="10" width="980" height="580" rx="22" pathLength="1"></rect></svg>
+  <div class="splash-glow"></div>
+  <div class="card">
+    <div class="splash-glyph" hidden></div>
+    <div class="splash-name">megaclaw</div>
+    <div class="splash-hostname">megaclaw</div>
+  </div>
+</div></div>
 <div id="attention" role="alertdialog" aria-label="Attention alert demo"><div class="acard">
   <div class="atitle">Codex → 1Password</div>
   <div class="amsg">Need your approval to continue.</div>
@@ -539,7 +599,7 @@ footer a:hover { color: var(--ink); }
       <div class="card"><h3><span class="n">03</span>Watermark</h3><p>A big translucent name across the screen, readable from across the room. It's behind this text right now.</p></div>
       <div class="card"><h3><span class="n">04</span>Connect splash</h3><p>The Mac's name flashes center-screen when a remote session likely just started, then fades out. No more typing <code>hostname</code> to be sure.</p></div>
       <div class="card"><h3><span class="n">05</span>Menu bar plate</h3><p>A colored mini-nameplate in the menu bar. Its menu is a glanceable dashboard: uptime, IP (click to copy), CPU, RAM, free disk.</p></div>
-      <div class="card"><h3><span class="n">06</span>Attention alerts</h3><p>A bundled CLI summons a topmost message card with pulsating borders when an agent or script needs the human at the keyboard.</p></div>
+      <div class="card"><h3><span class="n">06</span>Attention alerts</h3><p>A bundled CLI summons a topmost message card with pulsating borders when an agent or script needs the human at the keyboard. Any click dismisses it without blocking the control underneath.</p></div>
     </div>
   </section>
 
@@ -618,7 +678,9 @@ const PALETTE = [
 const root = document.documentElement;
 const $ = id => document.getElementById(id);
 const tag = $("tag"), splash = $("splash"), miniTag = $("miniTag");
-const splashCard = splash.querySelector(".card");
+const splashName = splash.querySelector(".splash-name");
+const splashGlyph = splash.querySelector(".splash-glyph");
+const splashHostname = splash.querySelector(".splash-hostname");
 const watermark = document.querySelector("#watermark span");
 
 function setAccent(hex) {
@@ -640,9 +702,9 @@ makeSwatches($("swatches"), "swatch");
 makeSwatches($("setSwatches"), "mini-swatch");
 
 // identity: name + glyph, synced between the corner pill and the settings field
-const currentName = () => ($("setName").value.trim() || tag.textContent.trim() || "megaclaw");
+const currentName = () => ($("setName").value.trim() || "megaclaw");
 function renderIdentity() {
-  const name = $("setName").value.trim() || "megaclaw";
+  const name = currentName();
   const glyph = $("setGlyph").value.trim();
   const label = glyph ? glyph + " " + name : name;
   tag.textContent = label;
@@ -662,12 +724,22 @@ tag.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault
 
 // splash
 let splashSecs = 2.4;
+let splashTimer = null;
 function playSplash() {
-  splashCard.textContent = currentName().toUpperCase();
-  splash.style.animationDuration = splashSecs + "s";
+  const name = $("setName").value.trim() || "megaclaw";
+  const glyph = $("setGlyph").value.trim();
+  splashName.textContent = name;
+  splashGlyph.textContent = glyph;
+  splashGlyph.hidden = !glyph;
+  splashHostname.textContent = name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "") || "megaclaw";
+  splash.style.setProperty("--splash-duration", splashSecs + "s");
+  splash.style.setProperty("--splash-exit-delay", Math.max(.75, splashSecs - .42) + "s");
+  splash.style.setProperty("--splash-reduced-exit-delay", Math.max(0, splashSecs - .2) + "s");
+  clearTimeout(splashTimer);
   splash.classList.remove("on");
   void splash.offsetWidth; // restart animation
   splash.classList.add("on");
+  splashTimer = setTimeout(() => splash.classList.remove("on"), (splashSecs + .5) * 1000);
 }
 $("replay").addEventListener("click", playSplash);
 $("setSplashPlay").addEventListener("click", playSplash);
@@ -770,7 +842,9 @@ function showAttention() {
   attnTimer = setTimeout(dismissAttention, 8000);
 }
 $("attnDemo").addEventListener("click", showAttention);
-attention.addEventListener("click", dismissAttention);
+document.addEventListener("mousedown", () => {
+  if (attention.classList.contains("on")) dismissAttention();
+}, { capture: true });
 document.addEventListener("keydown", e => { if (e.key === "Escape") dismissAttention(); });
 if ("IntersectionObserver" in window && !sessionStorage.getItem("np-hinted")) {
   const hintObserver = new IntersectionObserver(entries => {
