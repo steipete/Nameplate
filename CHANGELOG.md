@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.6 - Unreleased
+## 0.3.0 - 2026-07-15
 
 - macOS: attention alerts now dismiss on any mouse click without consuming it, so the intended control underneath still receives the click.
 - Website: the connect-splash demo now mirrors the native frame trace, glow, identity plate, exit timing, and Reduce Motion behavior; its attention demo also preserves the clicked control.
