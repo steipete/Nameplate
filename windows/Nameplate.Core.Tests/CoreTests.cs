@@ -100,4 +100,15 @@ public sealed class CoreTests
 
         Assert.Equal(request, AttentionRequest.FromJson(request.ToJson()));
     }
+
+    [Theory]
+    [InlineData(2.5, false, 2.08, 0.38)]
+    [InlineData(0.5, false, 0.75, 0.38)]
+    [InlineData(2.5, true, 2.3, 0.2)]
+    [InlineData(0.1, true, 0, 0.2)]
+    public void SplashExitTimingMatchesMac(double hold, bool reduceMotion, double delay, double duration)
+    {
+        Assert.Equal(TimeSpan.FromSeconds(delay), SplashAnimation.ExitDelay(TimeSpan.FromSeconds(hold), reduceMotion));
+        Assert.Equal(TimeSpan.FromSeconds(duration), SplashAnimation.ExitDuration(reduceMotion));
+    }
 }

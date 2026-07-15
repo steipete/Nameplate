@@ -1,6 +1,6 @@
 # Nameplate for Windows
 
-Windows port of Nameplate: stable per-machine identity for remote-desktop fleets. It renders click-through colored frames, name-tag pills, and watermarks on every monitor; shows a connect splash on remote-connect/session-unlock; and accepts clickable agent attention alerts.
+Windows port of Nameplate: stable per-machine identity for remote-desktop fleets. It renders click-through colored frames, name-tag pills, and watermarks on every monitor; shows an animated connect splash on remote-connect/session-unlock; and displays click-through agent attention alerts.
 
 ## Build
 
@@ -84,7 +84,7 @@ The tray menu toggles frame, tag, and watermark and persists those choices here.
 - Host identity uses the lowercased first DNS label.
 - Default accent uses the same FNV-1a 64-bit hash and eight-color palette as macOS.
 - Pill text uses the same WCAG relative-luminance calculation and `0.4` dark-text threshold.
-- Every display receives independent frame, tag, watermark, splash, and attention windows.
-- Decorative layers use Win32 layered/transparent/no-activate/tool-window styles and do not consume clicks. Attention deliberately accepts clicks so a user can dismiss it.
+- Every display receives independent frame, tag, watermark, splash, and attention windows. The splash traces the colored perimeter, brings the identity plate into focus, and respects Windows' client-animation setting.
+- All overlay layers use Win32 layered/transparent/no-activate/tool-window styles. A passive low-level mouse observer dismisses attention on any button press and always forwards the original event, so the intended control still receives it.
 
 The Windows app uses WPF plus the built-in WinForms `NotifyIcon`; application and Core projects have no third-party NuGet dependencies. xUnit is used only by `Nameplate.Core.Tests`.
