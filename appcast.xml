@@ -3,6 +3,34 @@
     <channel>
         <title>Nameplate</title>
         <item>
+            <title>0.3.0</title>
+            <pubDate>Wed, 15 Jul 2026 13:50:47 +0100</pubDate>
+            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
+            <sparkle:version>9</sparkle:version>
+            <sparkle:shortVersionString>0.3.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Nameplate 0.3.0</h2>
+<ul>
+<li>macOS: attention alerts now dismiss on any mouse click without consuming it, so the intended control underneath still receives the click.</li>
+<li>Website: the connect-splash demo now mirrors the native frame trace, glow, identity plate, exit timing, and Reduce Motion behavior; its attention demo also preserves the clicked control.</li>
+<li>Windows/Linux: connect splashes now match the macOS frame trace, glow, identity-plate entrance, exit timing, and reduced-motion behavior; attention alerts dismiss on any mouse click without consuming it (X11 on Linux).</li>
+<li>macOS: connect splash now traces the identity-colored screen perimeter, springs the nameplate into focus, dissolves smoothly, respects Reduce Motion, and plays when Nameplate launches.</li>
+<li>Fixed (macOS): remote-only overlays now use dedicated-port and process signals for best-effort TeamViewer and AnyDesk session detection. Thanks @abhinavgautam01!</li>
+<li>Linux: install Nameplate with <code>brew install steipete/tap/nameplate</code> and keep it current with <code>brew upgrade</code>. Thanks @officiallymarky!</li>
+<li>Fixed (macOS): imported config links now preserve watermark opacity values through the full Settings range instead of silently clamping them to 30%. Thanks @abhinavgautam01!</li>
+<li>Fixed (macOS): <code>nameplate attention --color</code> now rejects invalid values and normalizes valid hex colors before handing requests to the app. Thanks @abhinavgautam01!</li>
+<li>Fixed (macOS): Settings window placement now persists across app restarts. Thanks @abhinavgautam01!</li>
+<li>Fixed (macOS): rapid attention requests now queue and display in order instead of overwriting each other, while legacy handoffs still migrate. Thanks @abhinavgautam01!</li>
+<li>Fixed (macOS): attention cards now stay visibly bounded and click-through until presentation succeeds, recover safely across display and Space changes, and can be cleared with <code>nameplate dismiss</code> without quitting the app.</li>
+<li>Fixed (macOS): Sparkle now stays disabled for Homebrew-managed installs even when the app lives directly in <code>/Applications</code>. Thanks @abhinavgautam01!</li>
+<li>macOS: <code>nameplate attention --wait</code> now blocks until the human clicks, app-driven dismissal, request expiry, or wait timeout, with scriptable exit codes and FIFO behavior for concurrent alerts. Thanks @mvanhorn!</li>
+<li>Optional name-tag info lines show the current IP address, uptime, macOS version, and location without opening the menu. Thanks @mvanhorn!</li>
+</ul>
+<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
+]]></description>
+            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.3.0/Nameplate-0.3.0.zip" length="3093080" type="application/octet-stream" sparkle:edSignature="uWnQCwgrrXC7v+MUXBE8Biy1PlKivkE1o3uCd87r6ecvUNw/FVog1Pow2PcD0fKav916wD19OcqaxVWcai/mCg=="/>
+        </item>
+        <item>
             <title>0.2.5</title>
             <pubDate>Thu, 09 Jul 2026 12:58:28 +0100</pubDate>
             <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
@@ -34,41 +62,6 @@
 <p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
 ]]></description>
             <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.4/Nameplate-0.2.4.zip" length="2989233" type="application/octet-stream" sparkle:edSignature="fJNXb8+yOG93EoZdO52WnrRJDwwnJkYOo1i/9I9r3VHGgXrVDqZZYtRS1sTFwAdTTFb/CRyD+eetbYlm51rsCA=="/>
-        </item>
-        <item>
-            <title>0.2.3</title>
-            <pubDate>Thu, 09 Jul 2026 09:25:50 +0100</pubDate>
-            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
-            <sparkle:version>6</sparkle:version>
-            <sparkle:shortVersionString>0.2.3</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<h2>Nameplate 0.2.3</h2>
-<ul>
-<li>Attention alerts now stay on screen until clicked by default (all platforms); pass <code>--duration &lt;seconds&gt;</code> for the old auto-dismiss behavior.</li>
-<li>The attention card clamps to the visible screen area so it stays fully readable on small displays.</li>
-</ul>
-<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
-]]></description>
-            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.3/Nameplate-0.2.3.zip" length="2985455" type="application/octet-stream" sparkle:edSignature="JniNzShqYBzL5AL9Jbk+xufqSbgeVWbZ7q2Pmyw7wmRvxUBlpiF9sBcXTQ62MZ/1rCFh9vUcMSo3px+86DJ+CQ=="/>
-        </item>
-        <item>
-            <title>0.2.2</title>
-            <pubDate>Wed, 08 Jul 2026 12:06:42 +0100</pubDate>
-            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
-            <sparkle:version>5</sparkle:version>
-            <sparkle:shortVersionString>0.2.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<h2>Nameplate 0.2.2</h2>
-<ul>
-<li>Fixed: fleet-file watcher no longer triggers status/overlay redraws every 15 s when <code>fleet.json</code> is absent. Thanks @abhinavgautam01!</li>
-<li>Fixed: <code>nameplate://</code> deep links now match case-insensitively (<code>Nameplate://Config</code> works). Thanks @abhinavgautam01!</li>
-<li>Fixed: future-dated attention requests (clock drift, spoofed handoff) are rejected by the freshness filter. Thanks @abhinavgautam01!</li>
-<li>Status menu falls back to a routable IPv6 address when no IPv4 is available (IPv6-only/NAT64 networks). Thanks @abhinavgautam01!</li>
-<li>Website: &quot;Summon me&quot; demo fires a real attention alert (card + pulsating frame) on the page; one subtle frame-pulse hint per session when the agents section scrolls into view — never uninvited.</li>
-</ul>
-<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
-]]></description>
-            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.2/Nameplate-0.2.2.zip" length="2985168" type="application/octet-stream" sparkle:edSignature="MEhRyllrUO3VfYft01U5TM3oAWeEd7VAPMAhAVy96e08BHJg/zXxyE35fyD/BujCx+Bv70eMhqWdzDtFTe2vCQ=="/>
         </item>
     </channel>
 </rss>
