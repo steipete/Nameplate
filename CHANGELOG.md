@@ -2,7 +2,7 @@
 
 ## 0.2.6 - Unreleased
 
-- macOS: connect splash now traces the identity-colored screen perimeter, springs the nameplate into focus, and dissolves smoothly; it also plays when Nameplate launches.
+- macOS: connect splash now traces the identity-colored screen perimeter, springs the nameplate into focus, dissolves smoothly, respects Reduce Motion, and plays when Nameplate launches.
 - Fixed (macOS): remote-only overlays now use dedicated-port and process signals for best-effort TeamViewer and AnyDesk session detection. Thanks @abhinavgautam01!
 - Linux: install Nameplate with `brew install steipete/tap/nameplate` and keep it current with `brew upgrade`. Thanks @officiallymarky!
 - Fixed (macOS): imported config links now preserve watermark opacity values through the full Settings range instead of silently clamping them to 30%. Thanks @abhinavgautam01!

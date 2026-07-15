@@ -88,11 +88,12 @@ final class SplashController {
 struct SplashView: View {
     let identity: MacIdentity
     let duration: Double
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var frameProgress: CGFloat = 0
     @State private var frameOpacity = 1.0
     @State private var contentOpacity = 0.0
-    @State private var contentScale = 0.88
-    @State private var glowScale = 0.78
+    @State private var contentScale: CGFloat = 0.88
+    @State private var glowScale: CGFloat = 0.78
     @State private var glowOpacity = 0.0
 
     var body: some View {
@@ -158,27 +159,40 @@ struct SplashView: View {
     }
 
     private func play() {
-        withAnimation(.easeInOut(duration: 0.62)) {
+        if self.reduceMotion {
             self.frameProgress = 1
-        }
-        withAnimation(.easeOut(duration: 0.55).delay(0.08)) {
-            self.glowScale = 1.03
+            self.glowScale = 1
             self.glowOpacity = 1
-        }
-        withAnimation(.spring(response: 0.48, dampingFraction: 0.72).delay(0.2)) {
             self.contentOpacity = 1
             self.contentScale = 1
+        } else {
+            withAnimation(.easeInOut(duration: 0.62)) {
+                self.frameProgress = 1
+            }
+            withAnimation(.easeOut(duration: 0.55).delay(0.08)) {
+                self.glowScale = 1.03
+                self.glowOpacity = 1
+            }
+            withAnimation(.spring(response: 0.48, dampingFraction: 0.72).delay(0.2)) {
+                self.contentOpacity = 1
+                self.contentScale = 1
+            }
         }
 
-        let exitDelay = max(0.75, self.duration - 0.42)
+        let exitDuration = self.reduceMotion ? 0.2 : 0.38
+        let exitDelay = self.reduceMotion
+            ? max(0, self.duration - exitDuration)
+            : max(0.75, self.duration - 0.42)
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(exitDelay))
-            withAnimation(.easeIn(duration: 0.38)) {
+            withAnimation(.easeIn(duration: exitDuration)) {
                 self.contentOpacity = 0
-                self.contentScale = 1.045
                 self.frameOpacity = 0
                 self.glowOpacity = 0
-                self.glowScale = 1.08
+                if !self.reduceMotion {
+                    self.contentScale = 1.045
+                    self.glowScale = 1.08
+                }
             }
         }
     }
