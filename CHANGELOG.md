@@ -4,6 +4,7 @@
 
 - macOS: attention alerts now dismiss on any mouse click without consuming it, so the intended control underneath still receives the click.
 - Website: the connect-splash demo now mirrors the native frame trace, glow, identity plate, exit timing, and Reduce Motion behavior; its attention demo also preserves the clicked control.
+- Windows/Linux: connect splashes now match the macOS frame trace, glow, identity-plate entrance, exit timing, and reduced-motion behavior; attention alerts dismiss on any mouse click without consuming it (X11 on Linux).
 - macOS: connect splash now traces the identity-colored screen perimeter, springs the nameplate into focus, dissolves smoothly, respects Reduce Motion, and plays when Nameplate launches.
 - Fixed (macOS): remote-only overlays now use dedicated-port and process signals for best-effort TeamViewer and AnyDesk session detection. Thanks @abhinavgautam01!
 - Linux: install Nameplate with `brew install steipete/tap/nameplate` and keep it current with `brew upgrade`. Thanks @officiallymarky!

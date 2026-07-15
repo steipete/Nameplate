@@ -10,9 +10,13 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::mpsc;
 use std::time::Duration;
+#[cfg(target_os = "linux")]
+use std::time::Instant;
 
 enum Event {
     Command(DaemonCommand),
+    #[cfg(target_os = "linux")]
+    GlobalClick(Instant),
     Reload,
     MonitorsChanged,
     Unlock,
@@ -79,6 +83,9 @@ fn run_daemon() {
         });
 
         if let Some(display) = gtk::gdk::Display::default() {
+            if !platform::start_global_click_monitor(&display, sender.clone()) {
+                eprintln!("nameplate: global attention-click monitoring requires X11");
+            }
             let monitors = display.monitors();
             let sender = sender.clone();
             monitors.connect_items_changed(move |_, _, _, _| {
@@ -105,6 +112,10 @@ fn run_daemon() {
                         duration,
                         color,
                     }) => overlays.show_attention(message, title, duration, color),
+                    #[cfg(target_os = "linux")]
+                    Event::GlobalClick(clicked_at) => {
+                        overlays.dismiss_attention_from_click(clicked_at)
+                    }
                     Event::Reload => overlays.reload(),
                     Event::MonitorsChanged => {
                         overlays.rebuild();

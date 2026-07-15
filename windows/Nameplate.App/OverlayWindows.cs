@@ -1,9 +1,11 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Effects;
+using System.Windows.Shapes;
+using Nameplate.Core;
 using Forms = System.Windows.Forms;
 using Brush = System.Windows.Media.Brush;
 using Brushes = System.Windows.Media.Brushes;
@@ -163,25 +165,83 @@ internal sealed class WatermarkWindow : OverlayWindow
 internal sealed class SplashWindow : OverlayWindow
 {
     private readonly CancellationTokenSource lifetime = new();
+    private readonly Rectangle frame;
+    private readonly Rectangle glow;
+    private readonly Border plate;
+    private readonly ScaleTransform frameScale = new(1, 1);
+    private readonly ScaleTransform glowScale = new(0.78, 0.78);
+    private readonly ScaleTransform plateScale = new(0.88, 0.88);
+    private readonly bool reduceMotion;
 
     public SplashWindow(Forms.Screen screen, Brush accent, Nameplate.Core.MachineIdentity identity)
         : base(screen, true)
     {
-        var foreground = Nameplate.Core.ColorHex.PrefersDarkText(identity.ColorHex) ? Brushes.Black : Brushes.White;
-        Content = CreateCard(identity, accent, foreground, 32, 22);
-        Opacity = 0;
+        var accentColor = accent is SolidColorBrush solid ? solid.Color : Colors.MediumSeaGreen;
+        frame = new Rectangle
+        {
+            Margin = new Thickness(7),
+            RadiusX = 22,
+            RadiusY = 22,
+            Stroke = accent,
+            StrokeThickness = 7,
+            RenderTransform = frameScale,
+            RenderTransformOrigin = new Point(0.5, 0.5),
+            Effect = new DropShadowEffect
+            {
+                Color = accentColor,
+                BlurRadius = 18,
+                Opacity = 0.9,
+                ShadowDepth = 0,
+            },
+        };
+
+        var glowBrush = accent.Clone();
+        glowBrush.Opacity = 0.16;
+        glow = new Rectangle
+        {
+            Margin = new Thickness(7),
+            RadiusX = 22,
+            RadiusY = 22,
+            Stroke = glowBrush,
+            StrokeThickness = 2,
+            Opacity = 0,
+            RenderTransform = glowScale,
+            RenderTransformOrigin = new Point(0.5, 0.5),
+        };
+        plate = CreateIdentityPlate(identity, accent, accentColor);
+        plate.Opacity = 0;
+        plate.RenderTransform = plateScale;
+        plate.RenderTransformOrigin = new Point(0.5, 0.5);
+
+        var grid = new Grid();
+        grid.Children.Add(frame);
+        grid.Children.Add(glow);
+        grid.Children.Add(plate);
+        Content = grid;
+
+        reduceMotion = !SystemParameters.ClientAreaAnimation;
+        if (reduceMotion)
+        {
+            ApplyPresentedState();
+        }
+        Loaded += OnLoaded;
         Closed += OnClosed;
     }
 
     public async Task ShowForAsync(TimeSpan duration)
     {
         Show();
-        BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(220)));
+        _ = ExitContentAfterAsync(duration);
         try
         {
             await Task.Delay(duration, lifetime.Token);
-            BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(350)));
-            await Task.Delay(350, lifetime.Token);
+            BeginAnimation(
+                OpacityProperty,
+                new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(500))
+                {
+                    EasingFunction = new CubicEase { EasingMode = EasingMode.EaseIn },
+                });
+            await Task.Delay(500, lifetime.Token);
             Close();
         }
         catch (OperationCanceledException)
@@ -189,27 +249,153 @@ internal sealed class SplashWindow : OverlayWindow
         }
     }
 
-    internal static Border CreateCard(Nameplate.Core.MachineIdentity identity, Brush accent, Brush foreground, double fontSize, double padding)
+    private static Border CreateIdentityPlate(MachineIdentity identity, Brush accent, Color accentColor)
     {
-        var text = string.IsNullOrWhiteSpace(identity.Glyph) ? identity.Name : $"{identity.Glyph}  {identity.Name}";
+        var stack = new StackPanel();
+        if (!string.IsNullOrWhiteSpace(identity.Glyph))
+        {
+            stack.Children.Add(new TextBlock
+            {
+                Text = identity.Glyph,
+                FontFamily = new FontFamily("Segoe UI Emoji"),
+                FontSize = 76,
+                Foreground = Brushes.White,
+                TextAlignment = TextAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 18),
+            });
+        }
+        stack.Children.Add(new TextBlock
+        {
+            Text = identity.Name,
+            FontFamily = new FontFamily("Segoe UI Variable Display, Segoe UI"),
+            FontSize = 64,
+            FontWeight = FontWeights.Bold,
+            Foreground = Brushes.White,
+            TextAlignment = TextAlignment.Center,
+            TextWrapping = TextWrapping.Wrap,
+        });
+        stack.Children.Add(new TextBlock
+        {
+            Text = Environment.MachineName,
+            FontFamily = new FontFamily("Cascadia Mono, Consolas"),
+            FontSize = 15,
+            FontWeight = FontWeights.Medium,
+            Foreground = new SolidColorBrush(Color.FromArgb(140, 255, 255, 255)),
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 18, 0, 0),
+        });
         return new Border
         {
-            Background = accent,
-            CornerRadius = new CornerRadius(22),
-            Padding = new Thickness(padding, padding * 0.65, padding, padding * 0.65),
+            MaxWidth = 720,
+            Background = new SolidColorBrush(Color.FromArgb(189, 0, 0, 0)),
+            BorderBrush = accent,
+            BorderThickness = new Thickness(4),
+            CornerRadius = new CornerRadius(32),
+            Padding = new Thickness(64, 44, 64, 44),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            Effect = new System.Windows.Media.Effects.DropShadowEffect { BlurRadius = 28, Opacity = 0.35, ShadowDepth = 8 },
-            Child = new TextBlock
+            Effect = new DropShadowEffect
             {
-                Text = text,
-                FontFamily = new FontFamily("Segoe UI Variable Display, Segoe UI"),
-                FontSize = fontSize,
-                FontWeight = FontWeights.Bold,
-                Foreground = foreground,
-                TextAlignment = TextAlignment.Center,
+                Color = accentColor,
+                BlurRadius = 36,
+                Opacity = 0.3,
+                ShadowDepth = 0,
             },
+            Child = stack,
         };
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs args)
+    {
+        if (reduceMotion)
+        {
+            return;
+        }
+
+        var perimeter = RoundedRectanglePerimeter(
+            Math.Max(1, frame.ActualWidth),
+            Math.Max(1, frame.ActualHeight),
+            22);
+        var dashUnits = perimeter / frame.StrokeThickness;
+        frame.StrokeDashArray = new DoubleCollection { dashUnits, dashUnits };
+        frame.StrokeDashOffset = dashUnits;
+        frame.BeginAnimation(
+            Shape.StrokeDashOffsetProperty,
+            new DoubleAnimation(dashUnits, 0, TimeSpan.FromSeconds(0.62))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut },
+            });
+        glow.BeginAnimation(
+            OpacityProperty,
+            new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.55))
+            {
+                BeginTime = TimeSpan.FromSeconds(0.08),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            });
+        AnimateScale(glowScale, 0.78, 1.03, TimeSpan.FromSeconds(0.55), TimeSpan.FromSeconds(0.08), new CubicEase { EasingMode = EasingMode.EaseOut });
+        plate.BeginAnimation(
+            OpacityProperty,
+            new DoubleAnimation(0, 1, TimeSpan.FromSeconds(0.48))
+            {
+                BeginTime = TimeSpan.FromSeconds(0.2),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+            });
+        AnimateScale(plateScale, 0.88, 1, TimeSpan.FromSeconds(0.48), TimeSpan.FromSeconds(0.2), new BackEase { Amplitude = 0.18, EasingMode = EasingMode.EaseOut });
+    }
+
+    private async Task ExitContentAfterAsync(TimeSpan holdDuration)
+    {
+        try
+        {
+            await Task.Delay(SplashAnimation.ExitDelay(holdDuration, reduceMotion), lifetime.Token);
+            var duration = SplashAnimation.ExitDuration(reduceMotion);
+            var ease = new CubicEase { EasingMode = EasingMode.EaseIn };
+            frame.BeginAnimation(OpacityProperty, new DoubleAnimation(frame.Opacity, 0, duration) { EasingFunction = ease });
+            glow.BeginAnimation(OpacityProperty, new DoubleAnimation(glow.Opacity, 0, duration) { EasingFunction = ease });
+            plate.BeginAnimation(OpacityProperty, new DoubleAnimation(plate.Opacity, 0, duration) { EasingFunction = ease });
+            if (!reduceMotion)
+            {
+                AnimateScale(frameScale, frameScale.ScaleX, 1.045, duration, TimeSpan.Zero, ease);
+                AnimateScale(glowScale, glowScale.ScaleX, 1.08, duration, TimeSpan.Zero, ease);
+                AnimateScale(plateScale, plateScale.ScaleX, 1.045, duration, TimeSpan.Zero, ease);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private void ApplyPresentedState()
+    {
+        frame.Opacity = 1;
+        glow.Opacity = 1;
+        plate.Opacity = 1;
+        frameScale.ScaleX = frameScale.ScaleY = 1;
+        glowScale.ScaleX = glowScale.ScaleY = 1;
+        plateScale.ScaleX = plateScale.ScaleY = 1;
+    }
+
+    private static void AnimateScale(
+        ScaleTransform transform,
+        double from,
+        double to,
+        TimeSpan duration,
+        TimeSpan beginTime,
+        IEasingFunction easing)
+    {
+        var animation = new DoubleAnimation(from, to, duration)
+        {
+            BeginTime = beginTime,
+            EasingFunction = easing,
+        };
+        transform.BeginAnimation(ScaleTransform.ScaleXProperty, animation);
+        transform.BeginAnimation(ScaleTransform.ScaleYProperty, animation.Clone());
+    }
+
+    private static double RoundedRectanglePerimeter(double width, double height, double radius)
+    {
+        var boundedRadius = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
+        return 2 * (width + height - 4 * boundedRadius) + 2 * Math.PI * boundedRadius;
     }
 
     private void OnClosed(object? sender, EventArgs args)
@@ -228,14 +414,16 @@ internal sealed class AttentionWindow : OverlayWindow
         Brush accent,
         Nameplate.Core.MachineIdentity identity,
         Nameplate.Core.AttentionRequest request)
-        : base(screen, false)
+        : base(screen, true)
     {
-        var grid = new Grid { Background = Brushes.Transparent };
-        var frame = new Border
+        var grid = new Grid();
+        var frame = new Rectangle
         {
-            BorderBrush = accent,
-            BorderThickness = new Thickness(12),
-            CornerRadius = new CornerRadius(18),
+            Stroke = accent,
+            StrokeThickness = 12,
+            RadiusX = 18,
+            RadiusY = 18,
+            Margin = new Thickness(6),
             Opacity = 0.45,
         };
         frame.BeginAnimation(
@@ -250,7 +438,6 @@ internal sealed class AttentionWindow : OverlayWindow
         var card = CreateAttentionCard(accent, identity.ColorHex, request);
         grid.Children.Add(card);
         Content = grid;
-        MouseLeftButtonDown += OnMouseLeftButtonDown;
         Closed += OnClosed;
     }
 
@@ -312,8 +499,6 @@ internal sealed class AttentionWindow : OverlayWindow
             Child = stack,
         };
     }
-
-    private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs args) => DismissRequested?.Invoke(this, EventArgs.Empty);
 
     private void OnClosed(object? sender, EventArgs args)
     {

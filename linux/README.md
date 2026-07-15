@@ -1,6 +1,6 @@
 # Nameplate for Linux
 
-Nameplate brands Linux machines in a remote-desktop fleet with the same stable identity as the macOS app. It draws a click-through colored frame, name-tag pill, translucent watermark, connect splash, and clickable agent-attention cards over every monitor without modifying the wallpaper.
+Nameplate brands Linux machines in a remote-desktop fleet with the same stable identity as the macOS app. It draws a click-through colored frame, name-tag pill, translucent watermark, animated connect splash, and agent-attention cards over every monitor without modifying the wallpaper.
 
 The X11 path is the primary target for xrdp and VNC fleets. Wayland layer-shell support is optional.
 
@@ -52,11 +52,11 @@ nameplate attention "Need 1Password approval" \
   --title "Agent needs attention" --duration 12 --color '#E24B30'
 ```
 
-The daemon listens for monitor changes and rebuilds one GTK window per monitor per enabled layer. A logind `org.freedesktop.login1.Session.Unlock` signal triggers the connect splash. Attention cards dismiss on click or timeout; their animated border windows remain click-through.
+The daemon listens for monitor changes and rebuilds one GTK window per monitor per enabled layer. A logind `org.freedesktop.login1.Session.Unlock` signal triggers the connect splash. The splash traces the colored perimeter, brings the identity plate into focus, and respects GTK's animation preference. On X11, any mouse-button press dismisses an attention card without consuming the event; an optional timeout still works everywhere.
 
 ## X11 and Wayland
 
-On X11, Nameplate applies `_NET_WM_STATE_ABOVE`, skip-taskbar, and skip-pager window-manager hints, positions each window over its monitor, and gives passive layers an empty GDK input region. The attention window's input region contains only the card.
+On X11, Nameplate applies `_NET_WM_STATE_ABOVE`, skip-taskbar, and skip-pager window-manager hints, positions each window over its monitor, and gives every overlay an empty GDK input region. An XI2 raw-button observer sees attention-dismissal clicks without grabbing them, so the target application receives the same event.
 
 Wayland compositors do not permit ordinary applications to position always-on-top windows. Build the optional integration when the distribution provides `gtk4-layer-shell` development files:
 
@@ -64,7 +64,7 @@ Wayland compositors do not permit ordinary applications to position always-on-to
 cargo build --release --features layer-shell
 ```
 
-That feature anchors overlay-layer surfaces to each output through `gtk4-layer-shell`. Compositor support for the layer-shell protocol is required. The feature is not part of the default build and does not affect X11.
+That feature anchors overlay-layer surfaces to each output through `gtk4-layer-shell`. Compositor support for the layer-shell protocol is required. The feature is not part of the default build and does not affect X11. Wayland intentionally blocks arbitrary global input observation, so click-anywhere dismissal is X11-only; use `--duration` for attention alerts on Wayland.
 
 ## Configuration
 

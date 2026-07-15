@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media;
 using Nameplate.Core;
@@ -12,6 +13,8 @@ internal sealed class OverlayManager : IDisposable
     private readonly List<SplashWindow> splashWindows = [];
     private readonly List<AttentionWindow> attentionWindows = [];
     private readonly ConfigStore config;
+    private GlobalMouseMonitor? attentionClickMonitor;
+    private int attentionGeneration;
 
     public OverlayManager(ConfigStore config)
     {
@@ -23,14 +26,14 @@ internal sealed class OverlayManager : IDisposable
     {
         CloseWindows(persistentWindows);
         CloseWindows(splashWindows);
-        CloseWindows(attentionWindows);
+        CloseAttention();
     }
 
     public void Rebuild()
     {
         CloseWindows(persistentWindows);
         CloseWindows(splashWindows);
-        CloseWindows(attentionWindows);
+        CloseAttention();
         var identity = config.Identity;
         var settings = config.Settings.Layers;
         var accent = Brush(identity.ColorHex);
@@ -70,11 +73,12 @@ internal sealed class OverlayManager : IDisposable
 
     public void ShowAttention(AttentionRequest request)
     {
-        CloseWindows(attentionWindows);
+        CloseAttention();
+        var generation = ++attentionGeneration;
         var normalized = ColorHex.Normalize(request.Color) ?? config.Identity.ColorHex;
         var accent = Brush(normalized);
         var identity = config.Identity with { ColorHex = normalized };
-        // No duration = sticky until the card is clicked.
+        // No duration = sticky until the next mouse click anywhere.
         TimeSpan? duration = request.Duration is double seconds
             ? TimeSpan.FromSeconds(Math.Clamp(seconds, 1, 3600))
             : null;
@@ -84,6 +88,17 @@ internal sealed class OverlayManager : IDisposable
             window.DismissRequested += OnAttentionDismissRequested;
             attentionWindows.Add(window);
             _ = window.ShowForAsync(duration);
+        }
+        try
+        {
+            attentionClickMonitor = new GlobalMouseMonitor(() =>
+            {
+                _ = Application.Current.Dispatcher.BeginInvoke(() => DismissAttention(generation));
+            });
+        }
+        catch (Win32Exception error)
+        {
+            Console.Error.WriteLine($"Nameplate: global click monitoring unavailable: {error.Message}");
         }
     }
 
@@ -99,7 +114,28 @@ internal sealed class OverlayManager : IDisposable
         return brush;
     }
 
-    private void OnAttentionDismissRequested(object? sender, EventArgs args) => CloseWindows(attentionWindows);
+    private void OnAttentionDismissRequested(object? sender, EventArgs args)
+    {
+        if (sender is AttentionWindow window && attentionWindows.Contains(window))
+        {
+            CloseAttention();
+        }
+    }
+
+    private void DismissAttention(int generation)
+    {
+        if (generation == attentionGeneration)
+        {
+            CloseAttention();
+        }
+    }
+
+    private void CloseAttention()
+    {
+        attentionClickMonitor?.Dispose();
+        attentionClickMonitor = null;
+        CloseWindows(attentionWindows);
+    }
 
     private void ShowPersistent(Window window)
     {

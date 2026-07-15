@@ -7,7 +7,7 @@ If you drive a herd of Macs over [Jump Desktop](https://jumpdesktop.com/), Scree
 - **Frame** — a colored border around every display, with rounded corners that follow the screen's curve. Always visible, costs zero pixels of workspace, survives fullscreen apps.
 - **Name tag** — a small pill with the Mac's name (and an optional emoji glyph) pinned to a corner.
 - **Watermark** — a big translucent name across the screen, readable from across the room.
-- **Connect splash** — the Mac's name flashes center-screen when a remote session likely just started, then fades out.
+- **Connect splash** — the machine's identity locks into focus with a traced perimeter and animated nameplate when a remote session likely just started, then dissolves.
 - **Menu bar plate** — a colored mini-nameplate (plus the name) in the menu bar. Its menu doubles as a glanceable dashboard: uptime, IP address (click to copy), CPU load, RAM, and free disk, plus layer toggles.
 - **Attention alerts** — a bundled CLI lets agents and scripts summon a topmost message card with pulsating screen borders when they need the human (e.g. right before a 1Password auth prompt).
 
