@@ -47,18 +47,12 @@ final class SplashController {
             let panel = OverlayPanelFactory.makePanel(
                 for: screen,
                 level: NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1))
-            panel.contentView = NSHostingView(rootView: SplashView(identity: identity))
+            panel.contentView = NSHostingView(rootView: SplashView(
+                identity: identity,
+                duration: holdDuration))
             panel.setFrame(screen.frame, display: true)
-            panel.alphaValue = 0
             panel.orderFrontRegardless()
             return panel
-        }
-
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.18
-            for panel in self.panels {
-                panel.animator().alphaValue = 1
-            }
         }
 
         Task { @MainActor [weak self] in
@@ -93,9 +87,44 @@ final class SplashController {
 
 struct SplashView: View {
     let identity: MacIdentity
-    @State private var appeared = false
+    let duration: Double
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var frameProgress: CGFloat = 0
+    @State private var frameOpacity = 1.0
+    @State private var contentOpacity = 0.0
+    @State private var contentScale: CGFloat = 0.88
+    @State private var glowScale: CGFloat = 0.78
+    @State private var glowOpacity = 0.0
 
     var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .trim(from: 0, to: self.frameProgress)
+                .stroke(
+                    self.identity.color,
+                    style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round))
+                .padding(7)
+                .shadow(color: self.identity.color.opacity(0.9), radius: 18)
+                .opacity(self.frameOpacity)
+
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(self.identity.color.opacity(0.16), lineWidth: 2)
+                .padding(7)
+                .scaleEffect(self.glowScale)
+                .opacity(self.glowOpacity)
+
+            self.plate
+                .scaleEffect(self.contentScale)
+                .opacity(self.contentOpacity)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            self.play()
+        }
+        .allowsHitTesting(false)
+    }
+
+    private var plate: some View {
         VStack(spacing: 18) {
             if !self.identity.glyph.isEmpty {
                 Text(self.identity.glyph)
@@ -125,15 +154,47 @@ struct SplashView: View {
                     RoundedRectangle(cornerRadius: 32, style: .continuous)
                         .strokeBorder(self.identity.color, lineWidth: 4)
                 }
+                .shadow(color: self.identity.color.opacity(0.3), radius: 36)
         }
-        .scaleEffect(self.appeared ? 1 : 0.94)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                self.appeared = true
+    }
+
+    private func play() {
+        if self.reduceMotion {
+            self.frameProgress = 1
+            self.glowScale = 1
+            self.glowOpacity = 1
+            self.contentOpacity = 1
+            self.contentScale = 1
+        } else {
+            withAnimation(.easeInOut(duration: 0.62)) {
+                self.frameProgress = 1
+            }
+            withAnimation(.easeOut(duration: 0.55).delay(0.08)) {
+                self.glowScale = 1.03
+                self.glowOpacity = 1
+            }
+            withAnimation(.spring(response: 0.48, dampingFraction: 0.72).delay(0.2)) {
+                self.contentOpacity = 1
+                self.contentScale = 1
             }
         }
-        .allowsHitTesting(false)
+
+        let exitDuration = self.reduceMotion ? 0.2 : 0.38
+        let exitDelay = self.reduceMotion
+            ? max(0, self.duration - exitDuration)
+            : max(0.75, self.duration - 0.42)
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(exitDelay))
+            withAnimation(.easeIn(duration: exitDuration)) {
+                self.contentOpacity = 0
+                self.frameOpacity = 0
+                self.glowOpacity = 0
+                if !self.reduceMotion {
+                    self.contentScale = 1.045
+                    self.glowScale = 1.08
+                }
+            }
+        }
     }
 }
 

@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.settings = settings
         self.services = services
         services.start()
+        services.showSplash()
 
         let firstRunKey = "hasCompletedFirstRun"
         if !UserDefaults.standard.bool(forKey: firstRunKey) {
