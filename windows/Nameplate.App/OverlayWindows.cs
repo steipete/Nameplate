@@ -37,6 +37,11 @@ internal abstract class OverlayWindow : Window
 
     protected Forms.Screen Screen { get; }
 
+    internal void BringToFront()
+    {
+        NativeMethods.PositionWindow(new WindowInteropHelper(this).Handle, Screen.Bounds);
+    }
+
     private bool ClickThrough { get; }
 
     private void OnSourceInitialized(object? sender, EventArgs args)

@@ -129,7 +129,7 @@ pub enum Corner {
     BottomRight,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Settings {
     pub name: Option<String>,

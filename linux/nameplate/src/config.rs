@@ -6,6 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::mpsc;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct LoadedConfig {
     pub settings: Settings,
     pub identity: Identity,

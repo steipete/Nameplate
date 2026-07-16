@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 pub struct OverlayManager {
     application: gtk::Application,
     config: config::LoadedConfig,
-    decoration_windows: Vec<gtk::Window>,
+    decoration_windows: Vec<DecorationWindow>,
     transient_windows: Vec<gtk::Window>,
     attention_active: Rc<Cell<bool>>,
     attention_generation: Rc<Cell<u64>>,
@@ -35,6 +35,39 @@ struct SplashVisualState {
     glow_scale: f64,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum DecorationLayer {
+    Frame,
+    Tag,
+    Watermark,
+}
+
+impl DecorationLayer {
+    const ORDERED: [Self; 3] = [Self::Frame, Self::Tag, Self::Watermark];
+
+    fn draw_layer(self) -> DrawLayer {
+        match self {
+            Self::Frame => DrawLayer::Frame,
+            Self::Tag => DrawLayer::Tag,
+            Self::Watermark => DrawLayer::Watermark,
+        }
+    }
+
+    fn is_enabled(self, settings: &Settings) -> bool {
+        match self {
+            Self::Frame => settings.frame_enabled,
+            Self::Tag => settings.tag_enabled,
+            Self::Watermark => settings.watermark_enabled,
+        }
+    }
+}
+
+struct DecorationWindow {
+    layer: DecorationLayer,
+    window: gtk::Window,
+    animation_generation: Rc<Cell<u64>>,
+}
+
 impl OverlayManager {
     pub fn new(application: &gtk::Application) -> Self {
         Self {
@@ -50,42 +83,69 @@ impl OverlayManager {
     }
 
     pub fn reload(&mut self) {
-        self.config = config::load();
-        self.rebuild();
+        let next = config::load();
+        if next == self.config {
+            return;
+        }
+        let appearance_unchanged = self.config.identity == next.identity
+            && decoration_appearance(&self.config.settings)
+                == decoration_appearance(&next.settings);
+        self.config = next;
+        if appearance_unchanged {
+            self.reconcile_enabled_layers(true);
+        } else {
+            self.replace_decorations(true);
+        }
     }
 
     pub fn rebuild(&mut self) {
-        close_all(&mut self.decoration_windows);
-        let monitors = monitors();
-        for monitor in monitors {
-            if self.config.settings.frame_enabled {
-                self.decoration_windows.push(make_window(
-                    &self.application,
-                    &monitor,
-                    DrawLayer::Frame,
-                    &self.config.identity,
-                    &self.config.settings,
-                ));
-            }
-            if self.config.settings.tag_enabled {
-                self.decoration_windows.push(make_window(
-                    &self.application,
-                    &monitor,
-                    DrawLayer::Tag,
-                    &self.config.identity,
-                    &self.config.settings,
-                ));
-            }
-            if self.config.settings.watermark_enabled {
-                self.decoration_windows.push(make_window(
-                    &self.application,
-                    &monitor,
-                    DrawLayer::Watermark,
-                    &self.config.identity,
-                    &self.config.settings,
-                ));
+        self.replace_decorations(false);
+    }
+
+    fn replace_decorations(&mut self, animate: bool) {
+        let previous = std::mem::take(&mut self.decoration_windows);
+        for monitor in monitors() {
+            for (layer, visible) in decoration_targets(&self.config.settings) {
+                self.add_decoration(&monitor, layer, visible, animate);
             }
         }
+        for decoration in previous {
+            retire_decoration(decoration, animate);
+        }
+    }
+
+    fn reconcile_enabled_layers(&mut self, animate: bool) {
+        for decoration in &self.decoration_windows {
+            let visible = decoration.layer.is_enabled(&self.config.settings);
+            set_decoration_visibility(decoration, visible, animate);
+        }
+    }
+
+    fn add_decoration(
+        &mut self,
+        monitor: &gtk::gdk::Monitor,
+        layer: DecorationLayer,
+        visible: bool,
+        animate: bool,
+    ) {
+        let should_animate = visible && animate && animations_enabled();
+        let window = make_window(
+            &self.application,
+            monitor,
+            layer.draw_layer(),
+            &self.config.identity,
+            &self.config.settings,
+            if visible && !should_animate { 1.0 } else { 0.0 },
+        );
+        let decoration = DecorationWindow {
+            layer,
+            window,
+            animation_generation: Rc::new(Cell::new(0)),
+        };
+        if should_animate {
+            animate_decoration(&decoration, 1.0, false);
+        }
+        self.decoration_windows.push(decoration);
     }
 
     pub fn show_splash(&mut self, force: bool) {
@@ -125,6 +185,7 @@ impl OverlayManager {
                 },
                 &self.config.identity,
                 &self.config.settings,
+                1.0,
             );
             windows.push(window);
             areas.push(area);
@@ -190,6 +251,7 @@ impl OverlayManager {
                 },
                 &self.config.identity,
                 &self.config.settings,
+                1.0,
             );
             windows.push(window);
             pulse_areas.push(area);
@@ -206,6 +268,7 @@ impl OverlayManager {
                 },
                 &self.config.identity,
                 &self.config.settings,
+                1.0,
             );
             windows.push(window);
         }
@@ -278,6 +341,99 @@ enum DrawLayer {
     },
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct DecorationAppearance {
+    frame_thickness: f64,
+    frame_opacity: f64,
+    frame_corner_radius: f64,
+    frame_round_top_left: bool,
+    frame_round_top_right: bool,
+    frame_round_bottom_left: bool,
+    frame_round_bottom_right: bool,
+    tag_corner: Corner,
+    tag_shows_glyph: bool,
+    watermark_corner: Corner,
+    watermark_opacity: f64,
+}
+
+fn decoration_appearance(settings: &Settings) -> DecorationAppearance {
+    DecorationAppearance {
+        frame_thickness: settings.frame_thickness,
+        frame_opacity: settings.frame_opacity,
+        frame_corner_radius: settings.frame_corner_radius,
+        frame_round_top_left: settings.frame_round_top_left,
+        frame_round_top_right: settings.frame_round_top_right,
+        frame_round_bottom_left: settings.frame_round_bottom_left,
+        frame_round_bottom_right: settings.frame_round_bottom_right,
+        tag_corner: settings.tag_corner,
+        tag_shows_glyph: settings.tag_shows_glyph,
+        watermark_corner: settings.watermark_corner,
+        watermark_opacity: settings.watermark_opacity,
+    }
+}
+
+fn decoration_targets(settings: &Settings) -> [(DecorationLayer, bool); 3] {
+    DecorationLayer::ORDERED.map(|layer| (layer, layer.is_enabled(settings)))
+}
+
+fn animations_enabled() -> bool {
+    gtk::Settings::default().is_none_or(|settings| settings.is_gtk_enable_animations())
+}
+
+fn set_decoration_visibility(decoration: &DecorationWindow, visible: bool, animate: bool) {
+    let target_opacity = if visible { 1.0 } else { 0.0 };
+    decoration
+        .animation_generation
+        .set(decoration.animation_generation.get().wrapping_add(1));
+    if (decoration.window.opacity() - target_opacity).abs() < f64::EPSILON {
+        return;
+    }
+    if animate && animations_enabled() {
+        animate_decoration(decoration, target_opacity, false);
+    } else {
+        decoration.window.set_opacity(target_opacity);
+    }
+}
+
+fn retire_decoration(decoration: DecorationWindow, animate: bool) {
+    if animate && animations_enabled() {
+        animate_decoration(&decoration, 0.0, true);
+    } else {
+        decoration.window.close();
+    }
+}
+
+fn animate_decoration(decoration: &DecorationWindow, target_opacity: f64, close: bool) {
+    const DURATION: f64 = 0.2;
+
+    let generation = decoration.animation_generation.get().wrapping_add(1);
+    decoration.animation_generation.set(generation);
+    let animation_generation = Rc::clone(&decoration.animation_generation);
+    let window = decoration.window.clone();
+    let initial_opacity = window.opacity();
+    let started = Instant::now();
+    gtk::glib::timeout_add_local(Duration::from_millis(16), move || {
+        if animation_generation.get() != generation {
+            return gtk::glib::ControlFlow::Break;
+        }
+        let animation_progress = (started.elapsed().as_secs_f64() / DURATION).clamp(0.0, 1.0);
+        let opacity = lerp(
+            initial_opacity,
+            target_opacity,
+            smoothstep(animation_progress),
+        );
+        window.set_opacity(opacity);
+        if animation_progress >= 1.0 {
+            if close {
+                window.close();
+            }
+            gtk::glib::ControlFlow::Break
+        } else {
+            gtk::glib::ControlFlow::Continue
+        }
+    });
+}
+
 fn monitors() -> Vec<gtk::gdk::Monitor> {
     let Some(display) = gtk::gdk::Display::default() else {
         return Vec::new();
@@ -295,8 +451,17 @@ fn make_window(
     layer: DrawLayer,
     identity: &Identity,
     settings: &Settings,
+    initial_opacity: f64,
 ) -> gtk::Window {
-    make_window_with_area(application, monitor, layer, identity, settings).0
+    make_window_with_area(
+        application,
+        monitor,
+        layer,
+        identity,
+        settings,
+        initial_opacity,
+    )
+    .0
 }
 
 fn make_window_with_area(
@@ -305,6 +470,7 @@ fn make_window_with_area(
     layer: DrawLayer,
     identity: &Identity,
     settings: &Settings,
+    initial_opacity: f64,
 ) -> (gtk::Window, gtk::DrawingArea) {
     let geometry = monitor.geometry();
     let window = gtk::Window::builder()
@@ -315,6 +481,7 @@ fn make_window_with_area(
         .default_width(geometry.width())
         .default_height(geometry.height())
         .build();
+    window.set_opacity(initial_opacity);
     window.add_css_class("nameplate-overlay");
     window.set_can_focus(false);
     let area = gtk::DrawingArea::new();
@@ -863,6 +1030,54 @@ fn fade_out(windows: Vec<gtk::Window>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn decoration_appearance_ignores_non_decoration_settings() {
+        let original = Settings::default();
+        let toggled = Settings {
+            name: Some("renamed".to_owned()),
+            color: Some("#123456".to_owned()),
+            glyph: Some("test".to_owned()),
+            use_fleet_file: !original.use_fleet_file,
+            frame_enabled: !original.frame_enabled,
+            tag_enabled: !original.tag_enabled,
+            watermark_enabled: !original.watermark_enabled,
+            splash_enabled: !original.splash_enabled,
+            splash_duration: original.splash_duration + 1.0,
+            ..original.clone()
+        };
+        assert_eq!(
+            decoration_appearance(&original),
+            decoration_appearance(&toggled)
+        );
+
+        let restyled = Settings {
+            frame_opacity: 0.25,
+            ..original.clone()
+        };
+        assert_ne!(
+            decoration_appearance(&original),
+            decoration_appearance(&restyled)
+        );
+    }
+
+    #[test]
+    fn decoration_targets_keep_disabled_layers_in_canonical_order() {
+        let settings = Settings {
+            frame_enabled: true,
+            tag_enabled: false,
+            watermark_enabled: true,
+            ..Settings::default()
+        };
+        assert_eq!(
+            decoration_targets(&settings),
+            [
+                (DecorationLayer::Frame, true),
+                (DecorationLayer::Tag, false),
+                (DecorationLayer::Watermark, true),
+            ]
+        );
+    }
 
     #[test]
     fn animated_splash_traces_then_exits() {

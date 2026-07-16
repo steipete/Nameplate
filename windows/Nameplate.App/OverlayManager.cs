@@ -2,6 +2,7 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using Nameplate.Core;
 using Forms = System.Windows.Forms;
 
@@ -9,52 +10,74 @@ namespace Nameplate.App;
 
 internal sealed class OverlayManager : IDisposable
 {
-    private readonly List<Window> persistentWindows = [];
+    private static readonly TimeSpan DecorationAnimationDuration = TimeSpan.FromMilliseconds(200);
+
+    private readonly List<DecorationWindow> persistentWindows = [];
+    private readonly HashSet<Window> retiringWindows = [];
     private readonly List<SplashWindow> splashWindows = [];
     private readonly List<AttentionWindow> attentionWindows = [];
     private readonly ConfigStore config;
+    private MachineIdentity? renderedIdentity;
+    private LayerSettings? renderedSettings;
+    private string[] renderedScreens = [];
     private GlobalMouseMonitor? attentionClickMonitor;
     private int attentionGeneration;
+
+    private enum DecorationLayer
+    {
+        Frame,
+        Tag,
+        Watermark,
+    }
+
+    private sealed record DecorationWindow(DecorationLayer Layer, string ScreenKey, OverlayWindow Window);
 
     public OverlayManager(ConfigStore config)
     {
         this.config = config;
-        Rebuild();
+        Rebuild(animate: false, force: true);
     }
 
     public void Dispose()
     {
-        CloseWindows(persistentWindows);
+        ClosePersistentImmediately();
         CloseWindows(splashWindows);
         CloseAttention();
     }
 
-    public void Rebuild()
+    public void Rebuild(bool animate = true, bool force = false)
     {
-        CloseWindows(persistentWindows);
-        CloseWindows(splashWindows);
-        CloseAttention();
         var identity = config.Identity;
         var settings = config.Settings.Layers;
-        var accent = Brush(identity.ColorHex);
-
-        foreach (var screen in Forms.Screen.AllScreens)
+        var screens = Forms.Screen.AllScreens;
+        var screenKeys = screens.Select(ScreenKey).ToArray();
+        var appearanceChanged = renderedIdentity != identity
+            || renderedSettings is null
+            || AppearanceOnly(renderedSettings) != AppearanceOnly(settings);
+        var screensChanged = !renderedScreens.SequenceEqual(screenKeys);
+        var enabledLayersChanged = renderedSettings is null
+            || renderedSettings.FrameEnabled != settings.FrameEnabled
+            || renderedSettings.TagEnabled != settings.TagEnabled
+            || renderedSettings.WatermarkEnabled != settings.WatermarkEnabled;
+        if (!force && !appearanceChanged && !screensChanged && !enabledLayersChanged)
         {
-            if (settings.FrameEnabled)
-            {
-                ShowPersistent(new FrameWindow(screen, accent, settings));
-            }
-
-            if (settings.TagEnabled)
-            {
-                ShowPersistent(new TagWindow(screen, accent, identity, settings.TagCorner));
-            }
-
-            if (settings.WatermarkEnabled)
-            {
-                ShowPersistent(new WatermarkWindow(screen, accent, identity, settings.WatermarkCorner, settings.WatermarkOpacity));
-            }
+            return;
         }
+
+        CloseWindows(splashWindows);
+        CloseAttention();
+        if (force || appearanceChanged || screensChanged)
+        {
+            ReplaceDecorations(screens, identity, settings, animate);
+        }
+        else
+        {
+            ReconcileEnabledLayers(screens, identity, settings, animate);
+        }
+
+        renderedIdentity = identity;
+        renderedSettings = settings;
+        renderedScreens = screenKeys;
     }
 
     public void ShowSplash()
@@ -137,10 +160,174 @@ internal sealed class OverlayManager : IDisposable
         CloseWindows(attentionWindows);
     }
 
-    private void ShowPersistent(Window window)
+    private void ReplaceDecorations(
+        Forms.Screen[] screens,
+        MachineIdentity identity,
+        LayerSettings settings,
+        bool animate)
     {
-        persistentWindows.Add(window);
+        var previous = persistentWindows.ToArray();
+        persistentWindows.Clear();
+        foreach (var screen in screens)
+        {
+            foreach (var layer in EnabledLayers(settings))
+            {
+                AddDecoration(layer, screen, identity, settings, animate);
+            }
+        }
+
+        foreach (var decoration in previous)
+        {
+            HidePersistent(decoration.Window, animate);
+        }
+    }
+
+    private void ReconcileEnabledLayers(
+        Forms.Screen[] screens,
+        MachineIdentity identity,
+        LayerSettings settings,
+        bool animate)
+    {
+        var enabled = EnabledLayers(settings).ToHashSet();
+        foreach (var decoration in persistentWindows.Where(item => !enabled.Contains(item.Layer)).ToArray())
+        {
+            persistentWindows.Remove(decoration);
+            HidePersistent(decoration.Window, animate);
+        }
+
+        foreach (var screen in screens)
+        {
+            var screenKey = ScreenKey(screen);
+            foreach (var layer in enabled)
+            {
+                if (persistentWindows.Any(item => item.Layer == layer && item.ScreenKey == screenKey))
+                {
+                    continue;
+                }
+                AddDecoration(layer, screen, identity, settings, animate);
+            }
+        }
+        RestackDecorations(screens, settings);
+    }
+
+    private void RestackDecorations(Forms.Screen[] screens, LayerSettings settings)
+    {
+        foreach (var screen in screens)
+        {
+            var screenKey = ScreenKey(screen);
+            foreach (var layer in EnabledLayers(settings))
+            {
+                persistentWindows
+                    .First(item => item.Layer == layer && item.ScreenKey == screenKey)
+                    .Window
+                    .BringToFront();
+            }
+        }
+    }
+
+    private void AddDecoration(
+        DecorationLayer layer,
+        Forms.Screen screen,
+        MachineIdentity identity,
+        LayerSettings settings,
+        bool animate)
+    {
+        var accent = Brush(identity.ColorHex);
+        OverlayWindow window = layer switch
+        {
+            DecorationLayer.Frame => new FrameWindow(screen, accent, settings),
+            DecorationLayer.Tag => new TagWindow(screen, accent, identity, settings.TagCorner),
+            DecorationLayer.Watermark => new WatermarkWindow(
+                screen,
+                accent,
+                identity,
+                settings.WatermarkCorner,
+                settings.WatermarkOpacity),
+            _ => throw new ArgumentOutOfRangeException(nameof(layer)),
+        };
+        persistentWindows.Add(new DecorationWindow(layer, ScreenKey(screen), window));
+        ShowPersistent(window, animate);
+    }
+
+    private static IEnumerable<DecorationLayer> EnabledLayers(LayerSettings settings)
+    {
+        if (settings.FrameEnabled) yield return DecorationLayer.Frame;
+        if (settings.TagEnabled) yield return DecorationLayer.Tag;
+        if (settings.WatermarkEnabled) yield return DecorationLayer.Watermark;
+    }
+
+    private static LayerSettings AppearanceOnly(LayerSettings settings) => settings with
+    {
+        FrameEnabled = false,
+        TagEnabled = false,
+        WatermarkEnabled = false,
+    };
+
+    private static string ScreenKey(Forms.Screen screen) =>
+        $"{screen.DeviceName}:{screen.Bounds.X}:{screen.Bounds.Y}:{screen.Bounds.Width}:{screen.Bounds.Height}";
+
+    private static void ShowPersistent(Window window, bool animate)
+    {
+        var shouldAnimate = animate && SystemParameters.ClientAreaAnimation;
+        window.Opacity = shouldAnimate ? 0 : 1;
         window.Show();
+        if (!shouldAnimate)
+        {
+            return;
+        }
+
+        var animation = new DoubleAnimation(0, 1, DecorationAnimationDuration)
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut },
+        };
+        animation.Completed += (_, _) =>
+        {
+            if (!window.IsLoaded) return;
+            window.BeginAnimation(Window.OpacityProperty, null);
+            window.Opacity = 1;
+        };
+        window.BeginAnimation(Window.OpacityProperty, animation);
+    }
+
+    private void HidePersistent(Window window, bool animate)
+    {
+        if (!animate || !SystemParameters.ClientAreaAnimation || !window.IsLoaded)
+        {
+            window.Close();
+            return;
+        }
+
+        var currentOpacity = window.Opacity;
+        window.BeginAnimation(Window.OpacityProperty, null);
+        window.Opacity = currentOpacity;
+        retiringWindows.Add(window);
+        var animation = new DoubleAnimation(currentOpacity, 0, DecorationAnimationDuration)
+        {
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut },
+        };
+        animation.Completed += (_, _) =>
+        {
+            retiringWindows.Remove(window);
+            if (window.IsLoaded)
+            {
+                window.Close();
+            }
+        };
+        window.BeginAnimation(Window.OpacityProperty, animation);
+    }
+
+    private void ClosePersistentImmediately()
+    {
+        foreach (var decoration in persistentWindows.ToArray())
+        {
+            decoration.Window.Close();
+        }
+        persistentWindows.Clear();
+        foreach (var window in retiringWindows.ToArray())
+        {
+            window.Close();
+        }
+        retiringWindows.Clear();
     }
 
     private static void CloseWindows<T>(List<T> windows) where T : Window

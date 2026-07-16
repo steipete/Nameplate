@@ -31,6 +31,7 @@ extension AppSettings {
 struct OverlayView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var infoLineProvider: InfoLineProvider
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let identity = self.settings.identity
@@ -41,6 +42,7 @@ struct OverlayView: View {
                         identity.color.opacity(self.settings.frameOpacity),
                         lineWidth: self.settings.frameThickness)
                     .ignoresSafeArea()
+                    .transition(.opacity)
             }
 
             if self.settings.watermarkEnabled {
@@ -50,6 +52,7 @@ struct OverlayView: View {
                         maxHeight: .infinity,
                         alignment: self.settings.watermarkCorner.alignment)
                     .padding(self.layerPadding)
+                    .transition(.opacity)
             }
 
             if self.settings.tagEnabled {
@@ -62,10 +65,18 @@ struct OverlayView: View {
                         maxHeight: .infinity,
                         alignment: self.settings.tagCorner.alignment)
                     .padding(self.layerPadding)
+                    .transition(.opacity)
             }
         }
+        .animation(self.layerAnimation, value: self.settings.frameEnabled)
+        .animation(self.layerAnimation, value: self.settings.tagEnabled)
+        .animation(self.layerAnimation, value: self.settings.watermarkEnabled)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .allowsHitTesting(false)
+    }
+
+    private var layerAnimation: Animation? {
+        self.reduceMotion ? nil : .easeInOut(duration: 0.2)
     }
 
     private var layerPadding: CGFloat {
