@@ -508,7 +508,7 @@ dependencies = [
 
 [[package]]
 name = "nameplate"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "cairo-rs",
  "gdk4-x11",
@@ -522,7 +522,7 @@ dependencies = [
 
 [[package]]
 name = "nameplate-core"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "serde",
  "serde_json",
