@@ -42,10 +42,13 @@ enum OverlayPanelFactory {
 /// controller only manages panel lifecycle and per-screen visibility.
 @MainActor
 final class OverlayController {
+    private static let visibilityAnimationDuration: TimeInterval = 0.2
+
     private let settings: AppSettings
     private let remoteMonitor: RemoteViewMonitor
     private let infoLineProvider: InfoLineProvider
     private var panels: [(panel: NSPanel, screen: NSScreen)] = []
+    private var targetVisibility: [ObjectIdentifier: Bool] = [:]
     private var cancellable: AnyCancellable?
     // App-lifetime object: observers are registered once and never removed.
 
@@ -61,7 +64,7 @@ final class OverlayController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 DispatchQueue.main.async {
-                    self?.applyVisibility()
+                    self?.applyVisibility(animated: true)
                 }
             }
 
@@ -101,7 +104,7 @@ final class OverlayController {
             }
             self.panels[index].screen = screen
         }
-        self.applyVisibility()
+        self.applyVisibility(animated: false)
     }
 
     private var anyLayerEnabled: Bool {
@@ -122,6 +125,7 @@ final class OverlayController {
         for (panel, _) in self.panels {
             panel.close()
         }
+        self.targetVisibility.removeAll()
         self.panels = NSScreen.screens.map { screen in
             // .statusBar floats above app windows and fullscreen content but
             // stays below pop-up menus. Anything higher (.screenSaver) blocks
@@ -133,17 +137,56 @@ final class OverlayController {
             panel.setFrame(screen.frame, display: true)
             return (panel, screen)
         }
-        self.applyVisibility()
+        self.applyVisibility(animated: false)
     }
 
-    func applyVisibility() {
+    func applyVisibility(animated: Bool = true) {
         for (panel, screen) in self.panels {
-            if self.shouldShow(on: screen) {
-                if !panel.isVisible {
-                    panel.orderFrontRegardless()
-                }
-            } else {
+            self.setVisible(self.shouldShow(on: screen), panel: panel, animated: animated)
+        }
+    }
+
+    private func setVisible(_ visible: Bool, panel: NSPanel, animated: Bool) {
+        let identifier = ObjectIdentifier(panel)
+        guard self.targetVisibility[identifier] != visible else { return }
+        self.targetVisibility[identifier] = visible
+
+        let shouldAnimate = animated && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        if visible {
+            if !panel.isVisible {
+                panel.alphaValue = shouldAnimate ? 0 : 1
+                panel.orderFrontRegardless()
+            }
+            guard shouldAnimate else {
+                panel.alphaValue = 1
+                return
+            }
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = Self.visibilityAnimationDuration
+                panel.animator().alphaValue = 1
+            }
+            return
+        }
+
+        guard panel.isVisible else {
+            panel.alphaValue = 1
+            return
+        }
+        guard shouldAnimate else {
+            panel.orderOut(nil)
+            panel.alphaValue = 1
+            return
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Self.visibilityAnimationDuration
+            panel.animator().alphaValue = 0
+        } completionHandler: { [weak self, weak panel] in
+            Task { @MainActor in
+                guard let self, let panel,
+                      self.targetVisibility[ObjectIdentifier(panel)] == false
+                else { return }
                 panel.orderOut(nil)
+                panel.alphaValue = 1
             }
         }
     }

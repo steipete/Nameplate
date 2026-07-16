@@ -96,6 +96,6 @@ internal sealed class NameplateApplication : Application
 
     private void OnDisplaySettingsChanged(object? sender, EventArgs args)
     {
-        _ = Dispatcher.InvokeAsync(() => overlays?.Rebuild());
+        _ = Dispatcher.InvokeAsync(() => overlays?.Rebuild(animate: false, force: true));
     }
 }
