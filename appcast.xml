@@ -3,6 +3,21 @@
     <channel>
         <title>Nameplate</title>
         <item>
+            <title>0.3.1</title>
+            <pubDate>Thu, 16 Jul 2026 04:04:47 +0100</pubDate>
+            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
+            <sparkle:version>10</sparkle:version>
+            <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h2>Nameplate 0.3.1</h2>
+<ul>
+<li>Overlay visibility changes now fade smoothly on macOS, Windows, and Linux, with reduced-motion settings respected.</li>
+</ul>
+<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
+]]></description>
+            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.3.1/Nameplate-0.3.1.zip" length="3099192" type="application/octet-stream" sparkle:edSignature="Uyjuc4k0mYpH8ln1pUR6RLUiFuwpMTkJL3VwjkcaiaABvOH3twO6gvFzfcl//QZEQqDaulPqgB66aWCAxnu1Cg=="/>
+        </item>
+        <item>
             <title>0.3.0</title>
             <pubDate>Wed, 15 Jul 2026 13:50:47 +0100</pubDate>
             <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
@@ -46,22 +61,6 @@
 <p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
 ]]></description>
             <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.5/Nameplate-0.2.5.zip" length="2989227" type="application/octet-stream" sparkle:edSignature="6ls67UE4ugJIypfWXJ4iDQ0zXLgw4O/FobR4jzRkSx96cbGdGROq4JN55UnReSJpHYQh+nFP6KsV59jeyk3uAQ=="/>
-        </item>
-        <item>
-            <title>0.2.4</title>
-            <pubDate>Thu, 09 Jul 2026 10:24:43 +0100</pubDate>
-            <link>https://raw.githubusercontent.com/steipete/Nameplate/main/appcast.xml</link>
-            <sparkle:version>7</sparkle:version>
-            <sparkle:shortVersionString>0.2.4</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <description><![CDATA[<h2>Nameplate 0.2.4</h2>
-<ul>
-<li>Fixed (Windows): DPI-correct overlay sizing so frame corners aren&#x27;t clipped on scaled displays.</li>
-<li>Fixed: overlay frames now track display size changes reliably — screen frames are re-synced after display reconfiguration settles (remote-session window resizes reported stale sizes before). Sticky attention borders and the card re-anchor too.</li>
-</ul>
-<p><a href="https://github.com/steipete/Nameplate/blob/main/CHANGELOG.md">View full changelog</a></p>
-]]></description>
-            <enclosure url="https://github.com/steipete/Nameplate/releases/download/v0.2.4/Nameplate-0.2.4.zip" length="2989233" type="application/octet-stream" sparkle:edSignature="fJNXb8+yOG93EoZdO52WnrRJDwwnJkYOo1i/9I9r3VHGgXrVDqZZYtRS1sTFwAdTTFb/CRyD+eetbYlm51rsCA=="/>
         </item>
     </channel>
 </rss>
