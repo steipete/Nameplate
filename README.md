@@ -1,118 +1,94 @@
-# Nameplate
+# Nameplate 🪪 — Know which machine you’re driving
 
-**Brand every machine in your fleet — macOS, Windows, and Linux — so you always know which one you just remoted into.**
+[![CI](https://img.shields.io/github/actions/workflow/status/steipete/Nameplate/ci.yml?branch=main&style=flat-square&label=ci)](https://github.com/steipete/Nameplate/actions/workflows/ci.yml)
+[![GitHub release](https://img.shields.io/github/v/release/steipete/Nameplate?style=flat-square)](https://github.com/steipete/Nameplate/releases/latest)
+[![Platforms](https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-555?style=flat-square)](#install)
+[![License](https://img.shields.io/github/license/steipete/Nameplate?style=flat-square)](LICENSE)
+[![Homebrew](https://img.shields.io/badge/Homebrew-steipete%2Ftap-FBB040?style=flat-square&logo=homebrew&logoColor=white)](https://github.com/steipete/homebrew-tap)
 
-If you drive a herd of Macs over [Jump Desktop](https://jumpdesktop.com/), Screen Sharing, or any other remote desktop, the screens all look the same. Nameplate gives each Mac an unmistakable identity — like an aircraft livery — rendered as click-through overlays that float above everything:
-
-- **Frame** — a colored border around every display, with rounded corners that follow the screen's curve. Always visible, costs zero pixels of workspace, survives fullscreen apps.
-- **Name tag** — a small pill with the Mac's name (and an optional emoji glyph) pinned to a corner.
-- **Watermark** — a big translucent name across the screen, readable from across the room.
-- **Connect splash** — the machine's identity locks into focus with a traced perimeter and animated nameplate when a remote session likely just started, then dissolves.
-- **Menu bar plate** — a colored mini-nameplate (plus the name) in the menu bar. Its menu doubles as a glanceable dashboard: uptime, IP address (click to copy), CPU load, RAM, and free disk, plus layer toggles.
-- **Attention alerts** — a bundled CLI lets agents and scripts summon a topmost message card with pulsating screen borders when they need the human (e.g. right before a 1Password auth prompt).
-
-Your wallpaper stays untouched — everything is a transparent overlay, so you can keep any background you like.
-
-Each Mac gets a stable default color derived from its hostname, so even an unconfigured fleet is instantly tellable-apart.
+Nameplate gives each machine in a remote-desktop fleet a stable visual identity. It renders click-through frames, name tags, watermarks, and connect splashes on macOS, Windows, and Linux without changing the wallpaper.
 
 <p align="center"><img src="docs/settings.png" width="460" alt="Nameplate settings with live preview"></p>
 
+Each unconfigured machine gets a color derived from its hostname. Open the [interactive tour](https://nameplate.sh) to try the layers and settings in a browser.
+
 ## Install
 
-**macOS** — download the [DMG](https://github.com/steipete/Nameplate/releases/latest/download/Nameplate.dmg) (drag to install), or:
+| Platform | Smallest install |
+| --- | --- |
+| macOS 15+ (Apple silicon) | `brew install --cask steipete/tap/nameplate` |
+| Linux (x86_64 or arm64) | `brew install steipete/tap/nameplate` |
+| Windows (x64 or arm64) | Download the matching ZIP from the [latest release](https://github.com/steipete/Nameplate/releases/latest) |
+
+On macOS, the [DMG](https://github.com/steipete/Nameplate/releases/latest/download/Nameplate.dmg) is available as a direct install. Linux release tarballs require the system GTK4 and X11 runtime libraries; see the [Linux guide](linux/README.md). The Windows archive contains one self-contained tray app and CLI; see the [Windows guide](windows/README.md).
+
+## Quick start
+
+After the macOS Homebrew install:
 
 ```sh
-brew install --cask steipete/tap/nameplate
+open -a Nameplate
+nameplate splash
 ```
 
-**Windows** — grab [Nameplate-Windows-x64.zip](https://github.com/steipete/Nameplate/releases/latest/download/Nameplate-Windows-x64.zip) (or `arm64`) from the latest release: a single self-contained `nameplate.exe` (tray app + CLI in one binary). Source lives in [`windows/`](windows/).
+Settings opens on the first launch. Choose a name, color, optional glyph, and the layers to show; `nameplate splash` then replays the identity card. Windows and Linux expose the same splash command through their installed executable.
 
-**Linux** — install with Homebrew:
+## What appears on screen
 
-```sh
-brew install steipete/tap/nameplate
-```
+| Layer | Behavior |
+| --- | --- |
+| Frame | Outlines every display and remains visible above full-screen apps. |
+| Name tag | Pins the machine name and optional glyph to a chosen corner. |
+| Watermark | Shows a large translucent identity label. |
+| Connect splash | Traces the display perimeter and presents the identity after connection-related events. |
+| Attention alert | Lets a script display a topmost message card with pulsing borders. |
 
-Or grab [Nameplate-Linux-x86_64.tar.gz](https://github.com/steipete/Nameplate/releases/latest/download/Nameplate-Linux-x86_64.tar.gz) (or `arm64`) from the latest release; the tarball requires the system GTK4 runtime. Built for X11 fleets (xrdp/VNC), Wayland best-effort. Source lives in [`linux/`](linux/).
+The macOS menu bar plate also shows uptime, IP address (click to copy), CPU load, memory, and free disk space. Decorations can remain visible or appear only on virtual displays and during detected remote-viewing sessions.
 
-All three share the same fleet file, the same hostname-derived default colors, and the same `nameplate attention` / `nameplate splash` CLI.
+## Fleet identity
 
-Or build the Mac app from source (requires Xcode 26 / Swift 6.2+):
-
-```sh
-git clone https://github.com/steipete/Nameplate.git
-cd Nameplate
-./Scripts/package_app.sh release
-open Nameplate.app
-```
-
-`package_app.sh` signs with a Developer ID identity; pass your own via `APP_IDENTITY="Developer ID Application: You (TEAMID)"`, or use ad-hoc signing for a quick local build: `APP_IDENTITY="-" ./Scripts/package_app.sh release`.
-
-## Configure
-
-Click the nameplate in the menu bar → **Settings…** (opens automatically on first launch):
-
-- **Identity** — name, color (8 presets or custom), optional glyph. Empty name = computer name.
-- **Layers** — frame thickness/opacity and per-corner rounding (macOS defaults to rounded bottom corners; Windows and Linux default to square corners), tag corner and optional IP/uptime/macOS/location info lines on macOS, watermark corner/opacity.
-- **Splash** — duration and triggers (display wake, screen unlock, display reconfiguration).
-- **General** — start at login, menu bar appearance, and decoration visibility: **Always** or **Only when viewed remotely** — frame, tag, watermark, and splash appear only on virtual displays (Jump Desktop and similar identify themselves by display name/vendor) or while a Screen Sharing/VNC, TeamViewer, or AnyDesk connection is established. Attention alerts always show, so agents can still reach you when you're sitting at the Mac.
-
-### Fleet file
-
-Manage the whole fleet from one dotfile. Nameplate reads `~/.config/nameplate/fleet.json`, keyed by short hostname:
+Nameplate reads `~/.config/nameplate/fleet.json`, keyed by lowercase short hostname. The shared fields work on all three platforms:
 
 ```json
 {
-  "megaclaw": { "name": "MEGACLAW", "color": "#1D9E75", "glyph": "🦞", "location": "Phoenix" },
-  "clawmac":  { "name": "clawmac",  "color": "#E24B30", "glyph": "🔥", "location": "Atlanta (MacStadium)" },
+  "megaclaw": { "name": "MEGACLAW", "color": "#1D9E75", "glyph": "🦞" },
+  "clawmac": { "name": "clawmac", "color": "#E24B30", "glyph": "🔥" },
   "studio-1": { "color": "#7F77DD" }
 }
 ```
 
-All fields are optional; anything missing falls back to local settings. `location` (when set) shows in the status menu and connect splash. Sync the file via your dotfiles and every Mac picks up its own entry. Changes are applied live.
+All fields are optional, and edits apply live. macOS also accepts `location`; platform-specific settings and precedence are documented in [Configuration](docs/configuration.md).
 
-### CLI
+## CLI and automation
 
-The app bundle ships a CLI at `Nameplate.app/Contents/Helpers/nameplate` (symlink it onto your PATH):
-
-```sh
-ln -s /Applications/Nameplate.app/Contents/Helpers/nameplate ~/bin/nameplate
-
-nameplate attention "Need 1Password approval for release verification — no secret read." \
-  --title "Codex → 1Password" --wait --timeout 300
-nameplate splash      # replay the identity splash
-nameplate settings    # open settings
-nameplate dismiss     # clear any active attention alert
-```
-
-`attention` shows a topmost card plus pulsating borders on every display — built for AI agents that need a human at the keyboard, with the *reason* right in the alert. Any mouse click dismisses the alert without consuming the click, so the control underneath still receives it. Without `--duration`, the card stays until that click; pass `--duration <seconds>` to auto-dismiss instead. With `--wait`, the CLI blocks for up to 600 seconds by default (override with `--timeout <seconds>`) and exits `0` when clicked, `3` when app-driven dismissal clears it, or `4` when the wait times out or the request expires before presentation. Concurrent alerts queue in order. `nameplate dismiss` clears active and queued alerts without quitting Nameplate. It launches the app if needed. An agent skill ships in [skills/nameplate-attention](skills/nameplate-attention/SKILL.md) — copy it into your agent's skills directory.
-
-### Scripting without the CLI
-
-Darwin notifications work from anywhere, including SSH sessions, with no app activation:
+The installed executable handles both the app and its commands:
 
 ```sh
-notifyutil -p com.steipete.nameplate.splash
-notifyutil -p com.steipete.nameplate.settings
+nameplate attention "Need approval before release" --title "Agent needs attention"
+nameplate splash
 ```
 
-The `nameplate://splash` and `nameplate://settings` URLs are registered as well, but URL delivery to menu-bar-only apps is unreliable on current macOS betas — the Darwin notifications are the dependable path.
+`attention` and `splash` work on all three platforms. macOS also provides blocking acknowledgements, settings and dismissal commands, Darwin notifications, URL actions, and an [agent skill](skills/nameplate-attention/SKILL.md). See the [CLI reference](docs/cli.md) for syntax and platform differences.
 
-### Updates
+## Connection behavior
 
-Release builds update via [Sparkle](https://sparkle-project.org) (feed: `appcast.xml` on `main`). Dev and Homebrew builds keep Sparkle disabled.
+Windows receives remote-connect and session-unlock events directly. Linux uses logind unlock events and targets X11 fleets; Wayland support requires a compositor with the layer-shell protocol and is best-effort.
 
-## Why the splash triggers are heuristics
-
-macOS has no public "a remote session just connected" event. Nameplate reacts to the events that accompany a connect in practice: displays waking, the session unlocking, and display reconfiguration (on headless Macs, the remote-desktop host plugging in its virtual display fires this). Each trigger can be toggled individually.
+macOS has no public remote-session connection event. Nameplate instead reacts to display wake, screen unlock, and display reconfiguration, which are the events remote-desktop hosts produce in practice. Each trigger can be disabled in Settings.
 
 ## Development
 
+The macOS app requires Xcode 26 with Swift 6.2 or newer. From the repository root:
+
 ```sh
-swift build          # needs full Xcode (SwiftUI macros), not just CommandLineTools
+swift build
 swift test
-./Scripts/package_app.sh          # debug .app bundle
+APP_IDENTITY="-" ./Scripts/package_app.sh debug
 ```
+
+`package_app.sh` defaults to the maintainer's Developer ID. Set `APP_IDENTITY="Developer ID Application: You (TEAMID)"` to use your own identity, or keep `APP_IDENTITY="-"` for an ad-hoc local build.
+
+Windows requires the .NET 8 SDK; Linux requires Rust 1.92 plus GTK4 and X11 development libraries. Their build commands live in the [Windows](windows/README.md) and [Linux](linux/README.md) guides.
 
 ## License
 
