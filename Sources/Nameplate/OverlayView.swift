@@ -64,7 +64,8 @@ struct OverlayView: View {
                         maxWidth: .infinity,
                         maxHeight: .infinity,
                         alignment: self.settings.tagCorner.alignment)
-                    .padding(self.layerPadding)
+                    .padding(.horizontal, self.layerPadding + CGFloat(self.settings.tagHorizontalOffset))
+                    .padding(.vertical, self.layerPadding + CGFloat(self.settings.tagVerticalOffset))
                     .transition(.opacity)
             }
         }

@@ -7,7 +7,7 @@ Nameplate resolves a local identity, then applies any matching fleet entry. Miss
 Click the nameplate in the menu bar and choose **Settings…**. The window opens automatically on first launch.
 
 - **Identity** sets the name, color, optional glyph, and location.
-- **Layers** controls the frame, name tag, watermark, their corners, and optional information lines.
+- **Layers** controls the frame, name tag, watermark, their corners, name-tag offsets, and optional information lines.
 - **Splash** controls the duration and the display-wake, screen-unlock, and display-reconfiguration triggers.
 - **General** controls login startup, menu bar appearance, and whether decorations are always visible or only visible during detected remote viewing.
 

@@ -44,6 +44,16 @@ struct LayersSettingsPane: View {
                             Text(corner.label).tag(corner)
                         }
                     }
+                    SliderRow(
+                        title: "Horizontal offset",
+                        value: self.$settings.tagHorizontalOffset,
+                        range: 0...400,
+                        format: { "\(Int($0)) pt" })
+                    SliderRow(
+                        title: "Vertical offset",
+                        value: self.$settings.tagVerticalOffset,
+                        range: 0...400,
+                        format: { "\(Int($0)) pt" })
                     Toggle("Include glyph", isOn: self.$settings.tagShowsGlyph)
                     LabeledContent("Info lines") {
                         VStack(alignment: .leading, spacing: 6) {
@@ -58,7 +68,7 @@ struct LayersSettingsPane: View {
             } header: {
                 Text("Name tag")
             } footer: {
-                Text("Selected details stay visible on the name tag and may appear in screenshots and recordings.")
+                Text("Offsets move the tag inward from its corner. Selected details may appear in screenshots and recordings.")
             }
 
             Section {

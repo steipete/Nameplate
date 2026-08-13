@@ -55,6 +55,8 @@ final class AppSettings: ObservableObject {
     // Name tag layer.
     @AppStorage("tagEnabled") var tagEnabled: Bool = true
     @AppStorage("tagCornerRaw") private var tagCornerRaw: String = ScreenCorner.bottomLeft.rawValue
+    @AppStorage("tagHorizontalOffset") var tagHorizontalOffset: Double = 0
+    @AppStorage("tagVerticalOffset") var tagVerticalOffset: Double = 0
     @AppStorage("tagShowsGlyph") var tagShowsGlyph: Bool = true
     @AppStorage("tagInfoFields") private var tagInfoFieldsRaw: String = ""
 

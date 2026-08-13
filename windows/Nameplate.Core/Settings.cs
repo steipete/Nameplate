@@ -56,6 +56,12 @@ public sealed record LayerSettings
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ScreenCorner TagCorner { get; init; } = ScreenCorner.BottomLeft;
 
+    [JsonPropertyName("tagHorizontalOffset")]
+    public double TagHorizontalOffset { get; init; }
+
+    [JsonPropertyName("tagVerticalOffset")]
+    public double TagVerticalOffset { get; init; }
+
     [JsonPropertyName("watermarkCorner")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public ScreenCorner WatermarkCorner { get; init; } = ScreenCorner.BottomRight;

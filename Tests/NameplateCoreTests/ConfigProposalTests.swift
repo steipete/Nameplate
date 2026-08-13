@@ -8,7 +8,8 @@ struct ConfigProposalTests {
         let url = try #require(URL(string: "nameplate://config?name=%20megaclaw%20&glyph=%F0%9F%A6%9E"
             + "&color=%231D9E75&frameThickness=5&frameOpacity=1.0&cornerRadius=22"
             + "&roundTopLeft=0&roundTopRight=0&roundBottomLeft=1&roundBottomRight=1"
-            + "&tagCorner=bottomLeft&watermarkOpacity=0.05&frameEnabled=1&tagEnabled=1"
+            + "&tagCorner=bottomLeft&tagHorizontalOffset=120&tagVerticalOffset=48"
+            + "&watermarkOpacity=0.05&frameEnabled=1&tagEnabled=1"
             + "&watermarkEnabled=1&splashDuration=2.4"))
         let proposal = try #require(ConfigProposal(url: url))
 
@@ -23,13 +24,15 @@ struct ConfigProposalTests {
         #expect(proposal.roundBottomLeft == true)
         #expect(proposal.roundBottomRight == true)
         #expect(proposal.tagCorner == .bottomLeft)
+        #expect(proposal.tagHorizontalOffset == 120)
+        #expect(proposal.tagVerticalOffset == 48)
         #expect(proposal.watermarkOpacity == 0.05)
         #expect(proposal.frameEnabled == true)
         #expect(proposal.tagEnabled == true)
         #expect(proposal.watermarkEnabled == true)
         #expect(proposal.splashDuration == 2.4)
         #expect(!proposal.isEmpty)
-        #expect(proposal.summaryItems.count == 16)
+        #expect(proposal.summaryItems.count == 18)
     }
 
     @Test func normalizesHexWithoutHash() throws {
@@ -58,10 +61,13 @@ struct ConfigProposalTests {
     @Test func clampsOutOfRangeNumbers() throws {
         let proposal = try #require(self.proposal(
             "frameThickness=100&frameOpacity=0&cornerRadius=-4"
+                + "&tagHorizontalOffset=-10&tagVerticalOffset=1000"
                 + "&watermarkOpacity=1&splashDuration=0.1"))
         #expect(proposal.frameThickness == 20)
         #expect(proposal.frameOpacity == 0.1)
         #expect(proposal.cornerRadius == 0)
+        #expect(proposal.tagHorizontalOffset == 0)
+        #expect(proposal.tagVerticalOffset == 400)
         #expect(proposal.watermarkOpacity == 0.5)
         #expect(proposal.splashDuration == 0.5)
     }

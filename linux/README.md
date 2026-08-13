@@ -96,6 +96,8 @@ Local overrides and visual settings live beside it in `settings.json`. Unknown f
   "frameRoundBottomRight": false,
   "tagEnabled": true,
   "tagCorner": "bottomLeft",
+  "tagHorizontalOffset": 120,
+  "tagVerticalOffset": 48,
   "tagShowsGlyph": true,
   "watermarkEnabled": false,
   "watermarkCorner": "bottomRight",
@@ -105,7 +107,7 @@ Local overrides and visual settings live beside it in `settings.json`. Unknown f
 }
 ```
 
-Linux defaults to square frame corners. Set any per-corner value to `true` to opt into rounding.
+Linux defaults to square frame corners. Set any per-corner value to `true` to opt into rounding. Name-tag offsets move the tag inward from its selected corner, in pixels.
 
 Changes to either file are applied live, including editor/sync tools that replace files atomically. Fleet values take precedence over local identity values; missing values fall back to local settings and then hostname defaults.
 

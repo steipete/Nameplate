@@ -236,7 +236,7 @@ internal sealed class OverlayManager : IDisposable
         OverlayWindow window = layer switch
         {
             DecorationLayer.Frame => new FrameWindow(screen, accent, settings),
-            DecorationLayer.Tag => new TagWindow(screen, accent, identity, settings.TagCorner),
+            DecorationLayer.Tag => new TagWindow(screen, accent, identity, settings),
             DecorationLayer.Watermark => new WatermarkWindow(
                 screen,
                 accent,

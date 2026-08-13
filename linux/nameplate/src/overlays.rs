@@ -351,6 +351,8 @@ struct DecorationAppearance {
     frame_round_bottom_left: bool,
     frame_round_bottom_right: bool,
     tag_corner: Corner,
+    tag_horizontal_offset: f64,
+    tag_vertical_offset: f64,
     tag_shows_glyph: bool,
     watermark_corner: Corner,
     watermark_opacity: f64,
@@ -366,6 +368,8 @@ fn decoration_appearance(settings: &Settings) -> DecorationAppearance {
         frame_round_bottom_left: settings.frame_round_bottom_left,
         frame_round_bottom_right: settings.frame_round_bottom_right,
         tag_corner: settings.tag_corner,
+        tag_horizontal_offset: settings.tag_horizontal_offset,
+        tag_vertical_offset: settings.tag_vertical_offset,
         tag_shows_glyph: settings.tag_shows_glyph,
         watermark_corner: settings.watermark_corner,
         watermark_opacity: settings.watermark_opacity,
@@ -593,14 +597,18 @@ fn draw_tag(context: &Context, width: f64, height: f64, identity: &Identity, set
         .map_or(text.len() as f64 * 8.0, |e| e.x_advance());
     let pill_width = text_width + 22.0;
     let pill_height = 28.0;
-    let pad = settings.frame_thickness.max(0.0) + 10.0;
+    let horizontal_pad =
+        settings.frame_thickness.max(0.0) + 10.0 + settings.tag_horizontal_offset.clamp(0.0, 400.0);
+    let vertical_pad =
+        settings.frame_thickness.max(0.0) + 10.0 + settings.tag_vertical_offset.clamp(0.0, 400.0);
     let (x, y) = corner_origin(
         settings.tag_corner,
         width,
         height,
         pill_width,
         pill_height,
-        pad,
+        horizontal_pad,
+        vertical_pad,
     );
     rounded_rectangle(context, x, y, pill_width, pill_height, pill_height / 2.0);
     set_source_hex(context, &identity.color, 1.0);
@@ -959,13 +967,17 @@ fn corner_origin(
     height: f64,
     item_width: f64,
     item_height: f64,
-    pad: f64,
+    horizontal_pad: f64,
+    vertical_pad: f64,
 ) -> (f64, f64) {
     match corner {
-        Corner::TopLeft => (pad, pad),
-        Corner::TopRight => (width - item_width - pad, pad),
-        Corner::BottomLeft => (pad, height - item_height - pad),
-        Corner::BottomRight => (width - item_width - pad, height - item_height - pad),
+        Corner::TopLeft => (horizontal_pad, vertical_pad),
+        Corner::TopRight => (width - item_width - horizontal_pad, vertical_pad),
+        Corner::BottomLeft => (horizontal_pad, height - item_height - vertical_pad),
+        Corner::BottomRight => (
+            width - item_width - horizontal_pad,
+            height - item_height - vertical_pad,
+        ),
     }
 }
 
@@ -1058,6 +1070,14 @@ mod tests {
         assert_ne!(
             decoration_appearance(&original),
             decoration_appearance(&restyled)
+        );
+    }
+
+    #[test]
+    fn corner_origin_applies_independent_offsets() {
+        assert_eq!(
+            corner_origin(Corner::BottomRight, 1000.0, 700.0, 100.0, 30.0, 120.0, 48.0),
+            (780.0, 622.0)
         );
     }
 
