@@ -14,6 +14,8 @@ public struct ConfigProposal: Equatable, Sendable {
     public var roundBottomLeft: Bool?
     public var roundBottomRight: Bool?
     public var tagCorner: ScreenCorner?
+    public var tagHorizontalOffset: Double?
+    public var tagVerticalOffset: Double?
     public var watermarkOpacity: Double?
     public var frameEnabled: Bool?
     public var tagEnabled: Bool?
@@ -32,6 +34,8 @@ public struct ConfigProposal: Equatable, Sendable {
         self.roundBottomLeft = nil
         self.roundBottomRight = nil
         self.tagCorner = nil
+        self.tagHorizontalOffset = nil
+        self.tagVerticalOffset = nil
         self.watermarkOpacity = nil
         self.frameEnabled = nil
         self.tagEnabled = nil
@@ -80,6 +84,12 @@ public struct ConfigProposal: Equatable, Sendable {
             case "tagCorner":
                 recognizedParameter = true
                 self.tagCorner = ScreenCorner(rawValue: value)
+            case "tagHorizontalOffset":
+                recognizedParameter = true
+                self.tagHorizontalOffset = Self.number(value, clampedTo: 0...400)
+            case "tagVerticalOffset":
+                recognizedParameter = true
+                self.tagVerticalOffset = Self.number(value, clampedTo: 0...400)
             case "watermarkOpacity":
                 recognizedParameter = true
                 self.watermarkOpacity = Self.number(value, clampedTo: 0...0.5)
@@ -107,7 +117,8 @@ public struct ConfigProposal: Equatable, Sendable {
             && self.frameThickness == nil && self.frameOpacity == nil && self.cornerRadius == nil
             && self.roundTopLeft == nil && self.roundTopRight == nil
             && self.roundBottomLeft == nil && self.roundBottomRight == nil
-            && self.tagCorner == nil && self.watermarkOpacity == nil
+            && self.tagCorner == nil && self.tagHorizontalOffset == nil && self.tagVerticalOffset == nil
+            && self.watermarkOpacity == nil
             && self.frameEnabled == nil && self.tagEnabled == nil && self.watermarkEnabled == nil
             && self.splashDuration == nil
     }
@@ -131,6 +142,12 @@ public struct ConfigProposal: Equatable, Sendable {
             items.append(("Round bottom right", Self.booleanSummary(roundBottomRight)))
         }
         if let tagCorner { items.append(("Tag corner", tagCorner.label)) }
+        if let tagHorizontalOffset {
+            items.append(("Tag horizontal offset", Self.numberSummary(tagHorizontalOffset)))
+        }
+        if let tagVerticalOffset {
+            items.append(("Tag vertical offset", Self.numberSummary(tagVerticalOffset)))
+        }
         if let watermarkOpacity {
             items.append(("Watermark opacity", Self.numberSummary(watermarkOpacity)))
         }

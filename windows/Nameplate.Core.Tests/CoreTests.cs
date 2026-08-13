@@ -85,6 +85,21 @@ public sealed class CoreTests
         Assert.False(layers.RoundTopRight);
         Assert.False(layers.RoundBottomLeft);
         Assert.False(layers.RoundBottomRight);
+        Assert.Equal(0, layers.TagHorizontalOffset);
+        Assert.Equal(0, layers.TagVerticalOffset);
+    }
+
+    [Fact]
+    public void TagOffsetsDeserializeFromLayerSettings()
+    {
+        const string json = """
+            { "layers": { "tagHorizontalOffset": 120, "tagVerticalOffset": 48 } }
+            """;
+
+        var settings = System.Text.Json.JsonSerializer.Deserialize<LocalSettings>(json)!;
+
+        Assert.Equal(120, settings.Layers.TagHorizontalOffset);
+        Assert.Equal(48, settings.Layers.TagVerticalOffset);
     }
 
     [Fact]

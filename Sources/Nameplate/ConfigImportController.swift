@@ -77,6 +77,12 @@ final class ConfigImportController {
             self.settings.frameRoundBottomRight = roundBottomRight
         }
         if let tagCorner = proposal.tagCorner { self.settings.tagCorner = tagCorner }
+        if let tagHorizontalOffset = proposal.tagHorizontalOffset {
+            self.settings.tagHorizontalOffset = tagHorizontalOffset
+        }
+        if let tagVerticalOffset = proposal.tagVerticalOffset {
+            self.settings.tagVerticalOffset = tagVerticalOffset
+        }
         if let watermarkOpacity = proposal.watermarkOpacity {
             self.settings.watermarkOpacity = watermarkOpacity
         }

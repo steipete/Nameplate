@@ -84,7 +84,7 @@ internal sealed class FrameWindow : OverlayWindow
 
 internal sealed class TagWindow : OverlayWindow
 {
-    public TagWindow(Forms.Screen screen, Brush accent, Nameplate.Core.MachineIdentity identity, Nameplate.Core.ScreenCorner corner)
+    public TagWindow(Forms.Screen screen, Brush accent, Nameplate.Core.MachineIdentity identity, Nameplate.Core.LayerSettings settings)
         : base(screen, true)
     {
         var textColor = Nameplate.Core.ColorHex.PrefersDarkText(identity.ColorHex) ? Brushes.Black : Brushes.White;
@@ -117,12 +117,16 @@ internal sealed class TagWindow : OverlayWindow
             Background = accent,
             CornerRadius = new CornerRadius(13),
             Padding = new Thickness(14, 8, 14, 8),
-            Margin = new Thickness(20),
+            Margin = new Thickness(
+                20 + Math.Clamp(settings.TagHorizontalOffset, 0, 400),
+                20 + Math.Clamp(settings.TagVerticalOffset, 0, 400),
+                20 + Math.Clamp(settings.TagHorizontalOffset, 0, 400),
+                20 + Math.Clamp(settings.TagVerticalOffset, 0, 400)),
             Child = panel,
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Top,
         };
-        Anchor(pill, corner);
+        Anchor(pill, settings.TagCorner);
         Content = pill;
     }
 

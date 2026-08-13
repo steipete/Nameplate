@@ -29,6 +29,8 @@
   --r-tl: 0px; --r-tr: 0px; --r-br: 22px; --r-bl: 22px;
   --frame-opacity: 1;
   --wm-opacity: .05;
+  --tag-x: 0px; --tag-y: 0px;
+  --tag-x-mini: 0px; --tag-y-mini: 0px;
   --font-display: "Bricolage Grotesque", sans-serif;
   --font-mono: "Fragment Mono", monospace;
 }
@@ -58,7 +60,7 @@ body {
   body.squircle #frame, body.squircle .mini-screen, body.squircle .mini-frame { corner-shape: squircle; }
 }
 #tag {
-  position: fixed; left: 22px; bottom: 20px; right: auto; top: auto; z-index: 91;
+  position: fixed; left: calc(22px + var(--tag-x)); bottom: calc(20px + var(--tag-y)); right: auto; top: auto; z-index: 91;
   background: var(--accent); color: #fff;
   font-family: var(--font-mono); font-size: 13px;
   padding: 5px 14px; border-radius: 999px;
@@ -67,9 +69,9 @@ body {
   outline: none; cursor: text; white-space: nowrap;
 }
 #tag:empty::before { content: "megaclaw"; opacity: .6; }
-#tag.tl { top: 22px; left: 22px; bottom: auto; right: auto; }
-#tag.tr { top: 22px; right: 22px; bottom: auto; left: auto; }
-#tag.br { bottom: 20px; right: 22px; top: auto; left: auto; }
+#tag.tl { top: calc(22px + var(--tag-y)); left: calc(22px + var(--tag-x)); bottom: auto; right: auto; }
+#tag.tr { top: calc(22px + var(--tag-y)); right: calc(22px + var(--tag-x)); bottom: auto; left: auto; }
+#tag.br { bottom: calc(20px + var(--tag-y)); right: calc(22px + var(--tag-x)); top: auto; left: auto; }
 body.no-frame #frame, body.no-tag #tag, body.no-watermark #watermark { display: none; }
 #watermark {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -427,13 +429,13 @@ pre .a { color: var(--accent); transition: color .45s ease; }
   opacity: var(--frame-opacity);
 }
 .mini-screen .mini-tag {
-  position: absolute; left: 14px; bottom: 12px;
+  position: absolute; left: calc(14px + var(--tag-x-mini)); bottom: calc(12px + var(--tag-y-mini));
   background: var(--accent); color: #fff; font-size: 11px;
   padding: 2px 9px; border-radius: 999px;
 }
-.mini-screen .mini-tag.tl { top: 12px; left: 14px; bottom: auto; right: auto; }
-.mini-screen .mini-tag.tr { top: 12px; right: 14px; bottom: auto; left: auto; }
-.mini-screen .mini-tag.br { bottom: 12px; right: 14px; top: auto; left: auto; }
+.mini-screen .mini-tag.tl { top: calc(12px + var(--tag-y-mini)); left: calc(14px + var(--tag-x-mini)); bottom: auto; right: auto; }
+.mini-screen .mini-tag.tr { top: calc(12px + var(--tag-y-mini)); right: calc(14px + var(--tag-x-mini)); bottom: auto; left: auto; }
+.mini-screen .mini-tag.br { bottom: calc(12px + var(--tag-y-mini)); right: calc(14px + var(--tag-x-mini)); top: auto; left: auto; }
 .about-pane { text-align: center; padding: 8px 0 4px; }
 .about-pane img { width: 72px; height: 72px; }
 .about-pane h4 { font-size: 15px; margin: 8px 0 2px; color: #e8eaeb; }
@@ -550,6 +552,8 @@ footer a:hover { color: var(--ink); }
           <div class="srow"><span>Name tag corner</span><span class="ctl"><span class="seg" id="setTagCorner">
             <button data-c="tl">↖︎</button><button data-c="tr">↗︎</button><button data-c="bl" class="on">↙︎</button><button data-c="br">↘︎</button>
           </span></span></div>
+          <div class="srow"><label for="setTagX">Horizontal offset</label><span class="ctl"><input type="range" id="setTagX" min="0" max="400" value="0"><span class="val" id="valTagX">0 pt</span></span></div>
+          <div class="srow"><label for="setTagY">Vertical offset</label><span class="ctl"><input type="range" id="setTagY" min="0" max="400" value="0"><span class="val" id="valTagY">0 pt</span></span></div>
           <div class="srow"><label for="setWmO">Watermark opacity</label><span class="ctl"><input type="range" id="setWmO" min="0" max="18" value="5"><span class="val" id="valWmO">5%</span></span></div>
         </div>
         <div class="scaption" id="cornerDefaultsCaption">macOS defaults to rounded bottom corners — the menu bar owns the top. Yes, the corner tiles take clicks anywhere now, not just on the border.</div>
@@ -786,6 +790,18 @@ $("setWmO").addEventListener("input", e => {
   root.style.setProperty("--wm-opacity", e.target.value / 100);
   $("valWmO").textContent = e.target.value + "%";
 });
+function applyTagOffsets() {
+  const x = Number($("setTagX").value);
+  const y = Number($("setTagY").value);
+  root.style.setProperty("--tag-x", x + "px");
+  root.style.setProperty("--tag-y", y + "px");
+  root.style.setProperty("--tag-x-mini", x * 0.25 + "px");
+  root.style.setProperty("--tag-y-mini", y * 0.25 + "px");
+  $("valTagX").textContent = x + " pt";
+  $("valTagY").textContent = y + " pt";
+}
+$("setTagX").addEventListener("input", applyTagOffsets);
+$("setTagY").addEventListener("input", applyTagOffsets);
 
 // name tag corner
 $("setTagCorner").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
@@ -874,6 +890,8 @@ function buildConfigURL() {
   p.set("roundBottomRight", corners.br ? 1 : 0);
   const tc = document.querySelector("#setTagCorner button.on").dataset.c;
   p.set("tagCorner", { tl: "topLeft", tr: "topRight", bl: "bottomLeft", br: "bottomRight" }[tc]);
+  p.set("tagHorizontalOffset", $("setTagX").value);
+  p.set("tagVerticalOffset", $("setTagY").value);
   p.set("watermarkOpacity", String($("setWmO").value / 100));
   p.set("frameEnabled", $("layFrame").checked ? 1 : 0);
   p.set("tagEnabled", $("layTag").checked ? 1 : 0);

@@ -178,7 +178,8 @@ struct IdentityPreviewCard: View {
                         maxWidth: .infinity,
                         maxHeight: .infinity,
                         alignment: self.settings.tagCorner.alignment)
-                    .padding(10)
+                    .padding(.horizontal, 10 + CGFloat(self.settings.tagHorizontalOffset) * 0.25)
+                    .padding(.vertical, 10 + CGFloat(self.settings.tagVerticalOffset) * 0.25)
             }
 
             if self.settings.frameEnabled {

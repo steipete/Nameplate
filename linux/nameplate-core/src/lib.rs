@@ -146,6 +146,8 @@ pub struct Settings {
     pub frame_round_bottom_right: bool,
     pub tag_enabled: bool,
     pub tag_corner: Corner,
+    pub tag_horizontal_offset: f64,
+    pub tag_vertical_offset: f64,
     pub tag_shows_glyph: bool,
     pub watermark_enabled: bool,
     pub watermark_corner: Corner,
@@ -171,6 +173,8 @@ impl Default for Settings {
             frame_round_bottom_right: false,
             tag_enabled: true,
             tag_corner: Corner::BottomLeft,
+            tag_horizontal_offset: 0.0,
+            tag_vertical_offset: 0.0,
             tag_shows_glyph: true,
             watermark_enabled: false,
             watermark_corner: Corner::BottomRight,
@@ -308,6 +312,17 @@ mod tests {
         assert!(!settings.frame_round_top_right);
         assert!(!settings.frame_round_bottom_left);
         assert!(!settings.frame_round_bottom_right);
+        assert_eq!(settings.tag_horizontal_offset, 0.0);
+        assert_eq!(settings.tag_vertical_offset, 0.0);
+    }
+
+    #[test]
+    fn tag_offsets_deserialize_from_settings() {
+        let settings: Settings =
+            serde_json::from_str(r#"{"tagHorizontalOffset":120,"tagVerticalOffset":48}"#).unwrap();
+
+        assert_eq!(settings.tag_horizontal_offset, 120.0);
+        assert_eq!(settings.tag_vertical_offset, 48.0);
     }
 
     #[test]

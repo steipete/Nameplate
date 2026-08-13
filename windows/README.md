@@ -64,6 +64,8 @@ Local overrides:
     "roundBottomLeft": false,
     "roundBottomRight": false,
     "tagCorner": "TopRight",
+    "tagHorizontalOffset": 120,
+    "tagVerticalOffset": 48,
     "watermarkCorner": "BottomRight",
     "watermarkOpacity": 0.14
   },
@@ -75,7 +77,7 @@ Local overrides:
 }
 ```
 
-Windows defaults to square frame corners. Set any per-corner value to `true` to opt into rounding.
+Windows defaults to square frame corners. Set any per-corner value to `true` to opt into rounding. Name-tag offsets move the tag inward from its selected corner, in device-independent pixels.
 
 The tray menu toggles frame, tag, and watermark and persists those choices here. **Open config folder** opens the local override directory.
 
