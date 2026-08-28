@@ -2,6 +2,7 @@
 
 ## 0.3.2 - Unreleased
 
+- Maintenance: update Sparkle, Linux dependencies, Windows test tooling, and GitHub Actions checkout.
 - Name-tag horizontal and vertical offsets can now move the tag inward from its selected corner on macOS, Windows, and Linux. Thanks @Czaruno!
 
 ## 0.3.1 - 2026-07-16
