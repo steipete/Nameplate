@@ -4,13 +4,17 @@ import Testing
 
 @Suite("AttentionAck")
 struct AttentionAckTests {
-    private func temporaryURL() -> URL {
-        FileManager.default.temporaryDirectory
-            .appending(path: "attention-ack-\(UUID().uuidString).json")
+    private func temporaryURL() throws -> URL {
+        // Pruning enumerates the parent directory; keep each test's files isolated.
+        let directory = FileManager.default.temporaryDirectory
+            .appending(path: "attention-ack-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        return directory.appending(path: "ack.json")
     }
 
     @Test func roundTripsAndConsumesOnce() throws {
-        let url = self.temporaryURL()
+        let url = try self.temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
         let ack = AttentionAck(id: "request-1", outcome: .clicked, at: Date())
         try ack.write(to: url)
         #expect(AttentionAck.consume(matching: ack.id, from: url) == ack)
@@ -18,7 +22,8 @@ struct AttentionAckTests {
     }
 
     @Test func onlyConsumesMatchingID() throws {
-        let url = self.temporaryURL()
+        let url = try self.temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
         let first = AttentionAck(id: "request-1", outcome: .superseded)
         let second = AttentionAck(id: "request-2", outcome: .clicked)
         try first.write(to: url)
@@ -34,7 +39,8 @@ struct AttentionAckTests {
     }
 
     @Test func dropsStaleAcks() throws {
-        let url = self.temporaryURL()
+        let url = try self.temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
         let now = Date()
         let ack = AttentionAck(
             id: "request-1",
@@ -47,7 +53,8 @@ struct AttentionAckTests {
     }
 
     @Test func writingAckPrunesOldAckFiles() throws {
-        let url = self.temporaryURL()
+        let url = try self.temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
         let now = Date()
         let stale = AttentionAck(id: "stale", outcome: .clicked)
         let fresh = AttentionAck(id: "fresh", outcome: .clicked)
@@ -66,7 +73,8 @@ struct AttentionAckTests {
     }
 
     @Test func removesMatchingAckFile() throws {
-        let url = self.temporaryURL()
+        let url = try self.temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
         let ack = AttentionAck(id: "timed-out", outcome: .clicked)
         try ack.write(to: url)
         let ackURL = AttentionAck.handoffURL(matching: ack.id, from: url)
@@ -77,7 +85,8 @@ struct AttentionAckTests {
     }
 
     @Test func encodesRequestIDAsOneSafeFilenameComponent() throws {
-        let url = self.temporaryURL()
+        let url = try self.temporaryURL()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
         let ack = AttentionAck(id: "../nested/request", outcome: .expired)
         let ackURL = AttentionAck.handoffURL(matching: ack.id, from: url)
 
