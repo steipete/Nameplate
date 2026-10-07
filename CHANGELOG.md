@@ -2,6 +2,8 @@
 
 ## 0.4.1 - Unreleased
 
+- Maintenance: update Sparkle to 2.10.0, Microsoft.NET.Test.Sdk to 18.10.1, compatible Rust dependencies, and pinned CI setup/artifact actions while preserving the supported runtime floors.
+
 - Name tags can anchor to the center of any screen edge on macOS, Windows, Linux, and the website demo, with signed offsets on centered axes, display-bounded placement, and numeric offset entry/reset in macOS settings and the demo. Thanks @Czaruno!
 
 - Fixed (macOS): floating overlay panels retain their requested window level, keeping name tags and splashes above regular windows. Thanks @Czaruno!
