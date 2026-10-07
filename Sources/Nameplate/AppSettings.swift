@@ -54,7 +54,7 @@ final class AppSettings: ObservableObject {
 
     // Name tag layer.
     @AppStorage("tagEnabled") var tagEnabled: Bool = true
-    @AppStorage("tagCornerRaw") private var tagCornerRaw: String = ScreenCorner.bottomLeft.rawValue
+    @AppStorage("tagCornerRaw") private var tagCornerRaw: String = TagPosition.bottomLeft.rawValue
     @AppStorage("tagHorizontalOffset") var tagHorizontalOffset: Double = 0
     @AppStorage("tagVerticalOffset") var tagVerticalOffset: Double = 0
     @AppStorage("tagShowsGlyph") var tagShowsGlyph: Bool = true
@@ -96,8 +96,8 @@ final class AppSettings: ObservableObject {
         }
     }
 
-    var tagCorner: ScreenCorner {
-        get { ScreenCorner(rawValue: self.tagCornerRaw) ?? .bottomLeft }
+    var tagCorner: TagPosition {
+        get { TagPosition(rawValue: self.tagCornerRaw) ?? .bottomLeft }
         set { self.tagCornerRaw = newValue.rawValue }
     }
 

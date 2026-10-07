@@ -31,6 +31,7 @@ extension AppSettings {
 struct OverlayView: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var infoLineProvider: InfoLineProvider
+    var topSafeAreaInset: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -56,17 +57,19 @@ struct OverlayView: View {
             }
 
             if self.settings.tagEnabled {
-                NameTagPill(
-                    identity: identity,
-                    showsGlyph: self.settings.tagShowsGlyph,
-                    infoLines: self.infoLineProvider.lines)
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: self.settings.tagCorner.alignment)
-                    .padding(.horizontal, self.layerPadding + CGFloat(self.settings.tagHorizontalOffset))
-                    .padding(.vertical, self.layerPadding + CGFloat(self.settings.tagVerticalOffset))
-                    .transition(.opacity)
+                NameTagLayout(
+                    position: self.settings.tagCorner,
+                    inset: self.layerPadding,
+                    horizontalOffset: self.settings.tagHorizontalOffset,
+                    verticalOffset: self.settings.tagVerticalOffset,
+                    topSafeAreaInset: self.topSafeAreaInset
+                ) {
+                    NameTagPill(
+                        identity: identity,
+                        showsGlyph: self.settings.tagShowsGlyph,
+                        infoLines: self.infoLineProvider.lines)
+                }
+                .transition(.opacity)
             }
         }
         .animation(self.layerAnimation, value: self.settings.frameEnabled)

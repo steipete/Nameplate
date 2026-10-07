@@ -66,8 +66,8 @@ struct ConfigProposalTests {
         #expect(proposal.frameThickness == 20)
         #expect(proposal.frameOpacity == 0.1)
         #expect(proposal.cornerRadius == 0)
-        #expect(proposal.tagHorizontalOffset == 0)
-        #expect(proposal.tagVerticalOffset == 400)
+        #expect(proposal.tagHorizontalOffset == -10)
+        #expect(proposal.tagVerticalOffset == 1000)
         #expect(proposal.watermarkOpacity == 0.5)
         #expect(proposal.splashDuration == 0.5)
     }
@@ -93,6 +93,23 @@ struct ConfigProposalTests {
     @Test func parsesTagCornerRawValue() throws {
         let proposal = try #require(self.proposal("tagCorner=topRight"))
         #expect(proposal.tagCorner == .topRight)
+    }
+
+    @Test func parsesCenteredPositionsAndSignedOffsetsInAnyOrder() throws {
+        for position in TagPosition.allCases {
+            let proposal = try #require(self.proposal(
+                "tagVerticalOffset=-600&tagCorner=\(position.rawValue)&tagHorizontalOffset=1200"))
+            #expect(proposal.tagCorner == position)
+            #expect(proposal.tagHorizontalOffset == 1200)
+            #expect(proposal.tagVerticalOffset == -600)
+            #expect(proposal.summaryItems.first?.label == "Tag position")
+        }
+    }
+
+    @Test func invalidPositionAndNonFiniteOffsetsAreIgnored() throws {
+        let proposal = try #require(self.proposal(
+            "tagCorner=unknown&tagHorizontalOffset=nan&tagVerticalOffset=inf"))
+        #expect(proposal.isEmpty)
     }
 
     private func proposal(_ query: String) -> ConfigProposal? {

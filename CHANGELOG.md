@@ -2,6 +2,10 @@
 
 ## 0.4.1 - Unreleased
 
+- Name tags can anchor to the center of any screen edge on macOS, Windows, Linux, and the website demo, with signed offsets on centered axes, display-bounded placement, and numeric offset entry/reset in macOS settings and the demo. Thanks @Czaruno!
+
+- Fixed (macOS): floating overlay panels retain their requested window level, keeping name tags and splashes above regular windows. Thanks @Czaruno!
+
 ## 0.4.0 - 2026-09-13
 
 **Highlights:** Move name tags inward from any corner with configurable horizontal and vertical offsets on macOS, Windows, and Linux.

@@ -16,5 +16,55 @@ jobs:
         run: swift build
       - name: Test
         run: swift test
+      - name: Website placement parity
+        run: node Scripts/test_tag_placement.mjs
       - name: Package app (ad-hoc signed)
         run: APP_IDENTITY="-" ./Scripts/package_app.sh release
+
+  windows-build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          dotnet-version: '8.0.x'
+      - name: Test core
+        run: dotnet test windows/Nameplate.Core.Tests/Nameplate.Core.Tests.csproj
+      - name: Build app
+        run: dotnet build windows/Nameplate.App/Nameplate.App.csproj
+      - name: Capture live Windows placement
+        env:
+          NAMEPLATE_EVIDENCE_SHA: ${{ github.sha }}
+        run: dotnet run --project windows/Nameplate.Evidence/Nameplate.Evidence.csproj -- "${{ runner.temp }}/nameplate-windows-evidence"
+      - name: Upload Windows runtime evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: nameplate-windows-runtime
+          path: ${{ runner.temp }}/nameplate-windows-evidence
+          if-no-files-found: warn
+
+  linux-build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install GTK and X11 headers
+        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev libx11-dev libxi-dev
+      - name: Select Rust
+        run: rustup toolchain install stable --profile minimal && rustup default stable
+      - name: Test core and GTK app
+        working-directory: linux
+        run: cargo test --workspace
+      - name: Install X11 evidence tools
+        run: sudo apt-get install -y xvfb openbox xcompmgr x11-xserver-utils x11-utils imagemagick dbus-x11 python3-pil fonts-dejavu-core
+      - name: Capture live Linux placement
+        env:
+          NAMEPLATE_EVIDENCE_SHA: ${{ github.sha }}
+        run: dbus-run-session -- python3 Scripts/evidence/linux.py "${{ runner.temp }}/nameplate-linux-evidence"
+      - name: Upload Linux runtime evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: nameplate-linux-runtime
+          path: ${{ runner.temp }}/nameplate-linux-evidence
+          if-no-files-found: warn

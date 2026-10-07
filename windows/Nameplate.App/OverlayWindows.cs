@@ -117,27 +117,30 @@ internal sealed class TagWindow : OverlayWindow
             Background = accent,
             CornerRadius = new CornerRadius(13),
             Padding = new Thickness(14, 8, 14, 8),
-            Margin = new Thickness(
-                20 + Math.Clamp(settings.TagHorizontalOffset, 0, 400),
-                20 + Math.Clamp(settings.TagVerticalOffset, 0, 400),
-                20 + Math.Clamp(settings.TagHorizontalOffset, 0, 400),
-                20 + Math.Clamp(settings.TagVerticalOffset, 0, 400)),
             Child = panel,
-            HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Top,
+            ClipToBounds = true,
         };
-        Anchor(pill, settings.TagCorner);
-        Content = pill;
-    }
+        var canvas = new Canvas { ClipToBounds = true };
+        canvas.Children.Add(pill);
+        Content = canvas;
 
-    private static void Anchor(FrameworkElement element, Nameplate.Core.ScreenCorner corner)
-    {
-        element.HorizontalAlignment = corner is Nameplate.Core.ScreenCorner.TopRight or Nameplate.Core.ScreenCorner.BottomRight
-            ? HorizontalAlignment.Right
-            : HorizontalAlignment.Left;
-        element.VerticalAlignment = corner is Nameplate.Core.ScreenCorner.BottomLeft or Nameplate.Core.ScreenCorner.BottomRight
-            ? VerticalAlignment.Bottom
-            : VerticalAlignment.Top;
+        // Canvas coordinates are local DIPs after the overlay's DPI correction.
+        // Re-measure for resizes so long names remain bounded on smaller displays.
+        void PositionTag()
+        {
+            if (canvas.ActualWidth <= 0 || canvas.ActualHeight <= 0) return;
+            pill.MaxWidth = Math.Max(0, canvas.ActualWidth - 40);
+            pill.MaxHeight = Math.Max(0, canvas.ActualHeight - 40);
+            pill.Measure(new Size(pill.MaxWidth, pill.MaxHeight));
+            var origin = TagPlacement.Origin(
+                settings.TagCorner, canvas.ActualWidth, canvas.ActualHeight,
+                pill.DesiredSize.Width, pill.DesiredSize.Height, 20,
+                settings.TagHorizontalOffset, settings.TagVerticalOffset);
+            Canvas.SetLeft(pill, origin.X);
+            Canvas.SetTop(pill, origin.Y);
+        }
+        canvas.SizeChanged += (_, _) => PositionTag();
+        pill.SizeChanged += (_, _) => PositionTag();
     }
 }
 

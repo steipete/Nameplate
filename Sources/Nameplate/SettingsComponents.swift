@@ -23,6 +23,34 @@ struct SliderRow: View {
     }
 }
 
+/// Offset entry keeps a slider for quick adjustment and a field for exact placement.
+@MainActor
+struct TagOffsetRow: View {
+    let title: String
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+
+    // Changing anchor or display size must not silently overwrite the saved offset.
+    private var sliderValue: Binding<Double> {
+        Binding(
+            get: { min(max(self.value.isFinite ? self.value : 0, self.range.lowerBound), self.range.upperBound) },
+            set: { self.value = min(max($0.isFinite ? $0 : 0, self.range.lowerBound), self.range.upperBound) })
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(self.title)
+            Slider(value: self.sliderValue, in: self.range, step: 1)
+                .accessibilityLabel(self.title)
+            TextField(self.title, value: self.sliderValue, format: .number.precision(.fractionLength(0)))
+                .textFieldStyle(.roundedBorder)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 76)
+            Text("pt").foregroundStyle(.secondary)
+        }
+    }
+}
+
 /// Four mini corner-diagram buttons: each shows a square rounded only at its
 /// corner; filled accent when that screen corner is rounded.
 @MainActor

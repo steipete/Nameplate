@@ -13,6 +13,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="../../Tests/Fixtures/tag-placement.json" Link="tag-placement.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../Nameplate.Core/Nameplate.Core.csproj" />
   </ItemGroup>
 </Project>

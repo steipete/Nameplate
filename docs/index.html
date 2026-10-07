@@ -29,8 +29,6 @@
   --r-tl: 0px; --r-tr: 0px; --r-br: 22px; --r-bl: 22px;
   --frame-opacity: 1;
   --wm-opacity: .05;
-  --tag-x: 0px; --tag-y: 0px;
-  --tag-x-mini: 0px; --tag-y-mini: 0px;
   --font-display: "Bricolage Grotesque", sans-serif;
   --font-mono: "Fragment Mono", monospace;
 }
@@ -60,18 +58,15 @@ body {
   body.squircle #frame, body.squircle .mini-screen, body.squircle .mini-frame { corner-shape: squircle; }
 }
 #tag {
-  position: fixed; left: calc(22px + var(--tag-x)); bottom: calc(20px + var(--tag-y)); right: auto; top: auto; z-index: 91;
+  position: fixed; left: 22px; bottom: 20px; right: auto; top: auto; z-index: 91;
   background: var(--accent); color: #fff;
   font-family: var(--font-mono); font-size: 13px;
   padding: 5px 14px; border-radius: 999px;
   box-shadow: 0 4px 18px rgba(0,0,0,.45);
   transition: background .45s ease;
-  outline: none; cursor: text; white-space: nowrap;
+  outline: none; cursor: text; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 #tag:empty::before { content: "megaclaw"; opacity: .6; }
-#tag.tl { top: calc(22px + var(--tag-y)); left: calc(22px + var(--tag-x)); bottom: auto; right: auto; }
-#tag.tr { top: calc(22px + var(--tag-y)); right: calc(22px + var(--tag-x)); bottom: auto; left: auto; }
-#tag.br { bottom: calc(20px + var(--tag-y)); right: calc(22px + var(--tag-x)); top: auto; left: auto; }
 body.no-frame #frame, body.no-tag #tag, body.no-watermark #watermark { display: none; }
 #watermark {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -402,6 +397,8 @@ pre .a { color: var(--accent); transition: color .45s ease; }
   outline: 2px solid transparent; outline-offset: 2px;
 }
 .mini-swatch[aria-pressed="true"] { outline-color: #e8eaeb; }
+#setTagPosition { max-width: 180px; color-scheme: dark; background: #34393d; color: #e8eaeb; border: 1px solid #555; border-radius: 5px; padding: 3px 7px; font: inherit; }
+.ctl input[type="number"] { width: 64px; min-width: 0; padding: 3px 5px; background: #111517; color: inherit; border: 1px solid #444; border-radius: 4px; }
 .corner-tile {
   width: 24px; height: 24px; background: transparent; cursor: pointer;
   border: 2px solid #55595d; border-radius: 3px;
@@ -429,13 +426,10 @@ pre .a { color: var(--accent); transition: color .45s ease; }
   opacity: var(--frame-opacity);
 }
 .mini-screen .mini-tag {
-  position: absolute; left: calc(14px + var(--tag-x-mini)); bottom: calc(12px + var(--tag-y-mini));
+  position: absolute; left: 14px; bottom: 12px;
   background: var(--accent); color: #fff; font-size: 11px;
-  padding: 2px 9px; border-radius: 999px;
+  padding: 2px 9px; border-radius: 999px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.mini-screen .mini-tag.tl { top: calc(12px + var(--tag-y-mini)); left: calc(14px + var(--tag-x-mini)); bottom: auto; right: auto; }
-.mini-screen .mini-tag.tr { top: calc(12px + var(--tag-y-mini)); right: calc(14px + var(--tag-x-mini)); bottom: auto; left: auto; }
-.mini-screen .mini-tag.br { bottom: calc(12px + var(--tag-y-mini)); right: calc(14px + var(--tag-x-mini)); top: auto; left: auto; }
 .about-pane { text-align: center; padding: 8px 0 4px; }
 .about-pane img { width: 72px; height: 72px; }
 .about-pane h4 { font-size: 15px; margin: 8px 0 2px; color: #e8eaeb; }
@@ -549,11 +543,15 @@ footer a:hover { color: var(--ink); }
           </span></div>
         </div>
         <div class="sgroup">
-          <div class="srow"><span>Name tag corner</span><span class="ctl"><span class="seg" id="setTagCorner">
-            <button data-c="tl">↖︎</button><button data-c="tr">↗︎</button><button data-c="bl" class="on">↙︎</button><button data-c="br">↘︎</button>
-          </span></span></div>
-          <div class="srow"><label for="setTagX">Horizontal offset</label><span class="ctl"><input type="range" id="setTagX" min="0" max="400" value="0"><span class="val" id="valTagX">0 pt</span></span></div>
-          <div class="srow"><label for="setTagY">Vertical offset</label><span class="ctl"><input type="range" id="setTagY" min="0" max="400" value="0"><span class="val" id="valTagY">0 pt</span></span></div>
+          <div class="srow"><label for="setTagPosition">Name tag position</label><span class="ctl"><select id="setTagPosition">
+            <option value="topLeft">Top left</option><option value="topCenter">Top center</option><option value="topRight">Top right</option>
+            <option value="leftCenter">Left center</option><option value="rightCenter">Right center</option>
+            <option value="bottomLeft" selected>Bottom left</option><option value="bottomCenter">Bottom center</option><option value="bottomRight">Bottom right</option>
+          </select></span></div>
+          <div class="srow"><label for="setTagX">Horizontal offset</label><span class="ctl"><input type="range" id="setTagX" min="0" max="400" value="0"><input type="number" id="setTagXValue" value="0" step="1" aria-label="Horizontal offset value"><span class="val">pt</span></span></div>
+          <div class="srow"><label for="setTagY">Vertical offset</label><span class="ctl"><input type="range" id="setTagY" min="0" max="400" value="0"><input type="number" id="setTagYValue" value="0" step="1" aria-label="Vertical offset value"><span class="val">pt</span></span></div>
+          <div class="srow"><span>Placement</span><span class="ctl"><button class="btn-small" id="resetTagOffsets">Reset offsets</button></span></div>
+          <div class="scaption">Offsets move inward from an edge. On centered axes, negative moves left/up and positive moves right/down. The tag stays within the screen.</div>
           <div class="srow"><label for="setWmO">Watermark opacity</label><span class="ctl"><input type="range" id="setWmO" min="0" max="18" value="5"><span class="val" id="valWmO">5%</span></span></div>
         </div>
         <div class="scaption" id="cornerDefaultsCaption">macOS defaults to rounded bottom corners — the menu bar owns the top. Yes, the corner tiles take clicks anywhere now, not just on the border.</div>
@@ -599,7 +597,7 @@ footer a:hover { color: var(--ink); }
     <h2>An aircraft livery for your machines.</h2>
     <div class="grid">
       <div class="card"><h3><span class="n">01</span>Frame</h3><p>A colored border around every display, rounded corners following the screen's curve. Always visible, costs zero pixels of workspace, survives fullscreen apps.</p></div>
-      <div class="card"><h3><span class="n">02</span>Name tag</h3><p>A small pill with the Mac's name and an optional emoji glyph, pinned to a corner. Like the one at the bottom of this page.</p></div>
+      <div class="card"><h3><span class="n">02</span>Name tag</h3><p>A small pill with the Mac's name and an optional emoji glyph, positioned at a corner or the center of an edge. Like the one at the bottom of this page.</p></div>
       <div class="card"><h3><span class="n">03</span>Watermark</h3><p>A big translucent name across the screen, readable from across the room. It's behind this text right now.</p></div>
       <div class="card"><h3><span class="n">04</span>Connect splash</h3><p>The Mac's name flashes center-screen when a remote session likely just started, then fades out. No more typing <code>hostname</code> to be sure.</p></div>
       <div class="card"><h3><span class="n">05</span>Menu bar plate</h3><p>A colored mini-nameplate in the menu bar. Its menu is a glanceable dashboard: uptime, IP (click to copy), CPU, RAM, free disk.</p></div>
@@ -705,7 +703,7 @@ function makeSwatches(container, cls) {
 makeSwatches($("swatches"), "swatch");
 makeSwatches($("setSwatches"), "mini-swatch");
 
-// identity: name + glyph, synced between the corner pill and the settings field
+// identity: name + glyph, synced between the name pill and the settings field
 const currentName = () => ($("setName").value.trim() || "megaclaw");
 function renderIdentity() {
   const name = currentName();
@@ -790,26 +788,69 @@ $("setWmO").addEventListener("input", e => {
   root.style.setProperty("--wm-opacity", e.target.value / 100);
   $("valWmO").textContent = e.target.value + "%";
 });
-function applyTagOffsets() {
-  const x = Number($("setTagX").value);
-  const y = Number($("setTagY").value);
-  root.style.setProperty("--tag-x", x + "px");
-  root.style.setProperty("--tag-y", y + "px");
-  root.style.setProperty("--tag-x-mini", x * 0.25 + "px");
-  root.style.setProperty("--tag-y-mini", y * 0.25 + "px");
-  $("valTagX").textContent = x + " pt";
-  $("valTagY").textContent = y + " pt";
+// Anchors use local coordinates: positive x points right, positive y points down.
+const TAG_ANCHORS = {
+  topLeft: ["start", "start"], topCenter: ["center", "start"], topRight: ["end", "start"],
+  leftCenter: ["start", "center"], rightCenter: ["end", "center"],
+  bottomLeft: ["start", "end"], bottomCenter: ["center", "end"], bottomRight: ["end", "end"],
+};
+const tagOffsets = { x: 0, y: 0 };
+function tagAxisOrigin(anchor, extent, item, inset, offset) {
+  const finite = value => Number.isFinite(value) ? value : 0;
+  const available = Math.max(0, finite(extent) - Math.max(0, finite(item)));
+  inset = Math.min(Math.max(0, finite(inset)), available / 2);
+  offset = finite(offset);
+  const proposed = anchor === "center" ? available / 2 + offset
+    : anchor === "start" ? inset + Math.max(0, offset) : available - inset - Math.max(0, offset);
+  return Math.min(Math.max(proposed, inset), available - inset);
 }
-$("setTagX").addEventListener("input", applyTagOffsets);
-$("setTagY").addEventListener("input", applyTagOffsets);
-
-// name tag corner
-$("setTagCorner").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
-  $("setTagCorner").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
-  tag.classList.remove("tl", "tr", "bl", "br");
-  miniTag.classList.remove("tl", "tr", "bl", "br");
-  if (b.dataset.c !== "bl") { tag.classList.add(b.dataset.c); miniTag.classList.add(b.dataset.c); }
-}));
+function positionTag(element, width, height, insetX, insetY, offsetScale) {
+  const [xAnchor, yAnchor] = TAG_ANCHORS[$("setTagPosition").value];
+  element.style.maxWidth = Math.max(0, width - 2 * insetX) + "px";
+  element.style.maxHeight = Math.max(0, height - 2 * insetY) + "px";
+  element.style.right = "auto";
+  element.style.bottom = "auto";
+  element.style.left = tagAxisOrigin(xAnchor, width, element.offsetWidth, insetX, tagOffsets.x * offsetScale) + "px";
+  element.style.top = tagAxisOrigin(yAnchor, height, element.offsetHeight, insetY, tagOffsets.y * offsetScale) + "px";
+}
+function applyTagOffsets() {
+  const [xAnchor, yAnchor] = TAG_ANCHORS[$("setTagPosition").value];
+  for (const [axis, anchor, extent] of [["X", xAnchor, innerWidth], ["Y", yAnchor, innerHeight]]) {
+    const slider = $("setTag" + axis), field = $("setTag" + axis + "Value");
+    const min = anchor === "center" ? -Math.floor(extent / 2) : 0;
+    const max = anchor === "center" ? Math.floor(extent / 2) : extent;
+    slider.min = field.min = min;
+    slider.max = field.max = max;
+    // A resize or anchor change retains saved values; only presentation is bounded.
+    const value = Math.min(Math.max(tagOffsets[axis.toLowerCase()], min), max);
+    slider.value = field.value = value;
+  }
+  positionTag(tag, innerWidth, innerHeight, 22, 20, 1);
+  const preview = miniTag.parentElement;
+  if (preview.clientWidth && preview.clientHeight) {
+    positionTag(miniTag, preview.clientWidth, preview.clientHeight, 14, 12, 0.25);
+  }
+}
+for (const axis of ["X", "Y"]) {
+  for (const suffix of ["", "Value"]) {
+    $("setTag" + axis + suffix).addEventListener("input", event => {
+      if (event.target.value === "" || !Number.isFinite(event.target.valueAsNumber)) return;
+      tagOffsets[axis.toLowerCase()] = Math.min(Math.max(event.target.valueAsNumber,
+        Number(event.target.min)), Number(event.target.max));
+      applyTagOffsets();
+    });
+  }
+}
+$("setTagPosition").addEventListener("change", applyTagOffsets);
+$("resetTagOffsets").addEventListener("click", () => {
+  tagOffsets.x = tagOffsets.y = 0;
+  applyTagOffsets();
+});
+window.addEventListener("resize", applyTagOffsets);
+new ResizeObserver(applyTagOffsets).observe(miniTag.parentElement);
+new ResizeObserver(applyTagOffsets).observe(tag);
+new ResizeObserver(applyTagOffsets).observe(miniTag);
+applyTagOffsets();
 
 // os skins: auto-detect, toggle, and adapt the download button
 const DOWNLOADS = {
@@ -888,10 +929,9 @@ function buildConfigURL() {
   p.set("roundTopRight", corners.tr ? 1 : 0);
   p.set("roundBottomLeft", corners.bl ? 1 : 0);
   p.set("roundBottomRight", corners.br ? 1 : 0);
-  const tc = document.querySelector("#setTagCorner button.on").dataset.c;
-  p.set("tagCorner", { tl: "topLeft", tr: "topRight", bl: "bottomLeft", br: "bottomRight" }[tc]);
-  p.set("tagHorizontalOffset", $("setTagX").value);
-  p.set("tagVerticalOffset", $("setTagY").value);
+  p.set("tagCorner", $("setTagPosition").value);
+  p.set("tagHorizontalOffset", tagOffsets.x);
+  p.set("tagVerticalOffset", tagOffsets.y);
   p.set("watermarkOpacity", String($("setWmO").value / 100));
   p.set("frameEnabled", $("layFrame").checked ? 1 : 0);
   p.set("tagEnabled", $("layTag").checked ? 1 : 0);

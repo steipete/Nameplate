@@ -1,9 +1,18 @@
+import AppKit
 import NameplateCore
 import SwiftUI
 
 @MainActor
 struct LayersSettingsPane: View {
     @ObservedObject var settings: AppSettings
+
+    @State private var displaySize = Self.largestDisplaySize
+
+    private static var largestDisplaySize: CGSize {
+        CGSize(
+            width: NSScreen.screens.map(\.frame.width).max() ?? 1920,
+            height: NSScreen.screens.map(\.frame.height).max() ?? 1080)
+    }
 
     var body: some View {
         Form {
@@ -39,21 +48,23 @@ struct LayersSettingsPane: View {
             Section {
                 Toggle("Show name tag", isOn: self.$settings.tagEnabled)
                 Group {
-                    Picker("Corner", selection: self.$settings.tagCorner) {
-                        ForEach(ScreenCorner.allCases) { corner in
-                            Text(corner.label).tag(corner)
+                    Picker("Position", selection: self.$settings.tagCorner) {
+                        ForEach(TagPosition.allCases) { position in
+                            Text(position.label).tag(position)
                         }
                     }
-                    SliderRow(
+                    TagOffsetRow(
                         title: "Horizontal offset",
                         value: self.$settings.tagHorizontalOffset,
-                        range: 0...400,
-                        format: { "\(Int($0)) pt" })
-                    SliderRow(
+                        range: self.settings.tagCorner.horizontalAnchor.offsetRange(extent: self.displaySize.width))
+                    TagOffsetRow(
                         title: "Vertical offset",
                         value: self.$settings.tagVerticalOffset,
-                        range: 0...400,
-                        format: { "\(Int($0)) pt" })
+                        range: self.settings.tagCorner.verticalAnchor.offsetRange(extent: self.displaySize.height))
+                    Button("Reset offsets") {
+                        self.settings.tagHorizontalOffset = 0
+                        self.settings.tagVerticalOffset = 0
+                    }
                     Toggle("Include glyph", isOn: self.$settings.tagShowsGlyph)
                     LabeledContent("Info lines") {
                         VStack(alignment: .leading, spacing: 6) {
@@ -68,7 +79,7 @@ struct LayersSettingsPane: View {
             } header: {
                 Text("Name tag")
             } footer: {
-                Text("Offsets move the tag inward from its corner. Selected details may appear in screenshots and recordings.")
+                Text("Offsets move inward from an edge. On centered axes, negative moves left/up and positive moves right/down. Selected details may appear in screenshots and recordings.")
             }
 
             Section {
@@ -93,6 +104,9 @@ struct LayersSettingsPane: View {
             }
         }
         .formStyle(.grouped)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in
+            self.displaySize = Self.largestDisplaySize
+        }
     }
 
     private func infoFieldBinding(_ field: InfoLineField) -> Binding<Bool> {

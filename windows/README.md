@@ -79,6 +79,8 @@ Local overrides:
 
 Windows defaults to square frame corners. Set any per-corner value to `true` to opt into rounding. Name-tag offsets move the tag inward from its selected corner, in device-independent pixels.
 
+Name tags support all four corners plus `TopCenter`, `LeftCenter`, `RightCenter`, and `BottomCenter` through the existing `layers.tagCorner` key. Offsets on edge-anchored axes move inward; centered axes accept negative values (left/up) and positive values (right/down), in device-independent pixels. The old 400-unit limit is removed and placement stays inside each display. For example, `"tagCorner": "RightCenter"` with `"tagVerticalOffset": -100` places the tag above the right-edge midpoint. See [Name-tag placement](../docs/configuration.md#name-tag-placement) for all values and offset rules.
+
 The tray menu toggles frame, tag, and watermark and persists those choices here. **Open config folder** opens the local override directory.
 
 ## Product parity

@@ -169,17 +169,18 @@ struct IdentityPreviewCard: View {
             }
 
             if self.settings.tagEnabled {
-                NameTagPill(
-                    identity: identity,
-                    showsGlyph: self.settings.tagShowsGlyph,
-                    infoLines: self.infoLineProvider.lines,
-                    scale: 0.9)
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: self.settings.tagCorner.alignment)
-                    .padding(.horizontal, 10 + CGFloat(self.settings.tagHorizontalOffset) * 0.25)
-                    .padding(.vertical, 10 + CGFloat(self.settings.tagVerticalOffset) * 0.25)
+                NameTagLayout(
+                    position: self.settings.tagCorner,
+                    inset: 10,
+                    horizontalOffset: self.settings.tagHorizontalOffset * 0.25,
+                    verticalOffset: self.settings.tagVerticalOffset * 0.25
+                ) {
+                    NameTagPill(
+                        identity: identity,
+                        showsGlyph: self.settings.tagShowsGlyph,
+                        infoLines: self.infoLineProvider.lines,
+                        scale: 0.9)
+                }
             }
 
             if self.settings.frameEnabled {

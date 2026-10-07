@@ -1,7 +1,7 @@
 use crate::{config, platform};
 use cairo::Context;
 use gtk::prelude::*;
-use nameplate_core::{Corner, Identity, Settings};
+use nameplate_core::{Corner, Identity, Settings, TagPosition};
 use std::cell::Cell;
 use std::f64::consts::{FRAC_PI_2, PI};
 use std::rc::Rc;
@@ -350,7 +350,7 @@ struct DecorationAppearance {
     frame_round_top_right: bool,
     frame_round_bottom_left: bool,
     frame_round_bottom_right: bool,
-    tag_corner: Corner,
+    tag_corner: TagPosition,
     tag_horizontal_offset: f64,
     tag_vertical_offset: f64,
     tag_shows_glyph: bool,
@@ -596,20 +596,23 @@ fn draw_tag(context: &Context, width: f64, height: f64, identity: &Identity, set
         .as_ref()
         .map_or(text.len() as f64 * 8.0, |e| e.x_advance());
     let pill_width = text_width + 22.0;
-    let pill_height = 28.0;
-    let horizontal_pad =
-        settings.frame_thickness.max(0.0) + 10.0 + settings.tag_horizontal_offset.clamp(0.0, 400.0);
-    let vertical_pad =
-        settings.frame_thickness.max(0.0) + 10.0 + settings.tag_vertical_offset.clamp(0.0, 400.0);
-    let (x, y) = corner_origin(
-        settings.tag_corner,
+    let pill_height: f64 = 28.0;
+    let inset = settings.frame_thickness.max(0.0) + 10.0;
+    let pill_width = pill_width.min((width - 2.0 * inset).max(0.0));
+    let pill_height = pill_height.min(height.max(0.0));
+    let (x, y) = settings.tag_corner.origin(
         width,
         height,
         pill_width,
         pill_height,
-        horizontal_pad,
-        vertical_pad,
+        inset,
+        settings.tag_horizontal_offset,
+        settings.tag_vertical_offset,
     );
+    // Keep very long names inside the measured pill rather than drawing off-screen.
+    let _ = context.save();
+    context.rectangle(x, y, pill_width, pill_height);
+    context.clip();
     rounded_rectangle(context, x, y, pill_width, pill_height, pill_height / 2.0);
     set_source_hex(context, &identity.color, 1.0);
     let _ = context.fill();
@@ -620,6 +623,7 @@ fn draw_tag(context: &Context, width: f64, height: f64, identity: &Identity, set
     }
     context.move_to(x + 11.0, y + 19.0);
     let _ = context.show_text(&text);
+    let _ = context.restore();
 }
 
 fn draw_watermark(
@@ -961,26 +965,6 @@ fn draw_centered_text(
     let _ = context.show_text(text);
 }
 
-fn corner_origin(
-    corner: Corner,
-    width: f64,
-    height: f64,
-    item_width: f64,
-    item_height: f64,
-    horizontal_pad: f64,
-    vertical_pad: f64,
-) -> (f64, f64) {
-    match corner {
-        Corner::TopLeft => (horizontal_pad, vertical_pad),
-        Corner::TopRight => (width - item_width - horizontal_pad, vertical_pad),
-        Corner::BottomLeft => (horizontal_pad, height - item_height - vertical_pad),
-        Corner::BottomRight => (
-            width - item_width - horizontal_pad,
-            height - item_height - vertical_pad,
-        ),
-    }
-}
-
 fn uneven_rounded_rectangle(context: &Context, x: f64, y: f64, w: f64, h: f64, radii: [f64; 4]) {
     let [tl, tr, br, bl] = radii.map(|radius| radius.clamp(0.0, w.min(h) / 2.0));
     context.new_sub_path();
@@ -1070,14 +1054,6 @@ mod tests {
         assert_ne!(
             decoration_appearance(&original),
             decoration_appearance(&restyled)
-        );
-    }
-
-    #[test]
-    fn corner_origin_applies_independent_offsets() {
-        assert_eq!(
-            corner_origin(Corner::BottomRight, 1000.0, 700.0, 100.0, 30.0, 120.0, 48.0),
-            (780.0, 622.0)
         );
     }
 

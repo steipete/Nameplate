@@ -54,7 +54,7 @@ public sealed record LayerSettings
 
     [JsonPropertyName("tagCorner")]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public ScreenCorner TagCorner { get; init; } = ScreenCorner.BottomLeft;
+    public TagPosition TagCorner { get; init; } = TagPosition.BottomLeft;
 
     [JsonPropertyName("tagHorizontalOffset")]
     public double TagHorizontalOffset { get; init; }

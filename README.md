@@ -38,7 +38,7 @@ Settings opens on the first launch. Choose a name, color, optional glyph, and th
 | Layer | Behavior |
 | --- | --- |
 | Frame | Outlines every display and remains visible above full-screen apps. |
-| Name tag | Pins the machine name and optional glyph to a chosen corner. |
+| Name tag | Pins the machine name and optional glyph to a chosen corner or edge center. |
 | Watermark | Shows a large translucent identity label. |
 | Connect splash | Traces the display perimeter and presents the identity after connection-related events. |
 | Attention alert | Lets a script display a topmost message card with pulsing borders. |

@@ -119,7 +119,7 @@ public enum Hostnames {
     }
 }
 
-/// Screen corner used to anchor the name tag and watermark layers.
+/// Screen corner used to anchor the watermark and control frame rounding.
 public enum ScreenCorner: String, CaseIterable, Codable, Sendable, Identifiable {
     case topLeft
     case topRight

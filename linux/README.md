@@ -107,7 +107,7 @@ Local overrides and visual settings live beside it in `settings.json`. Unknown f
 }
 ```
 
-Linux defaults to square frame corners. Set any per-corner value to `true` to opt into rounding. Name-tag offsets move the tag inward from its selected corner, in pixels.
+Linux defaults to square frame corners. Set any per-corner value to `true` to opt into rounding. Name tags support all four corners plus `topCenter`, `leftCenter`, `rightCenter`, and `bottomCenter` through the existing `tagCorner` key. Offsets on edge-anchored axes move inward; centered axes accept negative values (left/up) and positive values (right/down), in pixels. The old 400-pixel limit is removed and placement stays inside each display. For example, `"tagCorner": "rightCenter"` with `"tagVerticalOffset": -100` places the tag above the right-edge midpoint. See [Name-tag placement](../docs/configuration.md#name-tag-placement) for all values and offset rules.
 
 Changes to either file are applied live, including editor/sync tools that replace files atomically. Fleet values take precedence over local identity values; missing values fall back to local settings and then hostname defaults.
 

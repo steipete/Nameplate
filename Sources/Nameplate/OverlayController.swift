@@ -11,7 +11,6 @@ enum OverlayPanelFactory {
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false)
-        panel.level = level
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = false
@@ -20,6 +19,8 @@ enum OverlayPanelFactory {
         panel.isReleasedWhenClosed = false
         panel.isMovable = false
         panel.isFloatingPanel = true
+        // Becoming a floating panel resets its level; apply the requested level afterward.
+        panel.level = level
         panel.becomesKeyOnlyIfNeeded = true
         panel.animationBehavior = .none
         // Visible on every Space, next to fullscreen apps, and pinned during Mission Control.
@@ -102,6 +103,10 @@ final class OverlayController {
             if panel.frame != screen.frame {
                 panel.setFrame(screen.frame, display: true)
             }
+            if let hosting = panel.contentView as? NSHostingView<OverlayView>,
+               hosting.rootView.topSafeAreaInset != screen.safeAreaInsets.top {
+                hosting.rootView.topSafeAreaInset = screen.safeAreaInsets.top
+            }
             self.panels[index].screen = screen
         }
         self.applyVisibility(animated: false)
@@ -133,7 +138,8 @@ final class OverlayController {
             let panel = OverlayPanelFactory.makePanel(for: screen, level: .statusBar)
             panel.contentView = NSHostingView(rootView: OverlayView(
                 settings: self.settings,
-                infoLineProvider: self.infoLineProvider))
+                infoLineProvider: self.infoLineProvider,
+                topSafeAreaInset: screen.safeAreaInsets.top))
             panel.setFrame(screen.frame, display: true)
             return (panel, screen)
         }

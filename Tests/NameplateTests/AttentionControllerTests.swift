@@ -52,6 +52,17 @@ struct AttentionControllerTests {
         #expect(size.height <= AttentionController.cardMaximumHeight)
     }
 
+    @Test func floatingPanelsRetainTheirRequestedOverlayLevel() throws {
+        let screen = try #require(NSScreen.main ?? NSScreen.screens.first)
+        for level in [NSWindow.Level.statusBar, NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)] {
+            let panel = OverlayPanelFactory.makePanel(for: screen, level: level)
+            defer { panel.close() }
+            #expect(panel.isFloatingPanel)
+            #expect(panel.level == level)
+            #expect(panel.ignoresMouseEvents)
+        }
+    }
+
     @Test func interactivePanelStartsClickThroughAndAvoidsStationaryBehavior() throws {
         let screen = try #require(NSScreen.main ?? NSScreen.screens.first)
         let panel = OverlayPanelFactory.makeAttentionCardPanel(for: screen, level: .floating)

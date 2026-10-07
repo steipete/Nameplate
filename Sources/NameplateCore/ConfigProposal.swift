@@ -13,7 +13,7 @@ public struct ConfigProposal: Equatable, Sendable {
     public var roundTopRight: Bool?
     public var roundBottomLeft: Bool?
     public var roundBottomRight: Bool?
-    public var tagCorner: ScreenCorner?
+    public var tagCorner: TagPosition?
     public var tagHorizontalOffset: Double?
     public var tagVerticalOffset: Double?
     public var watermarkOpacity: Double?
@@ -83,13 +83,13 @@ public struct ConfigProposal: Equatable, Sendable {
                 self.roundBottomRight = Self.boolean(value)
             case "tagCorner":
                 recognizedParameter = true
-                self.tagCorner = ScreenCorner(rawValue: value)
+                self.tagCorner = TagPosition(rawValue: value)
             case "tagHorizontalOffset":
                 recognizedParameter = true
-                self.tagHorizontalOffset = Self.number(value, clampedTo: 0...400)
+                self.tagHorizontalOffset = Self.offset(value)
             case "tagVerticalOffset":
                 recognizedParameter = true
-                self.tagVerticalOffset = Self.number(value, clampedTo: 0...400)
+                self.tagVerticalOffset = Self.offset(value)
             case "watermarkOpacity":
                 recognizedParameter = true
                 self.watermarkOpacity = Self.number(value, clampedTo: 0...0.5)
@@ -141,7 +141,7 @@ public struct ConfigProposal: Equatable, Sendable {
         if let roundBottomRight {
             items.append(("Round bottom right", Self.booleanSummary(roundBottomRight)))
         }
-        if let tagCorner { items.append(("Tag corner", tagCorner.label)) }
+        if let tagCorner { items.append(("Tag position", tagCorner.label)) }
         if let tagHorizontalOffset {
             items.append(("Tag horizontal offset", Self.numberSummary(tagHorizontalOffset)))
         }
@@ -160,6 +160,11 @@ public struct ConfigProposal: Equatable, Sendable {
             items.append(("Splash duration", Self.numberSummary(splashDuration)))
         }
         return items
+    }
+
+    private static func offset(_ text: String) -> Double? {
+        guard let value = Double(text), value.isFinite else { return nil }
+        return value
     }
 
     private static func number(_ text: String, clampedTo range: ClosedRange<Double>) -> Double? {

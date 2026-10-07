@@ -129,6 +129,63 @@ pub enum Corner {
     BottomRight,
 }
 
+/// Name-tag anchors; existing `tagCorner` values still deserialize unchanged.
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum TagPosition {
+    TopLeft,
+    TopCenter,
+    TopRight,
+    LeftCenter,
+    RightCenter,
+    #[default]
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
+}
+
+impl TagPosition {
+    /// Local top-left origin. Edge offsets move inward; centered offsets are signed.
+    pub fn origin(
+        self,
+        width: f64,
+        height: f64,
+        tag_width: f64,
+        tag_height: f64,
+        inset: f64,
+        horizontal_offset: f64,
+        vertical_offset: f64,
+    ) -> (f64, f64) {
+        let horizontal = match self {
+            Self::TopLeft | Self::LeftCenter | Self::BottomLeft => -1,
+            Self::TopCenter | Self::BottomCenter => 0,
+            _ => 1,
+        };
+        let vertical = match self {
+            Self::TopLeft | Self::TopCenter | Self::TopRight => -1,
+            Self::LeftCenter | Self::RightCenter => 0,
+            _ => 1,
+        };
+        (
+            tag_axis_origin(horizontal, width, tag_width, inset, horizontal_offset),
+            tag_axis_origin(vertical, height, tag_height, inset, vertical_offset),
+        )
+    }
+}
+
+fn tag_axis_origin(anchor: i8, extent: f64, item: f64, inset: f64, offset: f64) -> f64 {
+    let finite = |value: f64| if value.is_finite() { value } else { 0.0 };
+    let available = (finite(extent) - finite(item).max(0.0)).max(0.0);
+    let inset = finite(inset).clamp(0.0, available / 2.0);
+    let offset = finite(offset);
+    let proposed = match anchor {
+        -1 => inset + offset.max(0.0),
+        0 => available / 2.0 + offset,
+        _ => available - inset - offset.max(0.0),
+    };
+    proposed.clamp(inset, available - inset)
+}
+
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Settings {
@@ -145,7 +202,7 @@ pub struct Settings {
     pub frame_round_bottom_left: bool,
     pub frame_round_bottom_right: bool,
     pub tag_enabled: bool,
-    pub tag_corner: Corner,
+    pub tag_corner: TagPosition,
     pub tag_horizontal_offset: f64,
     pub tag_vertical_offset: f64,
     pub tag_shows_glyph: bool,
@@ -172,7 +229,7 @@ impl Default for Settings {
             frame_round_bottom_left: false,
             frame_round_bottom_right: false,
             tag_enabled: true,
-            tag_corner: Corner::BottomLeft,
+            tag_corner: TagPosition::BottomLeft,
             tag_horizontal_offset: 0.0,
             tag_vertical_offset: 0.0,
             tag_shows_glyph: true,
@@ -323,6 +380,85 @@ mod tests {
 
         assert_eq!(settings.tag_horizontal_offset, 120.0);
         assert_eq!(settings.tag_vertical_offset, 48.0);
+    }
+
+    #[test]
+    fn shared_tag_placement_vectors() {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Vector {
+            name: String,
+            position: TagPosition,
+            width: f64,
+            height: f64,
+            tag_width: f64,
+            tag_height: f64,
+            inset: f64,
+            horizontal_offset: f64,
+            vertical_offset: f64,
+            x: f64,
+            y: f64,
+        }
+        let vectors: Vec<Vector> =
+            serde_json::from_str(include_str!("../../../Tests/Fixtures/tag-placement.json"))
+                .unwrap();
+        for vector in vectors {
+            assert_eq!(
+                vector.position.origin(
+                    vector.width,
+                    vector.height,
+                    vector.tag_width,
+                    vector.tag_height,
+                    vector.inset,
+                    vector.horizontal_offset,
+                    vector.vertical_offset
+                ),
+                (vector.x, vector.y),
+                "{}",
+                vector.name
+            );
+        }
+    }
+
+    #[test]
+    fn tag_positions_and_signed_offsets_round_trip() {
+        for position in [
+            "topLeft",
+            "topCenter",
+            "topRight",
+            "leftCenter",
+            "rightCenter",
+            "bottomLeft",
+            "bottomCenter",
+            "bottomRight",
+        ] {
+            let json = format!(
+                r#"{{"tagCorner":"{position}","tagHorizontalOffset":1200,"tagVerticalOffset":-600}}"#
+            );
+            let settings: Settings = serde_json::from_str(&json).unwrap();
+            assert_eq!(settings.tag_horizontal_offset, 1200.0);
+            assert_eq!(settings.tag_vertical_offset, -600.0);
+            let round_trip: Settings =
+                serde_json::from_str(&serde_json::to_string(&settings).unwrap()).unwrap();
+            assert_eq!(settings, round_trip);
+            assert_eq!(settings.watermark_corner, Corner::BottomRight);
+        }
+    }
+
+    #[test]
+    fn non_finite_tag_offsets_are_neutral() {
+        assert_eq!(
+            TagPosition::RightCenter.origin(
+                1000.0,
+                700.0,
+                100.0,
+                30.0,
+                20.0,
+                f64::NAN,
+                f64::INFINITY
+            ),
+            (880.0, 335.0)
+        );
     }
 
     #[test]
