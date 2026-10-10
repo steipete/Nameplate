@@ -2,6 +2,8 @@
 
 ## 0.4.1 - Unreleased
 
+- Maintenance: update eight compatible Rust dependencies, the xUnit Visual Studio runner to 4.0.1 (fixing test-thread limiting while retaining .NET 8 support), and the pinned artifact upload action to 7.0.2.
+
 - Maintenance: update Sparkle to 2.10.0, Microsoft.NET.Test.Sdk to 18.10.1, compatible Rust dependencies, and pinned CI setup/artifact actions while preserving the supported runtime floors.
 
 - Name tags can anchor to the center of any screen edge on macOS, Windows, Linux, and the website demo, with signed offsets on centered axes, display-bounded placement, and numeric offset entry/reset in macOS settings and the demo. Thanks @Czaruno!
