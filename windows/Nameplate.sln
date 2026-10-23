@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nameplate.App", "Nameplate.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nameplate.Core.Tests", "Nameplate.Core.Tests\Nameplate.Core.Tests.csproj", "{38074D68-9DC1-44CB-8BE0-8A054F19B647}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nameplate.App.Tests", "Nameplate.App.Tests\Nameplate.App.Tests.csproj", "{1E0E3A9F-591F-45F7-93C4-C5822F708A23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,5 +28,9 @@ Global
 		{38074D68-9DC1-44CB-8BE0-8A054F19B647}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38074D68-9DC1-44CB-8BE0-8A054F19B647}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38074D68-9DC1-44CB-8BE0-8A054F19B647}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E0E3A9F-591F-45F7-93C4-C5822F708A23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E0E3A9F-591F-45F7-93C4-C5822F708A23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E0E3A9F-591F-45F7-93C4-C5822F708A23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E0E3A9F-591F-45F7-93C4-C5822F708A23}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

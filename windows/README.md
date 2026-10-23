@@ -9,23 +9,28 @@ Requires the .NET 8 SDK and Windows 10 or later. From `windows/`:
 ```powershell
 dotnet restore Nameplate.sln
 dotnet test Nameplate.Core.Tests
+dotnet test Nameplate.App.Tests
 dotnet publish Nameplate.App -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
 ```
 
 The single-file executable is written below `Nameplate.App/bin/Release/net8.0-windows/win-x64/publish/nameplate.exe`.
 
+The app tests exercise real Windows named pipes. Run them from an elevated terminal to include the cross-account and cross-session checks, which create and remove temporary SYSTEM tasks without storing credentials. The session probe duplicates the test user's token into another existing Windows session. CI requires these checks on Windows.
+
 ## Install
 
 Copy `nameplate.exe` to a stable folder such as `%LOCALAPPDATA%\Nameplate`, run it once, then place a shortcut in `shell:startup` if it should launch at sign-in. The process lives in the notification area; double-click its colored plate or choose **Show splash** to replay the identity card.
 
-Use the same executable as the CLI. If the tray app is not running, a command starts it, waits for `\\.\pipe\nameplate`, forwards one JSON line, and exits:
+Use the same executable as the CLI. If the tray app is not running, a command starts it, waits for its session-specific named pipe, forwards one JSON line, and exits:
 
 ```powershell
 nameplate splash
 nameplate attention "Need approval before release" --title "Agent attention" --duration 12 --color "#D4537E"
 ```
 
-Only one tray instance runs per user session.
+Only one tray instance runs per user session. Commands target that session's tray, and its pipe allows access only to the signed-in user, including when the tray runs elevated.
+
+When updating from 0.5.0 or earlier, quit the older tray from the notification area before starting the new executable. An older running tray uses a different pipe; the updated CLI reports that it cannot accept commands and asks you to quit and restart it. It never forwards commands to the older machine-wide pipe. Your settings and fleet file are preserved.
 
 ## Configuration
 
@@ -91,4 +96,4 @@ The tray menu toggles frame, tag, and watermark and persists those choices here.
 - Every display receives independent frame, tag, watermark, splash, and attention windows. The splash traces the colored perimeter, brings the identity plate into focus, and respects Windows' client-animation setting.
 - All overlay layers use Win32 layered/transparent/no-activate/tool-window styles. A passive low-level mouse observer dismisses attention on any button press and always forwards the original event, so the intended control still receives it.
 
-The Windows app uses WPF plus the built-in WinForms `NotifyIcon`; application and Core projects have no third-party NuGet dependencies. xUnit is used only by `Nameplate.Core.Tests`.
+The Windows app uses WPF plus the built-in WinForms `NotifyIcon`; application and Core projects have no third-party NuGet dependencies. xUnit is used only by the test projects.

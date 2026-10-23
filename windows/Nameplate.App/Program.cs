@@ -9,7 +9,7 @@ namespace Nameplate.App;
 
 public static class Program
 {
-    private const string MutexName = "Local\\Nameplate";
+    internal const string MutexName = "Local\\Nameplate";
 
     [STAThread]
     public static int Main(string[] args)
@@ -130,11 +130,14 @@ internal static class PipeClient
 
         if (!startIfNeeded || Environment.ProcessPath is not { } executable)
         {
-            Console.Error.WriteLine("Nameplate is not running.");
+            ReportUnavailable();
             return 1;
         }
 
-        Process.Start(new ProcessStartInfo(executable) { UseShellExecute = true });
+        if (!IsTrayRunning())
+        {
+            Process.Start(new ProcessStartInfo(executable) { UseShellExecute = true });
+        }
         for (var attempt = 0; attempt < 40; attempt++)
         {
             await Task.Delay(100).ConfigureAwait(false);
@@ -144,8 +147,26 @@ internal static class PipeClient
             }
         }
 
-        Console.Error.WriteLine("Nameplate started but its command pipe did not become available.");
+        ReportUnavailable();
         return 1;
+    }
+
+    private static bool IsTrayRunning()
+    {
+        if (!Mutex.TryOpenExisting(Program.MutexName, out var mutex))
+        {
+            return false;
+        }
+
+        mutex.Dispose();
+        return true;
+    }
+
+    private static void ReportUnavailable()
+    {
+        Console.Error.WriteLine(IsTrayRunning()
+            ? "The running Nameplate instance is not accepting commands. Quit Nameplate from the notification area, start this version, and retry."
+            : "Nameplate is not running. Start Nameplate and retry.");
     }
 
     private static async Task<bool> TrySendAsync(string json)

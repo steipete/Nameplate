@@ -32,6 +32,10 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Test core
         run: dotnet test windows/Nameplate.Core.Tests/Nameplate.Core.Tests.csproj
+      - name: Test Windows command transport
+        env:
+          NAMEPLATE_REQUIRE_SESSION_PROOF: '1'
+        run: dotnet test windows/Nameplate.App.Tests/Nameplate.App.Tests.csproj
       - name: Build app
         run: dotnet build windows/Nameplate.App/Nameplate.App.csproj
       - name: Capture live Windows placement
