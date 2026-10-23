@@ -2,6 +2,7 @@
 
 ## 0.5.1 - Unreleased
 
+- Maintenance: update the Linux system-deps build dependency to 9.0.1 while retaining Rust 1.92 support.
 - Fixed (Windows): route commands to the calling session, restrict pipe access to the signed-in user even when elevated, and explain how to restart an older tray after updating. Thanks @SebTardif!
 - Maintenance: update the Linux libc dependency to 0.2.191 while retaining Rust 1.92 support.
 - Maintenance: move macOS CI and release builds to the Apple silicon `xcode-27` runner while preserving macOS 15 support.
