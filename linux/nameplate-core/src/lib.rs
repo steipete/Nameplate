@@ -1,5 +1,7 @@
 //! Platform-independent Nameplate identity, configuration, and IPC semantics.
 
+pub mod command_socket;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ffi::{CStr, c_char};
