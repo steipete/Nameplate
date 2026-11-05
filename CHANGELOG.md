@@ -2,6 +2,8 @@
 
 ## 0.5.2 - Unreleased
 
+- Fixed (Linux): a connect splash, unlock, or monitor change no longer dismisses an attention card.
+
 ## 0.5.1 - 2026-10-23
 
 **Highlights:** Windows commands now reach the calling session, with pipe access restricted to the signed-in user even when elevated.

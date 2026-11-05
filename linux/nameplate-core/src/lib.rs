@@ -1,5 +1,7 @@
 //! Platform-independent Nameplate identity, configuration, and IPC semantics.
 
+pub mod splash_close;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ffi::{CStr, c_char};
