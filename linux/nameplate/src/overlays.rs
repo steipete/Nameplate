@@ -1,6 +1,7 @@
 use crate::{config, platform};
 use cairo::Context;
 use gtk::prelude::*;
+use nameplate_core::splash_close::{OverlayRole, splash_closes};
 use nameplate_core::{Corner, Identity, Settings, TagPosition};
 use std::cell::Cell;
 use std::f64::consts::{FRAC_PI_2, PI};
@@ -11,7 +12,8 @@ pub struct OverlayManager {
     application: gtk::Application,
     config: config::LoadedConfig,
     decoration_windows: Vec<DecorationWindow>,
-    transient_windows: Vec<gtk::Window>,
+    splash_windows: Vec<gtk::Window>,
+    attention_windows: Vec<gtk::Window>,
     attention_active: Rc<Cell<bool>>,
     attention_generation: Rc<Cell<u64>>,
     attention_started: Option<Instant>,
@@ -74,7 +76,8 @@ impl OverlayManager {
             application: application.clone(),
             config: config::load(),
             decoration_windows: Vec::new(),
-            transient_windows: Vec::new(),
+            splash_windows: Vec::new(),
+            attention_windows: Vec::new(),
             attention_active: Rc::new(Cell::new(false)),
             attention_generation: Rc::new(Cell::new(0)),
             attention_started: None,
@@ -161,11 +164,16 @@ impl OverlayManager {
             }
         }
         self.last_splash = Some(Instant::now());
-        self.attention_generation
-            .set(self.attention_generation.get().wrapping_add(1));
-        self.attention_active.set(false);
-        self.attention_started = None;
-        close_all(&mut self.transient_windows);
+        if splash_closes(OverlayRole::Attention) {
+            self.attention_generation
+                .set(self.attention_generation.get().wrapping_add(1));
+            self.attention_active.set(false);
+            self.attention_started = None;
+            close_all(&mut self.attention_windows);
+        }
+        if splash_closes(OverlayRole::Splash) {
+            close_all(&mut self.splash_windows);
+        }
         let hold = self.config.settings.splash_duration.clamp(0.5, 10.0);
         let reduce_motion =
             gtk::Settings::default().is_some_and(|settings| !settings.is_gtk_enable_animations());
@@ -218,7 +226,7 @@ impl OverlayManager {
         gtk::glib::timeout_add_local_once(Duration::from_secs_f64(hold), move || {
             fade_out(timeout_windows);
         });
-        self.transient_windows = windows;
+        self.splash_windows = windows;
     }
 
     pub fn show_attention(
@@ -232,7 +240,9 @@ impl OverlayManager {
         self.attention_generation.set(generation);
         self.attention_active.set(false);
         self.attention_started = Some(Instant::now());
-        close_all(&mut self.transient_windows);
+        // Attention still replaces a splash. Splash must not replace attention.
+        close_all(&mut self.splash_windows);
+        close_all(&mut self.attention_windows);
         let color = requested_color
             .as_deref()
             .and_then(nameplate_core::normalize_hex)
@@ -303,7 +313,7 @@ impl OverlayManager {
             );
         }
         self.attention_active.set(!windows.is_empty());
-        self.transient_windows = windows;
+        self.attention_windows = windows;
     }
 
     #[cfg(target_os = "linux")]
@@ -317,7 +327,7 @@ impl OverlayManager {
             self.attention_started = None;
             self.attention_generation
                 .set(self.attention_generation.get().wrapping_add(1));
-            close_all(&mut self.transient_windows);
+            close_all(&mut self.attention_windows);
         }
     }
 }
