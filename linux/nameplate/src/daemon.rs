@@ -1,13 +1,24 @@
 use crate::Event;
 use nameplate_core::DaemonCommand;
+use nameplate_core::command_socket::{CommandSocketOwner, refuse_if_live};
 use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::Mutex;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
+
+static SOCKET_OWNER: Mutex<CommandSocketOwner> = Mutex::new(CommandSocketOwner::new());
+
+fn with_socket_owner<T>(body: impl FnOnce(&mut CommandSocketOwner) -> T) -> T {
+    let mut owner = SOCKET_OWNER
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    body(&mut owner)
+}
 
 pub fn socket_path() -> Result<PathBuf, String> {
     std::env::var_os("XDG_RUNTIME_DIR")
@@ -18,13 +29,14 @@ pub fn socket_path() -> Result<PathBuf, String> {
 
 pub fn start_socket_listener(sender: mpsc::Sender<Event>) -> Result<(), String> {
     let path = socket_path()?;
-    if path.exists() {
-        if UnixStream::connect(&path).is_ok() {
-            return Err("another daemon is already running".to_owned());
-        }
+    let exists = path.exists();
+    let connect_ok = exists && UnixStream::connect(&path).is_ok();
+    refuse_if_live(exists, connect_ok).map_err(|error| error.to_owned())?;
+    if exists {
         fs::remove_file(&path).map_err(|error| error.to_string())?;
     }
     let listener = UnixListener::bind(&path).map_err(|error| error.to_string())?;
+    with_socket_owner(|owner| owner.mark_bound());
     thread::spawn(move || {
         for connection in listener.incoming() {
             let Ok(connection) = connection else { continue };
@@ -90,6 +102,6 @@ fn spawn_daemon() -> Result<(), String> {
 
 pub fn remove_socket() {
     if let Ok(path) = socket_path() {
-        let _ = fs::remove_file(path);
+        with_socket_owner(|owner| owner.unlink_on_shutdown(&path));
     }
 }

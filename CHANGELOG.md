@@ -2,6 +2,8 @@
 
 ## 0.5.2 - Unreleased
 
+- Fixed (Linux): a second start no longer deletes the command socket of the daemon that is already listening.
+
 ## 0.5.1 - 2026-10-23
 
 **Highlights:** Windows commands now reach the calling session, with pipe access restricted to the signed-in user even when elevated.
