@@ -5,7 +5,7 @@ mod overlays;
 mod platform;
 
 use gtk::prelude::*;
-use nameplate_core::DaemonCommand;
+use nameplate_core::{DaemonCommand, login1_session_object_path};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::mpsc;
@@ -144,6 +144,26 @@ fn install_transparent_css() {
     }
 }
 
+fn current_login1_session_path(connection: &gtk::gio::DBusConnection) -> Option<String> {
+    let pid = u32::try_from(std::process::id()).ok()?;
+    let parameters = gtk::glib::Variant::from((pid,));
+    let reply = connection
+        .call_sync(
+            Some("org.freedesktop.login1"),
+            "/org/freedesktop/login1",
+            "org.freedesktop.login1.Manager",
+            "GetSessionByPID",
+            Some(&parameters),
+            Some(gtk::glib::VariantTy::new("(o)").unwrap()),
+            gtk::gio::DBusCallFlags::NONE,
+            -1,
+            gtk::gio::Cancellable::NONE,
+        )
+        .ok()?;
+    let path = reply.child_value(0).str()?.to_string();
+    login1_session_object_path(&path).map(str::to_owned)
+}
+
 fn subscribe_to_unlock(sender: mpsc::Sender<Event>) -> Option<gtk::gio::SignalSubscription> {
     let connection =
         match gtk::gio::bus_get_sync(gtk::gio::BusType::System, gtk::gio::Cancellable::NONE) {
@@ -153,11 +173,15 @@ fn subscribe_to_unlock(sender: mpsc::Sender<Event>) -> Option<gtk::gio::SignalSu
                 return None;
             }
         };
+    let Some(session_path) = current_login1_session_path(&connection) else {
+        eprintln!("nameplate: logind session path unavailable; unlock splash is disabled");
+        return None;
+    };
     Some(connection.subscribe_to_signal(
         Some("org.freedesktop.login1"),
         Some("org.freedesktop.login1.Session"),
         Some("Unlock"),
-        None,
+        Some(session_path.as_str()),
         None,
         gtk::gio::DBusSignalFlags::NONE,
         move |_| {

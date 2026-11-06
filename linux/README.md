@@ -52,7 +52,7 @@ nameplate attention "Need 1Password approval" \
   --title "Agent needs attention" --duration 12 --color '#E24B30'
 ```
 
-The daemon listens for monitor changes and rebuilds one GTK window per monitor per enabled layer. A logind `org.freedesktop.login1.Session.Unlock` signal triggers the connect splash. The splash traces the colored perimeter, brings the identity plate into focus, and respects GTK's animation preference. On X11, any mouse-button press dismisses an attention card without consuming the event; an optional timeout still works everywhere.
+The daemon listens for monitor changes and rebuilds one GTK window per monitor per enabled layer. A logind `Unlock` signal on this process's session object path triggers the connect splash. The `auto` method alias is not used, because logind emits the signal on the concrete session path. The splash traces the colored perimeter, brings the identity plate into focus, and respects GTK's animation preference. On X11, any mouse-button press dismisses an attention card without consuming the event; an optional timeout still works everywhere.
 
 ## X11 and Wayland
 

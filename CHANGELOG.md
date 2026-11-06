@@ -2,6 +2,8 @@
 
 ## 0.5.2 - Unreleased
 
+- Fixed (Linux): the unlock splash listens only for this process's logind session. Another seat unlocking no longer matches.
+
 ## 0.5.1 - 2026-10-23
 
 **Highlights:** Windows commands now reach the calling session, with pipe access restricted to the signed-in user even when elevated.
