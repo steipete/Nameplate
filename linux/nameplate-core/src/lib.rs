@@ -60,6 +60,21 @@ pub fn default_color(host: &str) -> &'static str {
     PALETTE[palette_index(host)]
 }
 
+/// Concrete logind session object path. `auto` is a method-call alias, not a signal path.
+pub fn login1_session_object_path(path: &str) -> Option<&str> {
+    let id = path.strip_prefix("/org/freedesktop/login1/session/")?;
+    if id.is_empty() || id == "auto" || id.contains('/') {
+        return None;
+    }
+    if !id
+        .bytes()
+        .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
+    {
+        return None;
+    }
+    Some(path)
+}
+
 pub fn normalize_hex(raw: &str) -> Option<String> {
     let raw = raw.trim().strip_prefix('#').unwrap_or(raw.trim());
     if !raw.bytes().all(|byte| byte.is_ascii_hexdigit()) {
@@ -310,6 +325,27 @@ mod tests {
         for (host, expected) in vectors {
             assert_eq!(palette_index(host), expected, "{host}");
         }
+    }
+
+    #[test]
+    fn login1_session_path_rejects_the_auto_alias() {
+        assert_eq!(
+            login1_session_object_path("/org/freedesktop/login1/session/_32"),
+            Some("/org/freedesktop/login1/session/_32")
+        );
+        assert_eq!(
+            login1_session_object_path("/org/freedesktop/login1/session/c1"),
+            Some("/org/freedesktop/login1/session/c1")
+        );
+        assert_eq!(
+            login1_session_object_path("/org/freedesktop/login1/session/auto"),
+            None
+        );
+        assert_eq!(login1_session_object_path("/org/freedesktop/login1"), None);
+        assert_eq!(
+            login1_session_object_path("/org/freedesktop/login1/session/../session/c1"),
+            None
+        );
     }
 
     #[test]
