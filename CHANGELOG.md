@@ -2,6 +2,8 @@
 
 ## 0.5.2 - Unreleased
 
+- Maintenance: update Sparkle to 2.10.1, Microsoft.NET.Test.Sdk to 18.12.0, and compatible Rust dependencies while retaining Rust 1.92 and .NET 8 support.
+
 ## 0.5.1 - 2026-10-23
 
 **Highlights:** Windows commands now reach the calling session, with pipe access restricted to the signed-in user even when elevated.
