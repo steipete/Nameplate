@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.5.2 - Unreleased
+## 0.5.3 - Unreleased
+
+## 0.5.2 - 2026-11-15
+
+**Highlights:** Update Sparkle with fixes for update installation and release-note handling, plus refreshed Linux and Windows dependencies.
 
 - Maintenance: update Sparkle to 2.10.1, Microsoft.NET.Test.Sdk to 18.12.0, and compatible Rust dependencies while retaining Rust 1.92 and .NET 8 support.
 
