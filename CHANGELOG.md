@@ -2,6 +2,8 @@
 
 ## 0.5.3 - Unreleased
 
+- Maintenance: refresh ten compatible Linux dependencies, including GTK bindings, while retaining Rust 1.92 support.
+
 ## 0.5.2 - 2026-11-15
 
 **Highlights:** Update Sparkle with fixes for update installation and release-note handling, plus refreshed Linux and Windows dependencies.
